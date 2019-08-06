@@ -1,0 +1,82 @@
+jsRoot : http://localhost:${server.port}${server.context-path}
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://10.121.2.77:3306/garbage_db?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: xny@Chint
+    driverClassName: com.mysql.cj.jdbc.Driver
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    connectionProperties: druid.stat.mergeSql:true;druid.stat.slowSqlMillis:5000
+server:
+  port: 8088
+  servlet:
+    context-path: /
+
+#freemarker 配置
+---
+spring:
+    freemarker:
+      expose-request-attributes: true
+      expose-session-attributes: true
+      expose-spring-macro-helpers: true
+      request-context-attribute: request
+      charset: utf-8
+      cache: false
+      content-type: text/html
+      suffix: .ftl
+      settings:
+        template_update_delay: 0
+        tag_syntax: auto_detect
+        default_encoding: UTF-8
+        output_encoding: UTF-8
+        locale: zh_CN
+        date_format: yyyy-MM-dd
+        time_format: HH:mm:ss
+        datetime_format: yyyy-MM-dd HH:mm:ss
+        number_format: 0.##
+        classic_compatible: true
+        url_escaping_charset: UTF-8
+        whitespace_stripping: true
+      template-loader-path: classpath:/templates/
+#      session存储redis配置
+#    session:
+#      store-type: redis
+#      redis:
+#        flush-mode: on_save
+#        namespace: /
+---
+#资源国际化
+spring:
+  messages:
+    basename: i18n/messages
+    encoding: utf-8
+  jpa:
+    show-sql: false
+    properties:
+      fomart_sql: true
+  jwt:
+    header:
+      typ: JWT
+      zip: HS256
+    claim:
+      aud: Garbage
+      exp: 7200000            #2h
+      secret: Garbage
+      refreshDate: 604800000   #7天
+  aop:
+    auto: true
+
+logging:
+  config: src/main/resources/logback-spring.xml

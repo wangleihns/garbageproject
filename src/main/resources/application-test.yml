@@ -1,0 +1,100 @@
+jsRoot : http://localhost:${server.port}${server.context-path}
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://192.168.1.102:3306/demo?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: 123456
+    driverClassName: com.mysql.jdbc.Driver
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    connectionProperties: druid.stat.mergeSql:true;druid.stat.slowSqlMillis:5000
+server:
+  port: 8082
+  context-path: /system
+
+#freemarker 配置
+---
+spring:
+    freemarker:
+      expose-request-attributes: true
+      expose-session-attributes: true
+      expose-spring-macro-helpers: true
+      request-context-attribute: request
+      charset: utf-8
+      cache: false
+      content-type: text/html
+      suffix: .ftl
+      settings:
+        template_update_delay: 0
+        tag_syntax: auto_detect
+        default_encoding: UTF-8
+        output_encoding: UTF-8
+        locale: zh_CN
+        date_format: yyyy-MM-dd
+        time_format: HH:mm:ss
+        datetime_format: yyyy-MM-dd HH:mm:ss
+        number_format: 0.##
+        classic_compatible: true
+        url_escaping_charset: UTF-8
+        whitespace_stripping: true
+      template-loader-path: classpath:/templates/
+    redis:
+      host: 127.0.0.1
+      database: 0
+      password:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+      timeout: 1000
+      port: 6379
+#      session存储redis配置
+#    session:
+#      store-type: redis
+#      redis:
+#        flush-mode: on_save
+#        namespace: /
+---
+security:
+  user:
+    name: wanglei
+    password: 123456
+  basic:
+    enabled: true
+    path: /**
+---
+#资源国际化
+spring:
+  messages:
+    basename: i18n/messages
+    encoding: utf-8
+  jpa:
+    show-sql: true
+  jwt:
+    header:
+      typ: JWT
+      zip: HS256
+    claim:
+      aud: Demo
+      exp: 7200000
+      secret: demo
+      refreshDate: 604800000   #7天
+  aop:
+    auto: true
+  pa: uf
+  jpush:
+    appKey: 4708c096fc3a881f3c2cb723
+    secret: aaccb75d19e53abab57c8161
+---
