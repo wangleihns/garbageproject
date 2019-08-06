@@ -86,8 +86,20 @@ public class Constants {
         }
     }
 
+    /**
+     * 数据状态
+     */
     public enum dataType{
-        DISABLE,ENABLE
+        DISABLE(0),ENABLE(1);
+        private int type;
+
+        dataType(int type) {
+            this.type = type;
+        }
+
+        public int getType() {
+            return type;
+        }
     }
 
     /**

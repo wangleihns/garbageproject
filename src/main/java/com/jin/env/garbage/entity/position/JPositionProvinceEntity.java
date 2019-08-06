@@ -5,7 +5,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "j_position_provice", schema = "garbage_db", catalog = "")
-public class JPositionProviceEntity {
+public class JPositionProvinceEntity {
     private int id;
     private int proviceId;
     private String proviceName;
@@ -44,7 +44,7 @@ public class JPositionProviceEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        JPositionProviceEntity that = (JPositionProviceEntity) o;
+        JPositionProvinceEntity that = (JPositionProvinceEntity) o;
         return id == that.id &&
                 proviceId == that.proviceId &&
                 Objects.equals(proviceName, that.proviceName);

@@ -16,7 +16,7 @@ public class ControllerExceptionHandle {
 
     private Logger logger = LoggerFactory.getLogger(ControllerExceptionHandle.class);
 
-    @Pointcut("execution(* com.jin.env.garbage.controller.*.*(..))")
+    @Pointcut("execution(* com.jin.env.garbage.controller.*.*.*(..))")
     public void init(){
         logger.info("aop切入点");
     }
