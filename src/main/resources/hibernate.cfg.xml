@@ -11,6 +11,10 @@
       <mapping class="com.jin.env.garbage.entity.position.JPositionProvinceEntity"/>
       <mapping class="com.jin.env.garbage.entity.position.JPositionTownEntity"/>
       <mapping class="com.jin.env.garbage.entity.position.JPositionVillageEntity"/>
+      <mapping class="com.jin.env.garbage.entity.user.GarbageUserEntity"/>
+      <mapping class="com.jin.env.garbage.entity.garbage.GarbageOrderEntity"/>
+      <mapping class="com.jin.env.garbage.entity.user.GarbageResourceEntity"/>
+      <mapping class="com.jin.env.garbage.entity.user.GarbageRoleEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

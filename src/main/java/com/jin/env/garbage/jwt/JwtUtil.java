@@ -101,10 +101,10 @@ public class JwtUtil {
      * @param issuer
      * @return
      */
-    public String generateJwtToken(String subject,String issuer){
+    public String generateJwtToken(String subject,String issuer, Integer expTime){
         return Jwts.builder()
                 .setHeader(getHeader())
-                .setClaims(getClaim(subject, issuer, exp))
+                .setClaims(getClaim(subject, issuer, (expTime == null ?exp:expTime)))
                 .signWith(getSignatureAlgorithm(alg), secret)
                 .compact();
     }

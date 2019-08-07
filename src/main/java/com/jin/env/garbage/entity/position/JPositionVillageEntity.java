@@ -1,25 +1,17 @@
 package com.jin.env.garbage.entity.position;
 
+import com.jin.env.garbage.entity.base.BaseEntity;
+
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "j_position_village", schema = "garbage_db", catalog = "")
-public class JPositionVillageEntity {
-    private int id;
+public class JPositionVillageEntity extends BaseEntity{
     private long townId;
     private long villageId;
     private String villageName;
 
-    @Id
-    @Column(name = "id")
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     @Basic
     @Column(name = "town_id")

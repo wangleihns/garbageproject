@@ -4,11 +4,11 @@ import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
-@Table(name = "j_position_provice", schema = "garbage_db", catalog = "")
+@Table(name = "j_position_province", schema = "garbage_db", catalog = "")
 public class JPositionProvinceEntity {
     private int id;
-    private int proviceId;
-    private String proviceName;
+    private int provinceId;
+    private String provinceName;
 
     @Id
     @Column(name = "id")
@@ -21,23 +21,23 @@ public class JPositionProvinceEntity {
     }
 
     @Basic
-    @Column(name = "provice_id")
-    public int getProviceId() {
-        return proviceId;
+    @Column(name = "province_id")
+    public int getProvinceId() {
+        return provinceId;
     }
 
-    public void setProviceId(int proviceId) {
-        this.proviceId = proviceId;
+    public void setProvinceId(int provinceId) {
+        this.provinceId = provinceId;
     }
 
     @Basic
-    @Column(name = "provice_name")
-    public String getProviceName() {
-        return proviceName;
+    @Column(name = "province_name")
+    public String getProvinceName() {
+        return provinceName;
     }
 
-    public void setProviceName(String proviceName) {
-        this.proviceName = proviceName;
+    public void setProvinceName(String provinceName) {
+        this.provinceName = provinceName;
     }
 
     @Override
@@ -46,13 +46,13 @@ public class JPositionProvinceEntity {
         if (o == null || getClass() != o.getClass()) return false;
         JPositionProvinceEntity that = (JPositionProvinceEntity) o;
         return id == that.id &&
-                proviceId == that.proviceId &&
-                Objects.equals(proviceName, that.proviceName);
+                provinceId == that.provinceId &&
+                Objects.equals(provinceName, that.provinceName);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, proviceId, proviceName);
+        return Objects.hash(id, provinceId, provinceName);
     }
 }

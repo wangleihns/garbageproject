@@ -2,6 +2,7 @@ package com.jin.env.garbage.controller.user;
 
 import com.aliyuncs.exceptions.ClientException;
 import com.jin.env.garbage.jwt.JwtUtil;
+import com.jin.env.garbage.service.user.GarbageUserService;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.SmsUtil;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,10 +29,21 @@ public class LoginApiController {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @RequestMapping(value = "login",method = RequestMethod.POST)
-    public  ResponseData login(String password, String username){
+    @Autowired
+    private GarbageUserService garbageUserService;
 
-        return null;
+    @RequestMapping(value = "login",method = RequestMethod.POST)
+    public  ResponseData login(String password, String username, String from){
+        Assert.hasText(username, "登录名不能为空");
+        Assert.hasText(password, "密码不能为空");
+        ResponseData responseData = garbageUserService.findByPhoneOrLoginNameOrENoOrIdCard(password, username, from);
+        return responseData;
+    }
+
+    @RequestMapping(value = "register",method = RequestMethod.POST)
+    public ResponseData register(String phone, String password){
+        ResponseData responseData = garbageUserService.register(password, phone);
+        return responseData;
     }
 
 
@@ -43,7 +56,7 @@ public class LoginApiController {
         String refreshToken = null;
         try {
             String sub = jwtUtil.getSubject(jwt);
-            accessToken = jwtUtil.generateJwtToken(sub,"demo");
+            accessToken = jwtUtil.generateJwtToken(sub,"demo", null);
 //            KnUserEntity userEntity = knUserEntityService.findByUserId(Long.valueOf(sub));
 //            String username = userEntity.getPhone();
 //            redisTemplate.opsForValue().set("accessToken:"+username, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期

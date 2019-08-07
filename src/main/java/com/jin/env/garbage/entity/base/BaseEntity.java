@@ -15,10 +15,10 @@ import javax.persistence.Transient;
 @EntityListeners({EntityListener.class})
 public abstract class BaseEntity extends IdEntity{
 
-    private Integer createId;
-    private Long createTime;
-    private Integer updateId;
-    private Long updateTime;
+    protected Integer createId;
+    protected Long createTime;
+    protected Integer updateId;
+    protected Long updateTime;
 
     @JsonIgnore
     @Column(name="create_id",length=13,updatable=false)

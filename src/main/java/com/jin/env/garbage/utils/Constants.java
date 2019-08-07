@@ -22,6 +22,22 @@ public class Constants {
         }
     }
 
+    public enum loginType{
+        GarbageCar("garbage_car"),
+        Android("android"),
+        IPhone("iphone"),
+        Web("web"),
+        Pad("pad"),
+        IPad("ipad");
+        private String type;
+        loginType(String type) {
+            this.type = type;
+        }
+        public String getType() {
+            return type;
+        }
+    }
+
 
     public enum accountStatus{
         UsernameNotFound("用户找不到"),
@@ -90,7 +106,10 @@ public class Constants {
      * 数据状态
      */
     public enum dataType{
-        DISABLE(0),ENABLE(1);
+        //不可用
+        DISABLE(0),
+        //可用
+        ENABLE(1);
         private int type;
 
         dataType(int type) {

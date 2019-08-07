@@ -10,14 +10,14 @@ import java.io.Serializable;
 @MappedSuperclass
 public abstract class IdEntity implements Serializable {
     private static final long serialVersionUID=2498902831272177631L;
-    protected Long id;
+    protected Integer id;
     @Id
     @GeneratedValue(generator="SEQUENCE", strategy= GenerationType.TABLE)
-    @TableGenerator(name="SEQUENCE", table="garbage_table_sequence", initialValue=10, allocationSize=1)
-    public Long getId(){
+    @TableGenerator(name="SEQUENCE", table="garbage_table_sequence", initialValue=10, allocationSize=1, valueColumnName = "sequence_next_hi_value")
+    public Integer getId(){
         return id;
     }
-    public void setId(Long id){
+    public void setId(Integer id){
         this.id=id;
     }
 
