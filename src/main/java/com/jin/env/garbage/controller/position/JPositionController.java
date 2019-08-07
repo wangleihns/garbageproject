@@ -38,7 +38,7 @@ public class JPositionController {
         return jPositionService.getTownListByCountyId(countyId);
     }
 
-    @RequestMapping(value = "getTownListByCountyId", method = RequestMethod.GET)
+    @RequestMapping(value = "getVillageListByTownId", method = RequestMethod.GET)
     public ResponseData getVillageListByTownId(Integer townId){
         return jPositionService.getVillageListByTownId(townId);
     }
