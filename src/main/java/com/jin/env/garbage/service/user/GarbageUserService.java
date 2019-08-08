@@ -103,4 +103,24 @@ public class GarbageUserService {
         responseData.setMsg("注册成功");
         return responseData;
     }
+
+    @Transactional
+    public ResponseData updatePassword(String token, String oldPassword, String newPassword) {
+        ResponseData responseData = new ResponseData();
+        try {
+            Integer sub = jwtUtil.getSubject(token);
+            GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+            if (!CommonUtil.md5(oldPassword).equals(userEntity.getPassword())){
+                throw new RuntimeException("原始密码不正确");
+            }
+            userEntity.setPassword(CommonUtil.md5(newPassword));
+            garbageUserDao.save(userEntity);
+            responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
+            responseData.setMsg("密码修改成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        return  responseData;
+    }
 }

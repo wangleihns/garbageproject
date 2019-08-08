@@ -2,8 +2,10 @@ package com.jin.env.garbage.service.user;
 
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
+import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.utils.Constants;
+import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -98,5 +101,26 @@ public class GarbageRoleService {
             }).collect(Collectors.toList()));
         }
         return sort;
+    }
+
+    public ResponseData resourceList() {
+        ResponseData responseData = new ResponseData();
+        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findAll();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("资源列表查询成功");
+        responseData.setData(resourceEntityList);
+        return  responseData;
+    }
+
+
+    @Transactional
+    public ResponseData updateRoleStatus(Integer roleId, Integer status) {
+        ResponseData responseData = new ResponseData();
+        GarbageRoleEntity roleEntity = garbageRoleDao.findById(roleId).get();
+        roleEntity.setStatus(status);
+        garbageRoleDao.save(roleEntity);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("角色状态更改成功");
+        return responseData;
     }
 }

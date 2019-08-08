@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -55,8 +56,8 @@ public class LoginApiController {
         String accessToken = null;
         String refreshToken = null;
         try {
-            String sub = jwtUtil.getSubject(jwt);
-            accessToken = jwtUtil.generateJwtToken(sub,"demo", null);
+            Integer sub = jwtUtil.getSubject(jwt);
+            accessToken = jwtUtil.generateJwtToken(sub.toString(),"garbage", null);
 //            KnUserEntity userEntity = knUserEntityService.findByUserId(Long.valueOf(sub));
 //            String username = userEntity.getPhone();
 //            redisTemplate.opsForValue().set("accessToken:"+username, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
@@ -97,6 +98,17 @@ public class LoginApiController {
             responseData.setMsg("短信验证码");
             responseData.setData(randomCode);
         }
+        return responseData;
+    }
+
+    @RequestMapping(value = "updatePassword", method = RequestMethod.POST)
+    public ResponseData updatePassword(String oldPassword, String newPassword, String repeatPassword, HttpServletRequest request){
+        Assert.hasText(oldPassword, "原始密码不能为空");
+        Assert.hasText(newPassword, "新密码不能空");
+        Assert.hasText(repeatPassword, "重复密码不能为空");
+        Assert.state(newPassword.equals(repeatPassword), "新密码与重复密码不一致");
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageUserService.updatePassword(jwt, oldPassword, newPassword);
         return responseData;
     }
 }

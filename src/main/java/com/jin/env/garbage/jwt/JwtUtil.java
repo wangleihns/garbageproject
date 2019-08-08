@@ -165,9 +165,16 @@ public class JwtUtil {
     }
 
 
-    public String getSubject(String jwt) throws Exception{
-        Map<String, Object> claims = parserJavaWebToken(jwt,"body");
-        return claims.get("sub").toString();
+    public Integer getSubject(String jwt){
+        Map<String, Object> claims = null;
+        Integer sub = null;
+        try {
+            claims = parserJavaWebToken(jwt,"body");
+            sub = Integer.valueOf(claims.get("sub").toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sub;
     }
 
 

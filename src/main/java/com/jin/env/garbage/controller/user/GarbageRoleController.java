@@ -1,15 +1,9 @@
 package com.jin.env.garbage.controller.user;
 
-import com.jin.env.garbage.dao.user.GarbageRoleDao;
-import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.service.user.GarbageRoleService;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,5 +18,27 @@ public class GarbageRoleController {
     public ResponsePageData roleList(int pageSize, int pageNo,String search, String  ...orderBys){
         ResponsePageData responsePageData =garbageRoleService.roleList(pageNo, pageSize,search, orderBys);
         return responsePageData;
+    }
+    @RequestMapping(value = "resourceList", method = RequestMethod.GET)
+    public ResponseData resourceList(){
+        ResponseData responseData =garbageRoleService.resourceList();
+        return responseData;
+    }
+    @RequestMapping(value = "addResourceToRole", method = RequestMethod.POST)
+    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds){
+        ResponseData responseData = new ResponseData();
+        return responseData;
+    }
+
+    /**
+     * 禁用 或启用角色
+     * @param roleId
+     * @param status
+     * @return
+     */
+    @RequestMapping(value = "updateRoleStatus", method = RequestMethod.POST)
+    public ResponseData updateRoleStatus(Integer roleId, Integer status){
+        ResponseData responseData =garbageRoleService.updateRoleStatus(roleId, status);
+        return responseData;
     }
 }
