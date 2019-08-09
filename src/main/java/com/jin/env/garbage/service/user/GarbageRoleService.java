@@ -2,8 +2,11 @@ package com.jin.env.garbage.service.user;
 
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
+import com.jin.env.garbage.dao.user.GarbageRoleResourceDao;
+import com.jin.env.garbage.dto.resource.ResourceListDto;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
+import com.jin.env.garbage.entity.user.GarbageRoleResourceEntity;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
@@ -18,12 +21,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.Arrays;
-import java.util.List;
+import javax.persistence.criteria.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +32,9 @@ public class GarbageRoleService {
     private GarbageRoleDao garbageRoleDao;
     @Autowired
     private GarbageResourceDao garbageResourceDao;
+
+    @Autowired
+    private GarbageRoleResourceDao garbageRoleResourceDao;
 
     public ResponsePageData roleList(int pageNo, int pageSize, String search, String[] orderBys) {
         Sort sort = getSort(orderBys);
@@ -71,7 +73,7 @@ public class GarbageRoleService {
         if (orderBys == null || orderBys.length == 0 ){
             sort = Sort.by("id");
         }else {
-            sort =   Sort.by((List) Arrays.stream(orderBys).map((it) -> {
+            sort =   Sort.by(Arrays.stream(orderBys).map((it) -> {
                 String[] items = it.split(";");
                 String property = "";
                 Sort.Direction direction = null;
@@ -105,10 +107,50 @@ public class GarbageRoleService {
 
     public ResponseData resourceList() {
         ResponseData responseData = new ResponseData();
-        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findAll();
+        //主标题
+        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findAll(new Specification<GarbageResourceEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageResourceEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("supId"), 0);
+            }
+        });
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(Sort.Order.asc("seq"));
+        //子标题
+        List<GarbageResourceEntity> childResourceList = garbageResourceDao.findAll(new Specification<GarbageResourceEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageResourceEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.notEqual(root.get("supId"), 0);
+            }
+        }, Sort.by(orders));
+        Map<Integer, List<GarbageResourceEntity>> childResourceMap = new HashMap<>();
+        childResourceList.forEach(resourceEntity -> {
+            if (childResourceMap.containsKey(resourceEntity.getSupId())){
+                List<GarbageResourceEntity> list = childResourceMap.get(resourceEntity.getSupId());
+                list.add(resourceEntity);
+                childResourceMap.put(resourceEntity.getSupId(), list);
+            }else {
+                List<GarbageResourceEntity> list = new ArrayList<>();
+                list.add(resourceEntity);
+                childResourceMap.put(resourceEntity.getSupId(), list);
+            }
+    });
+        List<ResourceListDto> dtos = new ArrayList<>();
+        resourceEntityList.forEach(resourceEntity -> {
+            ResourceListDto dto = new ResourceListDto();
+            dto.setId(resourceEntity.getId());
+            dto.setCode(resourceEntity.getCode());
+            dto.setIcon(resourceEntity.getIcon());
+            dto.setName(resourceEntity.getName());
+            dto.setPath(resourceEntity.getPath());
+            dto.setNoDropdown(false);
+            dto.setEnabled(true);
+            dto.setChildren(childResourceMap.get(resourceEntity.getId()));
+            dtos.add(dto);
+        });
+        responseData.setData(dtos);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("资源列表查询成功");
-        responseData.setData(resourceEntityList);
         return  responseData;
     }
 
@@ -121,6 +163,71 @@ public class GarbageRoleService {
         garbageRoleDao.save(roleEntity);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("角色状态更改成功");
+        return responseData;
+    }
+
+
+    @Transactional
+    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds) {
+        ResponseData responseData = new ResponseData();
+        List<GarbageRoleResourceEntity> roleResourceEntityList = new ArrayList<>();
+        Arrays.stream(resourceIds).forEach(resourceId ->{
+            GarbageRoleResourceEntity roleResourceEntity = new GarbageRoleResourceEntity();
+            roleResourceEntity.setResourceId(resourceId);
+            roleResourceEntity.setRoleId(roleId);
+            roleResourceEntityList.add(roleResourceEntity);
+        });
+        try {
+            garbageRoleResourceDao.saveAll(roleResourceEntityList);
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("添加成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
+            responseData.setMsg("添加失败");
+        }
+        return responseData;
+    }
+
+    @Transactional
+    public ResponseData addResourceTile(String icon, String name, String path) {
+        ResponseData responseData = new ResponseData();
+        GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
+        resourceEntity.setName(name);
+        resourceEntity.setIcon(icon);
+        resourceEntity.setPath(path);
+        resourceEntity.setSeq(1);
+        resourceEntity.setSupId(0);
+        try {
+            garbageResourceDao.save(resourceEntity);
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("主资源添加成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
+            responseData.setMsg("添加失败");
+        }
+        return responseData;
+    }
+
+    @Transactional
+    public ResponseData addSubResourceTile(int parentId, String icon, String name, String path, int seq) {
+        ResponseData responseData = new ResponseData();
+        GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
+        resourceEntity.setName(name);
+        resourceEntity.setIcon(icon);
+        resourceEntity.setPath(path);
+        resourceEntity.setSeq(seq);
+        resourceEntity.setSupId(parentId);
+        try {
+            garbageResourceDao.save(resourceEntity);
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("子资源添加成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
+            responseData.setMsg("子资源添加失败");
+        }
         return responseData;
     }
 }

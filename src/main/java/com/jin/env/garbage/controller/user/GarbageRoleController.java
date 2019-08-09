@@ -19,16 +19,6 @@ public class GarbageRoleController {
         ResponsePageData responsePageData =garbageRoleService.roleList(pageNo, pageSize,search, orderBys);
         return responsePageData;
     }
-    @RequestMapping(value = "resourceList", method = RequestMethod.GET)
-    public ResponseData resourceList(){
-        ResponseData responseData =garbageRoleService.resourceList();
-        return responseData;
-    }
-    @RequestMapping(value = "addResourceToRole", method = RequestMethod.POST)
-    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds){
-        ResponseData responseData = new ResponseData();
-        return responseData;
-    }
 
     /**
      * 禁用 或启用角色

@@ -42,8 +42,9 @@ public class LoginApiController {
     }
 
     @RequestMapping(value = "register",method = RequestMethod.POST)
-    public ResponseData register(String phone, String password){
-        ResponseData responseData = garbageUserService.register(password, phone);
+    public ResponseData register(String jsonParam){
+        Assert.hasText(jsonParam,"注册信息不能为空");
+        ResponseData responseData = garbageUserService.register(jsonParam);
         return responseData;
     }
 
@@ -109,6 +110,13 @@ public class LoginApiController {
         Assert.state(newPassword.equals(repeatPassword), "新密码与重复密码不一致");
         String jwt = request.getHeader("Authorization").split(": ")[1];
         ResponseData responseData = garbageUserService.updatePassword(jwt, oldPassword, newPassword);
+        return responseData;
+    }
+
+    @RequestMapping(value = "collectorList", method = RequestMethod.GET)
+    public ResponseData collectorList(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageUserService.collectorList(jwt);
         return responseData;
     }
 }

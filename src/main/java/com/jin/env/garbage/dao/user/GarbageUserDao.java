@@ -8,6 +8,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface GarbageUserDao extends JpaRepository<GarbageUserEntity, Integer>, JpaSpecificationExecutor<GarbageUserEntity> {
 
-    @Query(value = "select u from GarbageUserEntity as u where u.phone=:username or u.loginName=:username or u.eNo=:username or u.idCard=:username")
-    GarbageUserEntity findByPhoneOrLoginNameOrENoOrIdCard(@Param(value = "username")String username);
+    @Query(value = "select u from GarbageUserEntity as u where u.phone=:username  or u.eNo=:username or u.idCard=:username")
+    GarbageUserEntity findByPhoneOrENoOrIdCard(@Param(value = "username")String username);
 }

@@ -15,6 +15,7 @@
       <mapping class="com.jin.env.garbage.entity.garbage.GarbageOrderEntity"/>
       <mapping class="com.jin.env.garbage.entity.user.GarbageResourceEntity"/>
       <mapping class="com.jin.env.garbage.entity.user.GarbageRoleEntity"/>
+      <mapping class="com.jin.env.garbage.entity.user.GarbageRoleResourceEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

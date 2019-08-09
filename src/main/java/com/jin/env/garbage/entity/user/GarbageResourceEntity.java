@@ -17,8 +17,8 @@ public class GarbageResourceEntity  extends BaseEntity{
     private String markName;
     private String name;
     private String path;
-    private Long seq;
-    private Long supId;
+    private Integer seq;
+    private Integer supId;
     private String type;
     private String url;
     private String version;
@@ -117,21 +117,21 @@ public class GarbageResourceEntity  extends BaseEntity{
 
     @Basic
     @Column(name = "seq")
-    public Long getSeq() {
+    public Integer getSeq() {
         return seq;
     }
 
-    public void setSeq(Long seq) {
+    public void setSeq(Integer seq) {
         this.seq = seq;
     }
 
     @Basic
     @Column(name = "sup_id")
-    public Long getSupId() {
+    public Integer getSupId() {
         return supId;
     }
 
-    public void setSupId(Long supId) {
+    public void setSupId(Integer supId) {
         this.supId = supId;
     }
 

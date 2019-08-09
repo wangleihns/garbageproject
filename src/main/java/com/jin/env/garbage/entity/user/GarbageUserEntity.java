@@ -3,6 +3,7 @@ package com.jin.env.garbage.entity.user;
 import com.jin.env.garbage.entity.base.BaseEntity;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ public class GarbageUserEntity extends BaseEntity{
     private String company;
     private String eNo;
     private String idCard;
-    private boolean sex;
+    private Integer sex;
     private Boolean cleaner;
     private Integer provinceId;
     private String provinceName;
@@ -182,12 +183,13 @@ public class GarbageUserEntity extends BaseEntity{
         this.idCard = idCard;
     }
 
+    @Basic
     @Column(name = "sex")
-    public boolean isSex() {
+    public Integer getSex() {
         return sex;
     }
 
-    public void setSex(boolean sex) {
+    public void setSex(Integer sex) {
         this.sex = sex;
     }
 
@@ -318,6 +320,7 @@ public class GarbageUserEntity extends BaseEntity{
     @Fetch(FetchMode.JOIN)
     // 集合按id排序
     @OrderBy("id ASC")
+    @Lazy(value = true)
     public Set<GarbageRoleEntity> getRoles() {
         return roles;
     }

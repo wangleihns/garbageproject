@@ -56,7 +56,7 @@ public class EntityListener {
             return 1;
         }
         String jwt = token.split(": ")[1];
-        String sub = null;
+        Integer sub = null;
         JwtUtil jwtUtil = (JwtUtil) SpringContextUtil.getBean("jwtUtil");
         try {
             sub = jwtUtil.getSubject(jwt);
@@ -64,6 +64,6 @@ public class EntityListener {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
-        return Integer.valueOf(sub);
+        return sub;
     }
 }
