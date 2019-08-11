@@ -1,10 +1,12 @@
 package com.jin.env.garbage.controller.user;
 
 import com.aliyuncs.exceptions.ClientException;
+import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.service.user.GarbageUserService;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.ResponseData;
+import com.jin.env.garbage.utils.ResponsePageData;
 import com.jin.env.garbage.utils.SmsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,9 +116,44 @@ public class LoginApiController {
     }
 
     @RequestMapping(value = "collectorList", method = RequestMethod.GET)
-    public ResponseData collectorList(HttpServletRequest request){
+    public ResponsePageData collectorList(String name, String phone, String idCard, String value, Integer provinceId,
+                                          Integer cityId, Integer countryId, Integer townId, Integer villageId,
+                                          String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
-        ResponseData responseData = garbageUserService.collectorList(jwt);
+        Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
+        Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
+        ResponsePageData responsePageData = garbageUserService.collectorList(name, phone, idCard, value,provinceId, cityId, countryId, townId, villageId, jwt, pageNo, pageSize, orderBys);
+        return responsePageData;
+    }
+
+    @RequestMapping(value = "getUserInfoById", method = RequestMethod.GET)
+    public ResponseData getUserInfoById(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageUserService.getUserInfoById(jwt);
+        return responseData;
+    }
+
+    @RequestMapping(value = "deleteUserById", method = RequestMethod.DELETE)
+    public ResponseData deleteUserById(HttpServletRequest request, Integer status){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageUserService.deleteUserById(jwt, status);
+        return responseData;
+    }
+
+    @RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
+    public ResponseData updateUserInfo(GarbageUserEntity userEntity, Integer fileId){
+        ResponseData responseData = garbageUserService.updateUserInfo(userEntity, fileId);
+        return responseData;
+    }
+
+    @RequestMapping(value = "residentList", method = RequestMethod.GET)
+    public ResponseData residentList(String name, String phone, String idCard, String eNo, String value,Integer provinceId,
+                                     Integer cityId, Integer countryId,  Integer townId, Integer villageId,
+                                     String roleCode, String[] orderBys, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
+        Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
+        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, value, provinceId, cityId, countryId, townId, villageId, roleCode, jwt, pageNo, pageSize, orderBys);
         return responseData;
     }
 }

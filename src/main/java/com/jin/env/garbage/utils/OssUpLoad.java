@@ -1,8 +1,13 @@
 package com.jin.env.garbage.utils;
 
+import com.aliyun.oss.ClientException;
+import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.PutObjectResult;
 
 import java.io.InputStream;
+import java.net.URL;
 
 /**
  * Created by abc on 2018/7/23.
@@ -36,13 +41,42 @@ public class OssUpLoad {
 //        }
 //    }
 
-    public static String upload2(InputStream is, String fileName) {
+    public static String uploadImage(InputStream is, String fileName) {
         // 创建OSSClient实例
-        OSSClient ossClient = new OSSClient(endpoint, accessKeyId, accessKeySecret);
-        ossClient.putObject(bucketName, fileName, is);
-        // 关闭client
-        ossClient.shutdown();
-        String src ="http://"+ bucketName + "." + endpoint + "/" + fileName;
+        String src = null;
+        try {
+            OSSClient ossClient = new OSSClient(endpoint, accessKeyId, accessKeySecret);
+            PutObjectResult putObjectResult = ossClient.putObject(bucketName, fileName, is);
+            // 关闭client
+            ossClient.shutdown();
+            src = "http://"+ bucketName + "." + endpoint + "/" + fileName;
+        } catch (OSSException e) {
+            e.printStackTrace();
+            throw e;
+        } catch (ClientException e) {
+            e.printStackTrace();
+            throw e;
+        }
         return src;
+    }
+
+    public static Boolean deleteSingleFile(String imageName){
+        // 创建OSSClient实例。
+        Boolean flag = false;
+        try {
+            OSSClient ossClient = new OSSClient(endpoint, accessKeyId, accessKeySecret);
+            // 删除文件。
+            ossClient.deleteObject(bucketName, imageName);
+            flag = true;
+            // 关闭OSSClient。
+            ossClient.shutdown();
+        } catch (OSSException e) {
+            e.printStackTrace();
+            throw e;
+        } catch (ClientException e) {
+            e.printStackTrace();
+            throw e;
+        }
+        return flag;
     }
 }

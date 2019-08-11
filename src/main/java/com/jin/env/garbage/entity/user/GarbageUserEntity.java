@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class GarbageUserEntity extends BaseEntity{
     private String loginName;
     private String password;
     private String name;
-    private String status;
+    private Integer status;
     private Boolean accountNonExpired;
     private Boolean credentialsNonExpired;
     private Boolean accountNonLocked;
@@ -42,6 +43,8 @@ public class GarbageUserEntity extends BaseEntity{
     private String address;
 
     private Set<GarbageRoleEntity> roles=new HashSet<>(); // 有序的关联对象集合
+
+    private List<GarbageENoEntity> eNos;
 
     @Basic
     @Column(name = "email")
@@ -95,11 +98,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "status")
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
@@ -320,13 +323,22 @@ public class GarbageUserEntity extends BaseEntity{
     @Fetch(FetchMode.JOIN)
     // 集合按id排序
     @OrderBy("id ASC")
-    @Lazy(value = true)
     public Set<GarbageRoleEntity> getRoles() {
         return roles;
     }
 
     public void setRoles(Set<GarbageRoleEntity> roles) {
         this.roles = roles;
+    }
+
+    @OneToMany
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    public List<GarbageENoEntity> geteNos() {
+        return eNos;
+    }
+
+    public void seteNos(List<GarbageENoEntity> eNos) {
+        this.eNos = eNos;
     }
 
     @Override

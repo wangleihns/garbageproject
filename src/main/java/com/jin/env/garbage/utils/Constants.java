@@ -124,21 +124,15 @@ public class Constants {
     /**
      * 图标类型枚举
      */
-    public enum icon{
-        DEVICE("设备"),
-        LINKAGE("联动"),
-        ROOM("房间"),
-        SCENE("场景");
+    public enum image{
+        //头像
+        HEADER,
+        //头像略缩图
+        HEADER_SMALL,
+
+        QRCODE;
 
         private String type;
-
-        icon(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
     }
 
 

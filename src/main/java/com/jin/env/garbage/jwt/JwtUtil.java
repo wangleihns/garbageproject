@@ -173,6 +173,7 @@ public class JwtUtil {
             sub = Integer.valueOf(claims.get("sub").toString());
         } catch (Exception e) {
             e.printStackTrace();
+            throw e;
         }
         return sub;
     }
