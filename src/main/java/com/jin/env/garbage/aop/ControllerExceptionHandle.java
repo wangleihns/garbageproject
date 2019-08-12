@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.sql.SQLException;
+
 @Component
 @Aspect
 public class ControllerExceptionHandle {
@@ -30,7 +32,15 @@ public class ControllerExceptionHandle {
         } catch (Throwable throwable) {
             ResponseData responseData = new ResponseData();
             throwable.printStackTrace();
-            responseData.setMsg(throwable.getMessage());
+            if (throwable instanceof NumberFormatException){
+                responseData.setMsg("数字转换异常");
+            } else if (throwable instanceof NullPointerException){
+                responseData.setMsg("空指针异常");
+            } else if (throwable instanceof RuntimeException){
+                responseData.setMsg(throwable.getMessage());
+            } else{
+                responseData.setMsg(throwable.getMessage());
+            }
             responseData.setStatus(Constants.responseStatus.Failure.getStatus());
             return responseData;
         }

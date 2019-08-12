@@ -290,36 +290,12 @@ public class GarbageUserService {
                     //村
                     Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
                     predicateList.add(predicate);
-                    if (!StringUtils.isEmpty(name)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(phone)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(idCard)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
 
                 }
                 if (roleCodeList.contains("TOWN_ADMIN")){
                     //乡镇
-                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), townId);
                     predicateList.add(predicate);
-                    if (!StringUtils.isEmpty(name)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(phone)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(idCard)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
                     if (villageId !=null){
                         Predicate villageIdPredicate = criteriaBuilder.equal(root.get("villageId"), villageId);
                         predicateList.add(villageIdPredicate);
@@ -327,20 +303,8 @@ public class GarbageUserService {
                 }
                 if (roleCodeList.contains("COUNTRY_ADMIN")){
                     // 县/区
-                    Predicate predicate = criteriaBuilder.equal(root.get("districtId"), userEntity.getDistrictId());
+                    Predicate predicate = criteriaBuilder.equal(root.get("districtId"), countryId);
                     predicateList.add(predicate);
-                    if (!StringUtils.isEmpty(name)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(phone)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(idCard)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
                     if (townId !=null){
                         Predicate townIdPredicate = criteriaBuilder.equal(root.get("townId"), townId);
                         predicateList.add(townIdPredicate);
@@ -352,20 +316,8 @@ public class GarbageUserService {
                 }
                 if (roleCodeList.contains("CITY_ADMIN")){
                     //市
-                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), cityId);
                     predicateList.add(predicate);
-                    if (!StringUtils.isEmpty(name)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(phone)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(idCard)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
                     if (countryId !=null){
                         Predicate countryIdPredicate = criteriaBuilder.equal(root.get("districtId"), countryId);
                         predicateList.add(countryIdPredicate);
@@ -383,18 +335,6 @@ public class GarbageUserService {
                     //省
                     Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
                     predicateList.add(predicate);
-                    if (!StringUtils.isEmpty(name)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(phone)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
-                    if (!StringUtils.isEmpty(idCard)) {
-                        Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
-                        predicateList.add(predicateName);
-                    }
                     if (cityId !=null) {
                         Predicate cityIdPredicate = criteriaBuilder.equal(root.get("cityId"), cityId);
                         predicateList.add(cityIdPredicate);
@@ -411,6 +351,18 @@ public class GarbageUserService {
                         Predicate villageIdPredicate = criteriaBuilder.equal(root.get("villageId"), villageId);
                         predicateList.add(villageIdPredicate);
                     }
+                }
+                if (!StringUtils.isEmpty(name)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + name + "%");
+                    predicateList.add(predicateName);
+                }
+                if (!StringUtils.isEmpty(phone)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
+                    predicateList.add(predicateName);
+                }
+                if (!StringUtils.isEmpty(idCard)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + idCard + "%");
+                    predicateList.add(predicateName);
                 }
 
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
@@ -553,11 +505,11 @@ public class GarbageUserService {
         return responseData;
     }
 
-    public ResponsePageData residentList(String name, String phone, String idCard, String eNo, String value,
+    public ResponsePageData residentList(String name, String phone, String idCard, String eNo,
                                      Integer provinceId, Integer cityId, Integer countryId, Integer townId,
                                      Integer villageId, String roleCode, String jwt, Integer pageNo,
                                      Integer pageSize, String[] orderBys) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize, getCollectorSort(orderBys));
+        Pageable pageable = PageRequest.of(pageNo -1, pageSize, getCollectorSort(orderBys));
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
@@ -623,7 +575,7 @@ public class GarbageUserService {
                 }
                 if (roleCodeList.contains("PROVINCE_ADMIN")){
                     //省
-                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), provinceId);
                     predicateList.add(predicate);
                     if (cityId !=null) {
                         Predicate cityIdPredicate = criteriaBuilder.equal(root.get("cityId"), cityId);
@@ -643,40 +595,34 @@ public class GarbageUserService {
                     }
                 }
                 if (!StringUtils.isEmpty(name)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + value + "%");
+                    Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + name + "%");
                     predicateList.add(predicateName);
                 }
                 if (!StringUtils.isEmpty(phone)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + value + "%");
+                    Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
                     predicateList.add(predicateName);
                 }
                 if (!StringUtils.isEmpty(idCard)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + value + "%");
+                    Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + idCard + "%");
                     predicateList.add(predicateName);
                 }
                 if (!StringUtils.isEmpty(eNo)){
-                    Root subRoot = criteriaQuery.from(GarbageENoEntity.class);
                     Join< GarbageUserEntity, GarbageENoEntity> eNoJoin = root.join("eNos", JoinType.INNER);
-//                    eNoJoin.on(criteriaBuilder.equal(root.get("id"), subRoot.get("userId")));
-//                    Predicate equal = criteriaBuilder.equal(eNoJoin.get("userId").as(Integer.class), root.get("id"));
-                    Predicate eNoPredicate = criteriaBuilder.equal(subRoot.get("eNo"), value);
+                    Predicate eNoPredicate = criteriaBuilder.equal(eNoJoin.get("eNo"), eNo);
                     predicateList.add(eNoPredicate);
                 }
-                Root roleRoot = criteriaQuery.from(GarbageRoleEntity.class);
                 Join<GarbageUserEntity, GarbageRoleEntity> roleEntityJoin = root.join("roles", JoinType.INNER);
                 if (!StringUtils.isEmpty(roleCode) && roleCode.equals("0")){
                     //所有
                     List<String> roleList = new ArrayList<>();
                     roleList.add("RESIDENT");
                     roleList.add("COLLECTOR");
-                    Predicate predicateIn = roleRoot.get("roleCode").in(roleList);
+                    Predicate predicateIn = roleEntityJoin.get("roleCode").in(roleList);
                     predicateList.add(predicateIn);
                 } else {
-                    Predicate rolePredicate = criteriaBuilder.equal(roleRoot.get("roleCode"), value);
+                    Predicate rolePredicate = criteriaBuilder.equal(roleEntityJoin.get("roleCode"), roleCode);
                     predicateList.add(rolePredicate);
                 }
-
-
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
         }, pageable);
@@ -699,6 +645,7 @@ public class GarbageUserService {
             dto.setGarbageUserEntity(user);
             dto.setHeaderImage(map.get(user.getId() + "-" + Constants.image.HEADER.name()));
             dto.setqRCode(map.get(user.getId() + "-" + Constants.image.QRCODE.name()));
+            dto.seteNos(user.geteNos().stream().map(noEntity-> noEntity.geteNo()).collect(Collectors.toList()));
             dtos.add(dto);
         });
         ResponsePageData pageData = new ResponsePageData();

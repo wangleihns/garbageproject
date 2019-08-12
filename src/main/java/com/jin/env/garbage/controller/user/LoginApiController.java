@@ -147,13 +147,13 @@ public class LoginApiController {
     }
 
     @RequestMapping(value = "residentList", method = RequestMethod.GET)
-    public ResponseData residentList(String name, String phone, String idCard, String eNo, String value,Integer provinceId,
+    public ResponseData residentList(String name, String phone, String idCard, String eNo, Integer provinceId,
                                      Integer cityId, Integer countryId,  Integer townId, Integer villageId,
                                      String roleCode, String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
-        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, value, provinceId, cityId, countryId, townId, villageId, roleCode, jwt, pageNo, pageSize, orderBys);
+        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, roleCode, jwt, pageNo, pageSize, orderBys);
         return responseData;
     }
 }
