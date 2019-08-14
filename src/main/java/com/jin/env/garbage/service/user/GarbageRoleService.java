@@ -230,4 +230,50 @@ public class GarbageRoleService {
         }
         return responseData;
     }
+
+    public ResponseData getCommunityList(Integer placeId) {
+        ResponseData responseData = new ResponseData();
+        List<GarbageResourceEntity> communityList = garbageResourceDao.findBySupIdAndFtType(placeId, "community");
+        responseData.setData(communityList);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("获取小区资源成功");
+        return  responseData;
+    }
+
+    @Transactional
+    public ResponseData addCommunity(Integer placeId, String communityName) {
+        ResponseData responseData = new ResponseData();
+        GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
+        resourceEntity.setName(communityName);
+        resourceEntity.setSeq(1);
+        resourceEntity.setSupId(placeId);
+        try {
+            garbageResourceDao.save(resourceEntity);
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("添加小区资源成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
+            responseData.setMsg("添加失败");
+        }
+        return responseData;
+    }
+
+    @Transactional
+    public ResponseData addRoleForCommunity(String roleCode, String roleName, Boolean isAdmin) {
+        GarbageRoleEntity roleEntity = new GarbageRoleEntity();
+        ResponseData responseData = new ResponseData();
+        roleEntity.setRoleCode(roleCode);
+        roleEntity.setRoleName(roleName);
+        if (isAdmin) {
+            roleEntity.setRoleDesc("COMMUNITY_ADMIN");
+        } else {
+            roleEntity.setRoleDesc("COMMUNITY_REMARK");
+        }
+        roleEntity.setStatus(Constants.dataType.ENABLE.getType());
+        garbageRoleDao.save(roleEntity);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("添加小区资源成功");
+        return responseData;
+    }
 }

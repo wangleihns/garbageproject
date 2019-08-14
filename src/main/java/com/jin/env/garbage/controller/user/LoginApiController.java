@@ -115,6 +115,21 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 查看收集员或者评分员
+     * @param name
+     * @param phone
+     * @param idCard
+     * @param value
+     * @param provinceId
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param orderBys
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "collectorList", method = RequestMethod.GET)
     public ResponsePageData collectorList(String name, String phone, String idCard, String value, Integer provinceId,
                                           Integer cityId, Integer countryId, Integer townId, Integer villageId,
@@ -149,11 +164,11 @@ public class LoginApiController {
     @RequestMapping(value = "residentList", method = RequestMethod.GET)
     public ResponseData residentList(String name, String phone, String idCard, String eNo, Integer provinceId,
                                      Integer cityId, Integer countryId,  Integer townId, Integer villageId,
-                                     String roleCode, String[] orderBys, HttpServletRequest request){
+                                     String checkType, String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
-        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, roleCode, jwt, pageNo, pageSize, orderBys);
+        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, checkType, jwt, pageNo, pageSize, orderBys);
         return responseData;
     }
 }

@@ -135,10 +135,39 @@ public class Constants {
         private String type;
     }
 
+    /**
+     * 垃圾类型
+     */
+    public enum garbageType{
+        KITCHEN_GARBAGE(1),
+        OTHER_GARBAGE(2);
+        private Integer type;
 
-    public enum deviceStatus{
-        START,
-        STOP
+        garbageType(Integer type) {
+            this.type = type;
+        }
+
+        public Integer getType() {
+            return type;
+        }
+    }
+
+    /**
+     * 垃圾质量
+     */
+    public enum garbageQuality{
+        QUALIFIED(1),
+        NOTQUALIFIED(2),
+        EMPTY(3);
+        private Integer type;
+
+        garbageQuality(Integer type) {
+            this.type = type;
+        }
+
+        public Integer getType() {
+            return type;
+        }
     }
 
     public enum activeStatus {

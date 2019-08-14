@@ -273,6 +273,8 @@ public class GarbageUserService {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
+        List<Integer> roleIds = roleEntityList.stream().map(role-> role.getId()).collect(Collectors.toList());
+        List<Integer> communityIds = garbageResourceDao.getAllCommunityIdsByRoleIds(roleIds);
         List<String> roleCodeList = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
         Page<GarbageUserEntity> page = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
             @Override
@@ -364,7 +366,11 @@ public class GarbageUserService {
                     Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + idCard + "%");
                     predicateList.add(predicateName);
                 }
-
+                //查看小区评分员
+                if (communityIds.size() > 0){
+                    Predicate communityPredicate = root.get("communityId").in(communityIds);
+                    predicateList.add(communityPredicate);
+                }
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
         }, pageable);
@@ -506,14 +512,18 @@ public class GarbageUserService {
     }
 
     public ResponsePageData residentList(String name, String phone, String idCard, String eNo,
-                                     Integer provinceId, Integer cityId, Integer countryId, Integer townId,
-                                     Integer villageId, String roleCode, String jwt, Integer pageNo,
-                                     Integer pageSize, String[] orderBys) {
+                                         Integer provinceId, Integer cityId, Integer countryId, Integer townId,
+                                         Integer villageId, String roleCode, String jwt, Integer pageNo,
+                                         Integer pageSize, String[] orderBys) {
         Pageable pageable = PageRequest.of(pageNo -1, pageSize, getCollectorSort(orderBys));
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
+        List<Integer> roleIds = roleEntityList.stream().map(role-> role.getId()).collect(Collectors.toList());
         List<String> roleCodeList = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+
+        List<Integer> communityIds = garbageResourceDao.getAllCommunityIdsByRoleIds(roleIds);
+
         Page<GarbageUserEntity> page = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
             @Nullable
             @Override
@@ -623,6 +633,13 @@ public class GarbageUserService {
                     Predicate rolePredicate = criteriaBuilder.equal(roleEntityJoin.get("roleCode"), roleCode);
                     predicateList.add(rolePredicate);
                 }
+                //查看小区居民
+                if (communityIds.size() > 0){
+                    Predicate communityPredicate = root.get("communityId").in(communityIds);
+                    predicateList.add(communityPredicate);
+                }
+
+
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
         }, pageable);

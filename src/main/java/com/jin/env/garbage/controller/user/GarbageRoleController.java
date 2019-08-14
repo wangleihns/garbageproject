@@ -31,4 +31,9 @@ public class GarbageRoleController {
         ResponseData responseData =garbageRoleService.updateRoleStatus(roleId, status);
         return responseData;
     }
+
+    public ResponseData addRoleForCommunity(String roleCode, String roleName, Boolean isAdmin){
+        ResponseData responseData =garbageRoleService.addRoleForCommunity(roleCode, roleName, isAdmin);
+        return responseData;
+    }
 }

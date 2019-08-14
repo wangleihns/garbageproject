@@ -21,6 +21,8 @@ public class TokenFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         logger.info(request.getRequestURI());
+        String cookie = request.getHeader("Cookie");
+        logger.info(cookie);
         filterChain.doFilter(servletRequest, servletResponse);
     }
 

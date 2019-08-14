@@ -11,6 +11,8 @@ public interface GarbageRoleDao extends JpaRepository<GarbageRoleEntity, Integer
 
     GarbageRoleEntity findByRoleCode(String roleCode);
 
-    @Query(nativeQuery = true, value = "select * FROM  garbage_role role INNER JOIN  garbage_user_role urole ON role.id = urole.role_id  AND  urole.user_id= ?1")
+    @Query(nativeQuery = true, value = "select * FROM  garbage_role role " +
+            "INNER JOIN  garbage_user_role urole ON role.id = urole.role_id  " +
+            "AND  urole.user_id= ?1 AND role.status = 1")
     List<GarbageRoleEntity> findByUserId(Integer userId);
 }

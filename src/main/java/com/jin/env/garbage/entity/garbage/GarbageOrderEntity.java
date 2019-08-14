@@ -1,16 +1,13 @@
 package com.jin.env.garbage.entity.garbage;
 
+import com.jin.env.garbage.entity.base.BaseEntity;
+
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "garbage_order", schema = "garbage_db", catalog = "")
-public class GarbageOrderEntity {
-    private int id;
-    private Integer createId;
-    private Long createTime;
-    private Integer updateId;
-    private Long updateTime;
+public class GarbageOrderEntity extends BaseEntity{
     private Integer orderNo;
     private String goodsName;
     private Integer goodsCount;
@@ -21,55 +18,6 @@ public class GarbageOrderEntity {
     private Long addTime;
     private Integer collectStatus;
 
-    @Id
-    @Column(name = "id")
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    @Basic
-    @Column(name = "create_id")
-    public Integer getCreateId() {
-        return createId;
-    }
-
-    public void setCreateId(Integer createId) {
-        this.createId = createId;
-    }
-
-    @Basic
-    @Column(name = "create_time")
-    public Long getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Long createTime) {
-        this.createTime = createTime;
-    }
-
-    @Basic
-    @Column(name = "update_id")
-    public Integer getUpdateId() {
-        return updateId;
-    }
-
-    public void setUpdateId(Integer updateId) {
-        this.updateId = updateId;
-    }
-
-    @Basic
-    @Column(name = "update_time")
-    public Long getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Long updateTime) {
-        this.updateTime = updateTime;
-    }
 
     @Basic
     @Column(name = "order_no")
