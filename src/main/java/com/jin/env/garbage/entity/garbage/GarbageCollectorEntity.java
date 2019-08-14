@@ -12,7 +12,7 @@ public class GarbageCollectorEntity extends BaseEntity{
     private String collectorName;
     private Double garbageWeight;
     private Integer garbagePoint;
-    private String garbageQuality;
+    private Integer garbageQuality;
     private String garbageImage;
     private Long collectDate;
     private String eNo;
@@ -71,11 +71,11 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     @Basic
     @Column(name = "garbage_quality")
-    public String getGarbageQuality() {
+    public Integer getGarbageQuality() {
         return garbageQuality;
     }
 
-    public void setGarbageQuality(String garbageQuality) {
+    public void setGarbageQuality(Integer garbageQuality) {
         this.garbageQuality = garbageQuality;
     }
 

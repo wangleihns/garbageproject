@@ -129,8 +129,14 @@ public class Constants {
         HEADER,
         //头像略缩图
         HEADER_SMALL,
-
-        QRCODE;
+        /**
+         * 二维码
+         */
+        QRCODE,
+        /**
+         * 垃圾图片
+         */
+        GARBAGE_IMAGE;
 
         private String type;
     }
@@ -139,7 +145,13 @@ public class Constants {
      * 垃圾类型
      */
     public enum garbageType{
+        /**
+         * 厨余垃圾
+         */
         KITCHEN_GARBAGE(1),
+        /**
+         * 其他垃圾
+         */
         OTHER_GARBAGE(2);
         private Integer type;
 
@@ -156,8 +168,17 @@ public class Constants {
      * 垃圾质量
      */
     public enum garbageQuality{
+        /**
+         * 合格
+         */
         QUALIFIED(1),
+        /**
+         * 不合格
+         */
         NOTQUALIFIED(2),
+        /**
+         * 空桶
+         */
         EMPTY(3);
         private Integer type;
 
@@ -170,9 +191,50 @@ public class Constants {
         }
     }
 
-    public enum activeStatus {
-        ACTIVE,
-        NO_ACTIVE
+    /**
+     * 垃圾来源客户端
+     */
+    public enum garbageFrom{
+        /**
+         * 人工环卫车
+         */
+        GARBAGETRUCK(1),
+        /**
+         * 自动环卫车
+         */
+        AUTOTRUCK(2);
+        private Integer type;
+
+        garbageFrom(Integer type) {
+            this.type = type;
+        }
+
+        public Integer getType() {
+            return type;
+        }
+    }
+
+    /**
+     * 根据地区设定垃圾质量分类积分
+     */
+    public enum garbagePointFromType {
+        /**
+         * 农村
+         */
+        TOWN(0),
+        /**
+         * 小区
+         */
+        COMMUNITY(1);
+        private Integer type;
+
+        garbagePointFromType(Integer type) {
+            this.type = type;
+        }
+
+        public Integer getType() {
+            return type;
+        }
     }
 
     public enum taskStatus {

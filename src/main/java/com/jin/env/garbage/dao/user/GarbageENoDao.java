@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface GarbageENoDao extends JpaRepository<GarbageENoEntity, Integer>, JpaSpecificationExecutor<GarbageENoEntity> {
     List<GarbageENoEntity> findByUserId(Integer userId);
+
+    GarbageENoEntity findByENo(String eno);
 }
