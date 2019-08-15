@@ -90,4 +90,4 @@ spring:
     auto: true
 
 logging:
-  config: src/main/resources/logback-spring.xml
+  config: classpath:logback-spring.xml

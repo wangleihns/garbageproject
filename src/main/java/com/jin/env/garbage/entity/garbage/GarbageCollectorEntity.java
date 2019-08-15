@@ -15,6 +15,7 @@ public class GarbageCollectorEntity extends BaseEntity{
     private Integer garbageQuality;
     private String garbageImage;
     private Long collectDate;
+    private Integer garbageType;
     private String eNo;
     private Integer userId;
     private Integer villageId;
@@ -27,6 +28,8 @@ public class GarbageCollectorEntity extends BaseEntity{
     private Integer townId;
     private Integer garbageFromType;
     private Integer communityId;
+
+    private Boolean isCheck; //true 审核 false 未审核
 
 
     @Basic
@@ -97,6 +100,16 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     public void setCollectDate(Long collectDate) {
         this.collectDate = collectDate;
+    }
+
+    @Basic
+    @Column(name = "garbage_type")
+    public Integer getGarbageType() {
+        return garbageType;
+    }
+
+    public void setGarbageType(Integer garbageType) {
+        this.garbageType = garbageType;
     }
 
     @Basic
@@ -217,6 +230,16 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     public void setCommunityId(Integer communityId) {
         this.communityId = communityId;
+    }
+
+    @Basic
+    @Column(name = "is_check")
+    public Boolean getCheck() {
+        return isCheck;
+    }
+
+    public void setCheck(Boolean check) {
+        isCheck = check;
     }
 
     @Override

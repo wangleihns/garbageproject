@@ -29,10 +29,36 @@ public class GarbageCollectorController {
      * @param imageId
      * @return
      */
-    @RequestMapping(value = "api/v1/collector/", method = RequestMethod.POST)
+    @RequestMapping(value = "addGarbageByCollector", method = RequestMethod.POST)
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
         ResponseData responseData = garbageCollectorService.addGarbageByCollector(eNo, quality, weight, imageId, jwt);
+        return  responseData;
+    }
+
+    /**
+     *  无人值守机器上传
+     * @param eNo
+     * @param weight
+     * @param imageId
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "addGarbageByAuto", method = RequestMethod.POST)
+    public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt);
+        return  responseData;
+    }
+
+
+
+    @RequestMapping(value = "communityGarbageList", method = RequestMethod.POST)
+    public ResponseData communityGarbageList(Integer pageNo, Integer pageSize, boolean isCheck, double weight, Integer point,
+                                             Integer quality, String eNo, String name, String phone, Integer garbageType, String[] orderBys, HttpServletRequest request ){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageCollectorService.communityGarbageList(pageNo,pageSize, isCheck, weight, point,
+                quality, eNo, name, phone, garbageType, jwt,  orderBys);
         return  responseData;
     }
 }
