@@ -2,6 +2,7 @@ package com.jin.env.garbage.controller.garbage;
 
 import com.jin.env.garbage.service.garbage.GarbageCollectorService;
 import com.jin.env.garbage.utils.ResponseData;
+import com.jin.env.garbage.utils.ResponsePageData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,11 @@ import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
-@Controller
+@RestController
 @RequestMapping(value = "api/v1/collector/")
 public class GarbageCollectorController {
     private Logger logger = LoggerFactory.getLogger(GarbageCollectorController.class);
@@ -53,12 +55,19 @@ public class GarbageCollectorController {
 
 
 
-    @RequestMapping(value = "communityGarbageList", method = RequestMethod.POST)
-    public ResponseData communityGarbageList(Integer pageNo, Integer pageSize, boolean isCheck, double weight, Integer point,
+    @RequestMapping(value = "communityGarbageList", method = RequestMethod.GET)
+    public ResponseData communityGarbageList(Integer pageNo, Integer pageSize, Boolean isCheck, Double weight, Integer point,
                                              Integer quality, String eNo, String name, String phone, Integer garbageType, String[] orderBys, HttpServletRequest request ){
         String jwt = request.getHeader("Authorization").split(": ")[1];
-        ResponseData responseData = garbageCollectorService.communityGarbageList(pageNo,pageSize, isCheck, weight, point,
-                quality, eNo, name, phone, garbageType, jwt,  orderBys);
+        garbageCollectorService.tst();
+        ResponsePageData responseData = garbageCollectorService.communityGarbageList(pageNo,pageSize, isCheck, weight, point, quality, eNo, name, phone, garbageType, jwt,  orderBys);
+        return  responseData;
+    }
+
+    @RequestMapping(value = "communityGarbageList", method = RequestMethod.POST)
+    public ResponseData remarkCommunityGarbage(Integer id, Integer quality, Integer garbageType, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageCollectorService.remarkCommunityGarbage(id, quality, garbageType,jwt);
         return  responseData;
     }
 }

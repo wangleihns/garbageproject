@@ -41,6 +41,7 @@ public class GarbageUserEntity extends BaseEntity{
     private Integer villageId;
     private String villageName;
     private String address;
+    private Integer communityId;
 
     private Set<GarbageRoleEntity> roles=new HashSet<>(); // 有序的关联对象集合
 
@@ -339,6 +340,16 @@ public class GarbageUserEntity extends BaseEntity{
 
     public void seteNos(List<GarbageENoEntity> eNos) {
         this.eNos = eNos;
+    }
+
+    @Basic
+    @Column(name = "community_id")
+    public Integer getCommunityId() {
+        return communityId;
+    }
+
+    public void setCommunityId(Integer communityId) {
+        this.communityId = communityId;
     }
 
     @Override

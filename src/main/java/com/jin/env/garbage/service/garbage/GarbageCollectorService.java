@@ -18,6 +18,7 @@ import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.ResponseData;
+import com.jin.env.garbage.utils.ResponsePageData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,6 +50,7 @@ public class GarbageCollectorService {
 
     @Autowired
     private GarbageENoDao garbageENoDao;
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -150,7 +149,7 @@ public class GarbageCollectorService {
         garbageImageDao.save(imageEntity);
         GarbageUserPointEntity userPointEntity = garbageUserPointDao.findByUserId(eNoEntity.getUserId());
         GarbageUserEntity userEntity = garbageUserDao.findById(eNoEntity.getUserId()).get();
-        if (userPointEntity == null) {
+        if (userPointEntity != null) {
             userPointEntity.setPoint(userPointEntity.getPoint() + pointScore);
         } else {
             userPointEntity = new GarbageUserPointEntity();
@@ -223,18 +222,37 @@ public class GarbageCollectorService {
         return responseData;
     }
 
-    public ResponseData communityGarbageList(Integer pageNo, Integer pageSize, boolean isCheck, Double weight,
+    public ResponsePageData communityGarbageList(Integer pageNo, Integer pageSize, Boolean isCheck, Double weight,
                                              Integer point, Integer quality, String eNo, String name, String phone,
                                              Integer garbageType, String jwt ,String[] orderBys) {
         Integer sub = jwtUtil.getSubject(jwt);
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
+        Boolean flag = true;
+        for (GarbageRoleEntity roleEntity:roleEntityList) {
+            if ("COMMUNITY_REMARK".equals(roleEntity.getRoleDesc())){
+                //评分员可以平分
+                flag = true;
+            }
+            if ("COMMUNITY_ADMIN".equals(roleEntity.getRoleDesc())){
+                //小区管理员可以查看
+                flag = true;
+            }
+        }
+        if (!flag){
+            throw new RuntimeException("没有权限访问");
+        }
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, getCommunityGarbageSort(orderBys));
         Page<GarbageCollectorEntity> page = garbageCollectorDao.findAll(new Specification<GarbageCollectorEntity>() {
             @Override
             public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                List<Predicate> predicateList = new ArrayList<>();
-                Predicate isCheckPredicate = criteriaBuilder.equal(root.get("isCheck"), isCheck);
-                predicateList.add(isCheckPredicate);
+               if (isCheck){
+                   Predicate isCheckPredicate = criteriaBuilder.isTrue(root.get("check"));
+                   predicateList.add(isCheckPredicate);
+               } else {
+                   Predicate isCheckPredicate = criteriaBuilder.isFalse(root.get("check"));
+                   predicateList.add(isCheckPredicate);
+               }
                 if (weight != null) {
                     Predicate weightPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("garbageWeight"), weight);
                     predicateList.add(weightPredicate);
@@ -243,7 +261,7 @@ public class GarbageCollectorService {
                     Predicate pointPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("garbagePoint"), point);
                     predicateList.add(pointPredicate);
                 }
-                if (garbageType != 0){
+                if (garbageType!= null && garbageType != 0){
                     //厨余垃圾--1    其他垃圾--2  所有-- 0
                     Predicate garbageTypePredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("garbageType"), garbageType);
                     predicateList.add(garbageTypePredicate);
@@ -271,12 +289,38 @@ public class GarbageCollectorService {
                     Predicate eNoPredicate = criteriaBuilder.equal(root.get("eNo"), eNo);
                     predicateList.add(eNoPredicate);
                 }
-                if (StringUtils.isEmpty(name) ){}
+                if (!StringUtils.isEmpty(name) || !StringUtils.isEmpty(phone)){
+                    List<Predicate> predicates = new ArrayList<>();
+                    Subquery subquery = criteriaQuery.subquery(GarbageUserEntity.class);
+                    Root subRoot = subquery.from(GarbageUserEntity.class);
+                    subquery.select(subRoot.get("id"));
+                    Predicate predicate = criteriaBuilder.equal(root.get("userId"), subRoot.get("id"));
+                    predicates.add(predicate);
+                    if (!StringUtils.isEmpty(name)){
+                        Predicate namePredicate  = criteriaBuilder.like(subRoot.get("name"), "%" + name + "%");
+                        predicates.add(namePredicate);
+                    }
+                    if (!StringUtils.isEmpty(phone)){
+                        Predicate phonePredicate  = criteriaBuilder.like(subRoot.get("phone"), "%" + phone + "%");
+                        predicates.add(phonePredicate);
+                    }
+                    Predicate exists = criteriaBuilder.exists(subquery.where(predicates.toArray(new Predicate[predicates.size()])));
+                    predicateList.add(exists);
+                }
 
-                return null;
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
         }, pageable);
-        return null;
+        ResponsePageData responsePageData = new ResponsePageData();
+        responsePageData.setPageNo(pageNo);
+        responsePageData.setPageSize(pageSize);
+        responsePageData.setCount(page.getTotalPages());
+        responsePageData.setLastPage(page.isLast());
+        responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setData(page.getContent());
+        responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
+        responsePageData.setMsg("列表查询成功");
+        return responsePageData;
     }
     private Sort getCommunityGarbageSort(String[] orderBys){
         Sort sort = null;
@@ -313,5 +357,89 @@ public class GarbageCollectorService {
             }).collect(Collectors.toList()));
         }
         return sort;
+    }
+
+    public void tst(){
+        System.out.println(222);
+    }
+
+    @Transactional
+    public ResponseData remarkCommunityGarbage(Integer id, Integer quality,Integer garbageType, String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        //评分员
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        Boolean flag = false;
+        for (GarbageRoleEntity roleEntity:roleEntities) {
+            if ("COMMUNITY_REMARK".equals(roleEntity.getRoleDesc())){
+                //评分员可以平分
+                flag = true;
+            }
+            if ("COMMUNITY_ADMIN".equals(roleEntity.getRoleDesc())){
+                //小区管理员可以查看
+                flag = true;
+            }
+        }
+        if (!flag){
+            throw new RuntimeException("没有权限访问");
+        }
+        Integer communityId = userEntity.getCommunityId();
+        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId, Constants.garbagePointFromType.COMMUNITY.getType());
+        Integer pointScore = 0;
+        Constants.garbageQuality garbageQuality = null;
+        switch (quality){
+            case 1:
+                garbageQuality = Constants.garbageQuality.QUALIFIED;
+                if (qualityPointEntity == null){
+                    pointScore = pointScoreForQualified;
+                } else {
+                    pointScore = qualityPointEntity.getQualified();
+                }
+                break;
+            case 2:
+                garbageQuality = Constants.garbageQuality.NOTQUALIFIED;
+                if (qualityPointEntity == null){
+                    pointScore = pointScoreForNoQualified;
+                } else {
+                    pointScore = qualityPointEntity.getNoQualified();
+                }
+                break;
+            default:
+                garbageQuality = Constants.garbageQuality.EMPTY;
+                if (qualityPointEntity == null){
+                    pointScore = pointScoreForEmpty;
+                } else {
+                    pointScore = qualityPointEntity.getEmpty();
+                }
+                break;
+        }
+        GarbageCollectorEntity collectorEntity = garbageCollectorDao.findById(id).get();
+        collectorEntity.setGarbageQuality(garbageQuality.getType());
+        collectorEntity.setGarbagePoint(pointScore);
+        collectorEntity.setGarbageType(garbageType);
+        garbageCollectorDao.save(collectorEntity);
+
+        GarbageUserPointEntity userPointEntity = garbageUserPointDao.findByUserId(collectorEntity.getUserId());
+        if (userPointEntity != null) {
+            userPointEntity.setPoint(userPointEntity.getPoint() + pointScore);
+        } else {
+            userPointEntity = new GarbageUserPointEntity();
+            userPointEntity.setUserId(collectorEntity.getUserId());
+            userPointEntity.setPoint(pointScore);
+            userPointEntity.setProvinceName(userEntity.getProvinceName());
+            userPointEntity.setCityName(userEntity.getCityName());
+            userPointEntity.setCountryName(userEntity.getDistrictName());
+            userPointEntity.setTownName(userEntity.getTownName());
+            userPointEntity.setVillageName(userEntity.getVillageName());
+            userPointEntity.setAddress(userEntity.getAddress());
+            userPointEntity.setPhone(userEntity.getPhone());
+        }
+        //计算总积分
+        garbageUserPointDao.save(userPointEntity);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("垃圾分类质量判定成功");
+        logger.info("垃圾分类质量判定成功");
+        return responseData;
     }
 }
