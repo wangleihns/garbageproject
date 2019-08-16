@@ -43,6 +43,8 @@ public class GarbageUserEntity extends BaseEntity{
     private String address;
     private Integer communityId;
 
+    private Integer fromType;
+
     private Set<GarbageRoleEntity> roles=new HashSet<>(); // 有序的关联对象集合
 
     private List<GarbageENoEntity> eNos;
@@ -350,6 +352,16 @@ public class GarbageUserEntity extends BaseEntity{
 
     public void setCommunityId(Integer communityId) {
         this.communityId = communityId;
+    }
+
+    @Basic
+    @Column(name = "from_type")
+    public Integer getFromType() {
+        return fromType;
+    }
+
+    public void setFromType(Integer fromType) {
+        this.fromType = fromType;
     }
 
     @Override

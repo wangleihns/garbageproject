@@ -189,6 +189,7 @@ public class GarbageUserService {
         userEntity.setVillageId(villageId);
         userEntity.setVillageName(villageName);
         userEntity.setAddress(address);
+        userEntity.setFromType(Constants.garbageFromType.TOWN.getType());
         GarbageRoleEntity roleEntity = null;
         if (!isCollector){
             //普通居民

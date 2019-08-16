@@ -198,11 +198,11 @@ public class Constants {
         /**
          * 人工环卫车
          */
-        GARBAGETRUCK(1),
+        GARBAGETRUCK(0),
         /**
          * 自动环卫车
          */
-        AUTOTRUCK(2);
+        AUTOTRUCK(1);
         private Integer type;
 
         garbageFrom(Integer type) {
@@ -217,7 +217,7 @@ public class Constants {
     /**
      * 根据地区设定垃圾质量分类积分
      */
-    public enum garbagePointFromType {
+    public enum garbageFromType {
         /**
          * 农村
          */
@@ -228,7 +228,7 @@ public class Constants {
         COMMUNITY(1);
         private Integer type;
 
-        garbagePointFromType(Integer type) {
+        garbageFromType(Integer type) {
             this.type = type;
         }
 

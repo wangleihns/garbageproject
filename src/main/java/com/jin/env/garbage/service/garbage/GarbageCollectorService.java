@@ -8,6 +8,7 @@ import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
+import com.jin.env.garbage.dto.garbage.CollectorDto;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
@@ -17,6 +18,7 @@ import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.utils.Constants;
+import com.jin.env.garbage.utils.DateFormatUtil;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
 import org.slf4j.Logger;
@@ -108,7 +110,7 @@ public class GarbageCollectorService {
         collectorEntity.setGarbageFromType(Constants.garbageFrom.GARBAGETRUCK.getType());
         collectorEntity.setGarbageWeight(weight);
         Constants.garbageQuality garbageQuality = null;
-        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(villageId, Constants.garbagePointFromType.TOWN.getType());
+        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(villageId, Constants.garbageFromType.TOWN.getType());
         Integer pointScore = 0;
         switch (quality){
             case "1":
@@ -246,7 +248,9 @@ public class GarbageCollectorService {
             @Override
             public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                List<Predicate> predicateList = new ArrayList<>();
-               if (isCheck){
+               Predicate predicateFrom = criteriaBuilder.equal(root.get("garbageFromType"), Constants.garbageFromType.COMMUNITY.getType());
+                predicateList.add(predicateFrom);
+                if (isCheck){
                    Predicate isCheckPredicate = criteriaBuilder.isTrue(root.get("check"));
                    predicateList.add(isCheckPredicate);
                } else {
@@ -384,7 +388,7 @@ public class GarbageCollectorService {
             throw new RuntimeException("没有权限访问");
         }
         Integer communityId = userEntity.getCommunityId();
-        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId, Constants.garbagePointFromType.COMMUNITY.getType());
+        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId, Constants.garbageFromType.COMMUNITY.getType());
         Integer pointScore = 0;
         Constants.garbageQuality garbageQuality = null;
         switch (quality){
@@ -441,5 +445,150 @@ public class GarbageCollectorService {
         responseData.setMsg("垃圾分类质量判定成功");
         logger.info("垃圾分类质量判定成功");
         return responseData;
+    }
+
+    @Transactional
+    public ResponseData getGarbageSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime,
+                                              String type, String phone, String name, String jwt, String[] orderBys, Integer provinceId,
+                                              Integer cityId, Integer countryId, Integer townId, Integer villageId) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        Long start = 0L;
+        Long end = 0L;
+        if ("day".equals(type)){
+            start = DateFormatUtil.parse(startTime,"yyyy-MM-dd").getTime();
+            end = DateFormatUtil.parse(endTime + " 23:59:59", "yyyy-MM-dd HH:mm:ss").getTime();
+        } else if ("month".equals(type)){
+            start = DateFormatUtil.getFirstDateOfMonth(startTime).getTime();
+            end = DateFormatUtil.getLastDateOfMonth(endTime).getTime();
+        }else if ("year".equals(type)){
+            start = DateFormatUtil.getFirstDayOfYear(startTime).getTime();
+            end = DateFormatUtil.getLastDayOfYear(endTime).getTime();
+        }else {
+
+        }
+        List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
+
+        List<String> roles = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, getGarbageSummaryInfoSort(orderBys));
+        Long finalStart = start;
+        Long finalEnd = end;
+
+        Specification specification = new Specification<GarbageCollectorEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicateList = new ArrayList<>();
+                // 0农村  1小区
+                Predicate townPredicate = criteriaBuilder.equal(root.get("garbageFromType"), fromType);
+                predicateList.add(townPredicate);
+                if (!StringUtils.isEmpty(startTime)&& !StringUtils.isEmpty(endTime)){
+                    Predicate predicateStart = criteriaBuilder.greaterThanOrEqualTo(root.<Long>get("collectDate"), finalStart);
+                    Predicate predicateEnd = criteriaBuilder.lessThanOrEqualTo(root.<Long>get("collectDate"), finalEnd);
+                    predicateList.add(predicateStart);
+                    predicateList.add(predicateEnd);
+                }
+                if (!StringUtils.isEmpty(phone)){
+                    Predicate predicatePhone = criteriaBuilder.like(root.get("collectorPhone"), "%" + phone +"%");
+                    predicateList.add(predicatePhone);
+                }
+                if (!StringUtils.isEmpty(name)){
+                    Predicate predicateName = criteriaBuilder.like(root.get("collectorName"), "%" + name +"%");
+                    predicateList.add(predicateName);
+                }
+
+                if (fromType == 1){
+                    //小区
+                    Predicate predicateCommunity = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                    predicateList.add(predicateCommunity);
+                } else {
+                    if (roles.contains("VILLAGE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roles.contains("TOWN_ADMIN")){
+                        Predicate predicateTown = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                        predicateList.add(predicateTown);
+                        if (villageId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    if (roles.contains("COUNTRY_ADMIN")){
+                        Predicate predicateCountry = criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId());
+                        predicateList.add(predicateCountry);
+                        if (townId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("townId"), townId);
+                            predicateList.add(predicate);
+                        }
+                        if (villageId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    if (roles.contains("CITY_ADMIN")){
+                        Predicate predicateCity = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                        predicateList.add(predicateCity);
+                        if (countryId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("countryId"), countryId);
+                            predicateList.add(predicate);
+                        }
+                        if (townId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("townId"), townId);
+                            predicateList.add(predicate);
+                        }
+                        if (villageId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    if (roles.contains("PROVINCE_ADMIN")){
+                        Predicate predicateProvince = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                        predicateList.add(predicateProvince);
+                        if (cityId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("cityId"), cityId);
+                            predicateList.add(predicate);
+                        }
+                        if (countryId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("countryId"), countryId);
+                            predicateList.add(predicate);
+                        }
+                        if (townId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("townId"), townId);
+                            predicateList.add(predicate);
+                        }
+                        if (villageId !=0){
+                            Predicate predicate = criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    Selection alias = criteriaBuilder.sum(root.<Double>get("garbageWeight")).alias("garbageWeight");
+                    criteriaQuery.select(alias);
+                    criteriaQuery.groupBy(root.get("collectorId"));
+                }
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            }
+        };
+        Page<CollectorDto> page = garbageCollectorDao.findAll(specification, pageable);
+        page.getContent().forEach(garbageCollectorEntity -> {
+            System.out.println(garbageCollectorEntity);
+        });
+        return null;
+    }
+
+    private Sort getGarbageSummaryInfoSort(String[] orderBys){
+        Sort sort = null;
+        if (orderBys == null || orderBys.length == 0 ){
+            sort = Sort.by("id").descending();
+        }else {
+            sort =   Sort.by(Arrays.stream(orderBys).map((it) -> {
+                String[] items = it.split(";");
+                String property = "";
+                Sort.Direction direction = null;
+                return new Sort.Order(direction, property);
+            }).collect(Collectors.toList()));
+        }
+        return sort;
     }
 }

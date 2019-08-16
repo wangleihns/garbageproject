@@ -10,6 +10,7 @@ import java.util.Objects;
 public class GarbageCollectorEntity extends BaseEntity{
     private Integer collectorId;
     private String collectorName;
+    private String collectorPhone;
     private Double garbageWeight;
     private Integer garbagePoint;
     private Integer garbageQuality;
@@ -50,6 +51,15 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     public void setCollectorName(String collectorName) {
         this.collectorName = collectorName;
+    }
+    @Basic
+    @Column(name = "collector_phone")
+    public String getCollectorPhone() {
+        return collectorPhone;
+    }
+
+    public void setCollectorPhone(String collectorPhone) {
+        this.collectorPhone = collectorPhone;
     }
 
     @Basic

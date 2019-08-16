@@ -101,6 +101,35 @@ public class DateFormatUtil {
         return calendar.get(Calendar.MONTH);
     }
 
+    public static Date getFirstDayOfYear(String dateString){
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(Calendar.YEAR, Integer.valueOf(dateString));
+        Date currYearFirst = calendar.getTime();
+        return currYearFirst;
+    }
+    public static Date getLastDayOfYear(String dateString){
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(Calendar.YEAR, Integer.valueOf(dateString));
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER);
+        calendar.set(Calendar.DAY_OF_MONTH, 31);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        Date currYearLast = calendar.getTime();
+        return currYearLast;
+    }
+
+    public static Date getFirstTimeOfDay(String dateString){
+        Date date = parse(dateString + " 00:00:00", "yyyy-MM-dd HH:mm:ss");
+        return date;
+    }
+
+    public static Date getLastTimeOfDay(String dateString){
+        Date date = parse(dateString + " 23:59:59", "yyyy-MM-dd HH:mm:ss");
+        return date;
+    }
 
 
     public static void main(String[] args) {
@@ -108,5 +137,7 @@ public class DateFormatUtil {
         getLastDateOfMonth("2018-08");
         getFirstDayOfCurrentMonth();
         System.out.println(getFirstDayOfCurrentYear());
+        System.out.println(getFirstDayOfYear("2019"));
+        System.out.println(getLastDayOfYear("2019"));
     }
 }
