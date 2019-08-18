@@ -93,12 +93,65 @@ public class GarbageCollectorController {
         ResponseData responseData = garbageCollectorService.remarkCommunityGarbage(id, quality, garbageType,jwt);
         return  responseData;
     }
-    @RequestMapping(value = "getGarbageSummaryInfo", method = RequestMethod.GET)
-    public ResponseData getGarbageSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
+
+    /**
+     * 收集员数据统报表
+     * @param pageNo
+     * @param pageSize
+     * @param startTime
+     * @param endTime
+     * @param type
+     * @param phone
+     * @param name
+     * @param orderBys
+     * @param provinceId
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "getGarbageCollectorSummaryInfo", method = RequestMethod.GET)
+    public ResponseData getGarbageCollectorSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
                                               String phone, String name, String[] orderBys, Integer provinceId,
                                               Integer cityId, Integer countryId, Integer townId, Integer villageId,  HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
-        ResponseData responseData = garbageCollectorService.getGarbageSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, provinceId, cityId, countryId, townId, villageId);
+        ResponseData responseData = garbageCollectorService.getGarbageCollectorSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, provinceId, cityId, countryId, townId, villageId);
         return  responseData;
     }
+
+    /**
+     * 收集统计报表分析
+     * @param pageNo
+     * @param pageSize
+     * @param startTime
+     * @param endTime
+     * @param type
+     * @param orderBys
+     * @param provinceId
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "getGarbageCollectSummaryInfoInPlace", method = RequestMethod.GET)
+    public ResponseData getGarbageCollectSummaryInfoInPlace(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
+                                      String[] orderBys, Integer provinceId, Integer cityId, Integer countryId, Integer townId, Integer villageId,  HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfoInPlace(pageNo, pageSize, startTime, endTime, type, provinceId,
+                cityId, countryId, townId, villageId, orderBys, jwt);
+        return  responseData;
+    }
+
+
+    @RequestMapping(value = "getNotSentGarbageInfoToSystemUser", method = RequestMethod.GET)
+    public ResponseData getNotSentGarbageInfoToSystemUser(Integer pageNo, Integer pageSize, String startTime, String endTime,String phone, String name, String[] orderBys , HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageCollectorService.getNotSentGarbageInfoToSystemUser(pageNo, pageSize, startTime, endTime, phone, name, jwt, orderBys);
+        return  responseData;
+    }
+
 }
