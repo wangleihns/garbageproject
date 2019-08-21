@@ -1,5 +1,6 @@
 package com.jin.env.garbage.dao.user;
 
+import com.jin.env.garbage.dto.user.UserCountInMonth;
 import com.jin.env.garbage.dto.user.UserVillageDto;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,7 @@ public interface GarbageUserDao extends JpaRepository<GarbageUserEntity, Integer
 
     @Query(value = "select new com.jin.env.garbage.dto.user.UserVillageDto(u.id, u.villageName) from GarbageUserEntity u where u.id in (?1)")
     List<UserVillageDto> getUserVillageNameByIds(List ids);
+
+    @Query(value =  "select new com.jin.env.garbage.dto.user.UserCountInMonth(u.month, count(u.id)) from GarbageUserEntity u where u.year = ?1 group by u.month")
+    List<UserCountInMonth> countUserInMonth(Integer year);
 }

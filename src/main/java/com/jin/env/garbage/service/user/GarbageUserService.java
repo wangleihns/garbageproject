@@ -1,6 +1,7 @@
 package com.jin.env.garbage.service.user;
 
 import com.jin.env.garbage.controller.user.LoginApiController;
+import com.jin.env.garbage.dao.garbage.GarbageCollectorDao;
 import com.jin.env.garbage.dao.image.GarbageImageDao;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
@@ -8,6 +9,9 @@ import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.user.GarbageUserDto;
 import com.jin.env.garbage.dto.user.QRcodeDto;
+import com.jin.env.garbage.dto.user.SummaryCountInfo;
+import com.jin.env.garbage.dto.user.UserCountInMonth;
+import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
@@ -66,6 +70,9 @@ public class GarbageUserService {
     private JwtUtil jwtUtil;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private GarbageCollectorDao garbageCollectorDao;
 
     public ResponseData findByPhoneOrLoginNameOrENoOrIdCard(String password, String username, String from) {
         ResponseData responseData = new ResponseData();
@@ -182,14 +189,18 @@ public class GarbageUserService {
         userEntity.setProvinceName(provinceName);
         userEntity.setCityId(cityId);
         userEntity.setCityName(cityName);
-        userEntity.setDistrictId(districtId);
-        userEntity.setDistrictName(districtName);
+        userEntity.setCountryId(districtId);
+        userEntity.setCountryName(districtName);
         userEntity.setTownId(townId);
         userEntity.setTownName(townName);
         userEntity.setVillageId(villageId);
         userEntity.setVillageName(villageName);
         userEntity.setAddress(address);
         userEntity.setFromType(Constants.garbageFromType.TOWN.getType());
+        Calendar calendar  = Calendar.getInstance();
+        userEntity.setDay(calendar.get(Calendar.DAY_OF_MONTH));
+        userEntity.setMonth(calendar.get(Calendar.MONTH));
+        userEntity.setYear(calendar.get(Calendar.YEAR));
         GarbageRoleEntity roleEntity = null;
         if (!isCollector){
             //普通居民
@@ -556,7 +567,7 @@ public class GarbageUserService {
                 }
                 if (roleCodeList.contains("COUNTRY_ADMIN")){
                     // 县/区
-                    Predicate predicate = criteriaBuilder.equal(root.get("districtId"), userEntity.getDistrictId());
+                    Predicate predicate = criteriaBuilder.equal(root.get("districtId"), userEntity.getCountryId());
                     predicateList.add(predicate);
                     if (townId !=null){
                         Predicate townIdPredicate = criteriaBuilder.equal(root.get("townId"), townId);
@@ -676,5 +687,111 @@ public class GarbageUserService {
         pageData.setCount(page.getTotalPages());
         pageData.setData(dtos);
         return pageData;
+    }
+
+    public ResponseData getSummaryInfo(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<String> roleCodes = userEntity.getRoles().stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        //会员的注册量
+        Long count = garbageUserDao.count(new Specification<GarbageUserEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicateList = new ArrayList<>();
+                if (roleCodes.contains("VILLAGE_ADMIN")|| roleCodes.contains("RESIDENT") || roleCodes.contains("COLLECTOR")){
+                    //查看本村的注册量
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 || roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_REMARK")).count() > 0){
+                    //小区管理员
+                    Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("SYSTEM_ADMIN")){
+
+                }
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            }
+        });
+        String todayString = DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd");
+        Long start = DateFormatUtil.getFirstTimeOfDay(todayString).getTime();
+        Long end = DateFormatUtil.getLastTimeOfDay(todayString).getTime();
+        Long collectCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicateList = new ArrayList<>();
+                Predicate startPredcate = criteriaBuilder.between(root.get("collectDate"), start, end);
+                predicateList.add(startPredcate);
+                if (roleCodes.contains("VILLAGE_ADMIN")|| roleCodes.contains("RESIDENT") || roleCodes.contains("COLLECTOR")){
+                    //查看本村的注册量
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 || roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_REMARK")).count() > 0){
+                    //小区管理员
+                    Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("SYSTEM_ADMIN")){
+
+                }
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            }
+        });
+        SummaryCountInfo countInfo = new SummaryCountInfo();
+        countInfo.setCollectCount(collectCount);
+        countInfo.setUserCount(count);
+        countInfo.setPointRechargeCount(0L);
+        countInfo.setReceivedCount(0L);
+        ResponseData responseData = new ResponseData();
+        responseData.setData(countInfo);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("统计信息获取成功");
+        return responseData;
+    }
+
+    public ResponseData getRegisterUserCountInMonth() {
+        Calendar calendar = Calendar.getInstance();
+        Integer year = calendar.get(Calendar.YEAR);
+        List<UserCountInMonth> userCountInMonths = garbageUserDao.countUserInMonth(year);
+        ResponseData responseData = new ResponseData();
+        responseData.setData(userCountInMonths);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("统计信息获取成功");
+        return responseData;
     }
 }

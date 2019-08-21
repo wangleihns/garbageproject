@@ -171,4 +171,29 @@ public class LoginApiController {
         ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, checkType, jwt, pageNo, pageSize, orderBys);
         return responseData;
     }
+
+    /**
+     * 主页会员数量 今日手机 订单回收，积分商品兑换统计信息
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "getSummaryInfo", method = RequestMethod.GET)
+    public ResponseData getSummaryInfo(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData = garbageUserService.getSummaryInfo(jwt);
+        return responseData;
+    }
+
+    /**
+     * 今年的用户注册量
+     * @return
+     */
+    @RequestMapping(value = "getRegisterUserCountInMonth", method = RequestMethod.GET)
+    public ResponseData getRegisterUserCountInMonth(){
+        ResponseData responseData = garbageUserService.getRegisterUserCountInMonth();
+        return responseData;
+    }
+
+
+
 }

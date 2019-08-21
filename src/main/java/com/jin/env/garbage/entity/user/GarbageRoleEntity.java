@@ -17,6 +17,7 @@ public class GarbageRoleEntity extends BaseEntity{
     private String roleName;
     private String roleDesc;
     private Integer status;
+    private Integer type;
     private Set<GarbageResourceEntity> knResourceEntitySet;
     @Basic
     @Column(name = "role_code")
@@ -71,6 +72,15 @@ public class GarbageRoleEntity extends BaseEntity{
 
     public void setKnResourceEntitySet(Set<GarbageResourceEntity> knResourceEntitySet) {
         this.knResourceEntitySet = knResourceEntitySet;
+    }
+    @Basic
+    @Column(name = "`type`")
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
     }
 
     @Override

@@ -170,6 +170,7 @@ public class GarbageRoleService {
     @Transactional
     public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds) {
         ResponseData responseData = new ResponseData();
+        garbageRoleResourceDao.deleteAllByRoleId(roleId);
         List<GarbageRoleResourceEntity> roleResourceEntityList = new ArrayList<>();
         Arrays.stream(resourceIds).forEach(resourceId ->{
             GarbageRoleResourceEntity roleResourceEntity = new GarbageRoleResourceEntity();
@@ -260,20 +261,21 @@ public class GarbageRoleService {
     }
 
     @Transactional
-    public ResponseData addRoleForCommunity(String roleCode, String roleName, Boolean isAdmin) {
+    public ResponseData addRoleForCommunity(String roleName, String roleDesc, Boolean isAdmin) {
         GarbageRoleEntity roleEntity = new GarbageRoleEntity();
         ResponseData responseData = new ResponseData();
-        roleEntity.setRoleCode(roleCode);
         roleEntity.setRoleName(roleName);
         if (isAdmin) {
-            roleEntity.setRoleDesc("COMMUNITY_ADMIN");
+            roleEntity.setRoleCode( " " +"COMMUNITY_ADMIN");
         } else {
-            roleEntity.setRoleDesc("COMMUNITY_REMARK");
+            roleEntity.setRoleDesc( " " +"COMMUNITY_REMARK");
         }
+        roleEntity.setRoleDesc(roleDesc);
         roleEntity.setStatus(Constants.dataType.ENABLE.getType());
+        roleEntity.setType(Constants.garbageFromType.COMMUNITY.getType());
         garbageRoleDao.save(roleEntity);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
-        responseData.setMsg("添加小区资源成功");
+        responseData.setMsg("添加小区角色名称成功");
         return responseData;
     }
 }

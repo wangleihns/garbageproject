@@ -73,29 +73,5 @@ public class GarbageResourceController {
     }
 
 
-    /**
-     * 获取小区资源
-     * @param placeId
-     * @return
-     */
-    @RequestMapping(value = "getCommunityList", method = RequestMethod.GET)
-    public ResponseData getCommunityList(Integer placeId){
-        Assert.state(placeId !=null, "请选择地区Id");
-        ResponseData responseData = garbageRoleService.getCommunityList(placeId);
-        return responseData;
-    }
 
-    /**
-     * 添加小区资源
-     * @param placeId
-     * @param communityName
-     * @return
-     */
-    @RequestMapping(value = "addCommunity", method = RequestMethod.GET)
-    public ResponseData addCommunity(Integer placeId, String communityName){
-        Assert.state(placeId !=null, "请选择地区Id");
-        Assert.hasText(communityName, "导航名称");
-        ResponseData responseData = garbageRoleService.addCommunity(placeId, communityName);
-        return responseData;
-    }
 }

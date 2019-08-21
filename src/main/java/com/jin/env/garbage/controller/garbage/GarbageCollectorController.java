@@ -114,10 +114,10 @@ public class GarbageCollectorController {
      */
     @RequestMapping(value = "getGarbageCollectorSummaryInfo", method = RequestMethod.GET)
     public ResponseData getGarbageCollectorSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
-                                              String phone, String name, String[] orderBys, Integer provinceId,
+                                              String phone, String name, String[] orderBys,
                                               Integer cityId, Integer countryId, Integer townId, Integer villageId,  HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
-        ResponseData responseData = garbageCollectorService.getGarbageCollectorSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, provinceId, cityId, countryId, townId, villageId);
+        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, cityId, countryId, townId, villageId);
         return  responseData;
     }
 
@@ -151,6 +151,16 @@ public class GarbageCollectorController {
     public ResponseData getNotSentGarbageInfoToSystemUser(Integer pageNo, Integer pageSize, String startTime, String endTime,String phone, String name, String[] orderBys , HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
         ResponseData responseData = garbageCollectorService.getNotSentGarbageInfoToSystemUser(pageNo, pageSize, startTime, endTime, phone, name, jwt, orderBys);
+        return  responseData;
+    }
+
+    /**
+     * 每月的垃圾累计值
+     * @return
+     */
+    @RequestMapping(value = "getGarbageWeightCurrentYear", method = RequestMethod.GET)
+    public ResponseData getGarbageWeightCurrentYear(){
+        ResponseData responseData = garbageCollectorService.getGarbageWeightCurrentYear();
         return  responseData;
     }
 

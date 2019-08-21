@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface GarbageRoleResourceDao extends JpaRepository<GarbageRoleResourceEntity, Integer>, JpaSpecificationExecutor<GarbageRoleResourceEntity> {
+    void deleteAllByRoleId(Integer roleId);
 }

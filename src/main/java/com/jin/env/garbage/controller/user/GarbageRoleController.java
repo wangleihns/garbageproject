@@ -32,8 +32,16 @@ public class GarbageRoleController {
         return responseData;
     }
 
-    public ResponseData addRoleForCommunity(String roleCode, String roleName, Boolean isAdmin){
-        ResponseData responseData =garbageRoleService.addRoleForCommunity(roleCode, roleName, isAdmin);
+    /**
+     * 添加小区角色
+     * @param roleName
+     * @param roleDesc
+     * @param isAdmin
+     * @return
+     */
+    @RequestMapping(value = "addRoleForCommunity", method = RequestMethod.POST)
+    public ResponseData addRoleForCommunity(String roleName,String roleDesc,  Boolean isAdmin){
+        ResponseData responseData =garbageRoleService.addRoleForCommunity(roleName,roleDesc, isAdmin);
         return responseData;
     }
 }

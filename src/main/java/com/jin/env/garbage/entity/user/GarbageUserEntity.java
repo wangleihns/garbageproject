@@ -34,8 +34,8 @@ public class GarbageUserEntity extends BaseEntity{
     private String provinceName;
     private Integer cityId;
     private String cityName;
-    private Integer districtId;
-    private String districtName;
+    private Integer countryId;
+    private String countryName;
     private Integer townId;
     private String townName;
     private Integer villageId;
@@ -48,6 +48,10 @@ public class GarbageUserEntity extends BaseEntity{
     private Set<GarbageRoleEntity> roles=new HashSet<>(); // 有序的关联对象集合
 
     private List<GarbageENoEntity> eNos;
+
+    private Integer day;
+    private Integer month;
+    private Integer year;
 
     @Basic
     @Column(name = "email")
@@ -250,23 +254,23 @@ public class GarbageUserEntity extends BaseEntity{
     }
 
     @Basic
-    @Column(name = "district_id")
-    public Integer getDistrictId() {
-        return districtId;
+    @Column(name = "country_id")
+    public Integer getCountryId() {
+        return countryId;
     }
 
-    public void setDistrictId(Integer districtId) {
-        this.districtId = districtId;
+    public void setCountryId(Integer countryId) {
+        this.countryId = countryId;
     }
 
     @Basic
-    @Column(name = "district_name")
-    public String getDistrictName() {
-        return districtName;
+    @Column(name = "country_name")
+    public String getCountryName() {
+        return countryName;
     }
 
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
+    public void setCountryName(String countryName) {
+        this.countryName = countryName;
     }
 
     @Basic
@@ -364,6 +368,36 @@ public class GarbageUserEntity extends BaseEntity{
         this.fromType = fromType;
     }
 
+    @Basic
+    @Column(name = "day")
+    public Integer getDay() {
+        return day;
+    }
+
+    public void setDay(Integer day) {
+        this.day = day;
+    }
+
+    @Basic
+    @Column(name = "month")
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    @Basic
+    @Column(name = "year")
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -393,8 +427,8 @@ public class GarbageUserEntity extends BaseEntity{
                 Objects.equals(provinceName, that.provinceName) &&
                 Objects.equals(cityId, that.cityId) &&
                 Objects.equals(cityName, that.cityName) &&
-                Objects.equals(districtId, that.districtId) &&
-                Objects.equals(districtName, that.districtName) &&
+                Objects.equals(countryId, that.countryId) &&
+                Objects.equals(countryName, that.countryName) &&
                 Objects.equals(townId, that.townId) &&
                 Objects.equals(townName, that.townName) &&
                 Objects.equals(villageId, that.villageId) &&
@@ -405,6 +439,6 @@ public class GarbageUserEntity extends BaseEntity{
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, createId, createTime, updateId, updateTime, email, phone, loginName, name, status, accountNonExpired, credentialsNonExpired, accountNonLocked, enabled, userType, company, eNo, idCard, sex, cleaner, provinceId, provinceName, cityId, cityName, districtId, districtName, townId, townName, villageId, villageName, address);
+        return Objects.hash(id, createId, createTime, updateId, updateTime, email, phone, loginName, name, status, accountNonExpired, credentialsNonExpired, accountNonLocked, enabled, userType, company, eNo, idCard, sex, cleaner, provinceId, provinceName, cityId, cityName, countryId, countryName, townId, townName, villageId, villageName, address);
     }
 }

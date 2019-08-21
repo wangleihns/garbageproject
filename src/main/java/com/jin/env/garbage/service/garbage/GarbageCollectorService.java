@@ -10,6 +10,8 @@ import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.garbage.CollectorDto;
 import com.jin.env.garbage.dto.garbage.GarbageCollectCountDto;
+import com.jin.env.garbage.dto.garbage.GarbageWeightInMonth;
+import com.jin.env.garbage.dto.user.UserCountInMonth;
 import com.jin.env.garbage.dto.user.UserVillageDto;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
@@ -37,10 +39,12 @@ import org.springframework.util.StringUtils;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@SuppressWarnings("ALL")
 @Service
 public class GarbageCollectorService {
     private Logger logger = LoggerFactory.getLogger(GarbageCollectorController.class);
@@ -88,7 +92,7 @@ public class GarbageCollectorService {
 
         Integer provinceId = collector.getProvinceId();
         Integer cityId = collector.getCityId();
-        Integer countryId = collector.getDistrictId();
+        Integer countryId = collector.getCountryId();
         Integer townId = collector.getTownId();
         Integer villageId = collector.getVillageId();
         Calendar calendar = Calendar.getInstance();
@@ -113,7 +117,7 @@ public class GarbageCollectorService {
         collectorEntity.setUserId(eNoEntity.getUserId());
         collectorEntity.setCollectorId(sub);
         collectorEntity.setCollectorName(collector.getName());
-        collectorEntity.setGarbageFromType(Constants.garbageFrom.GARBAGETRUCK.getType());
+        collectorEntity.setGarbageFromType(Constants.garbageFromType.TOWN.getType());
         collectorEntity.setGarbageWeight(weight);
         Constants.garbageQuality garbageQuality = null;
         GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(villageId, Constants.garbageFromType.TOWN.getType());
@@ -165,7 +169,7 @@ public class GarbageCollectorService {
             userPointEntity.setPoint(pointScore);
             userPointEntity.setProvinceName(collector.getProvinceName());
             userPointEntity.setCityName(collector.getCityName());
-            userPointEntity.setCountryName(collector.getDistrictName());
+            userPointEntity.setCountryName(collector.getCountryName());
             userPointEntity.setTownName(collector.getTownName());
             userPointEntity.setVillageName(collector.getVillageName());
             userPointEntity.setAddress(userEntity.getAddress());
@@ -187,7 +191,7 @@ public class GarbageCollectorService {
         GarbageUserEntity collector = garbageUserDao.findById(sub).get();
         Integer provinceId = collector.getProvinceId();
         Integer cityId = collector.getCityId();
-        Integer countryId = collector.getDistrictId();
+        Integer countryId = collector.getCountryId();
         Integer townId = collector.getTownId();
         Integer villageId = collector.getVillageId();
         Calendar calendar = Calendar.getInstance();
@@ -212,7 +216,7 @@ public class GarbageCollectorService {
         collectorEntity.setUserId(eNoEntity.getUserId());
         collectorEntity.setCollectorId(sub);
         collectorEntity.setCollectorName(collector.getName());
-        collectorEntity.setGarbageFromType(Constants.garbageFrom.AUTOTRUCK.getType());
+        collectorEntity.setGarbageFromType(Constants.garbageFromType.COMMUNITY.getType());
         collectorEntity.setGarbageWeight(weight);
         collectorEntity.setCheck(false);
         garbageCollectorDao.save(collectorEntity);
@@ -237,11 +241,11 @@ public class GarbageCollectorService {
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
         Boolean flag = true;
         for (GarbageRoleEntity roleEntity:roleEntityList) {
-            if ("COMMUNITY_REMARK".equals(roleEntity.getRoleDesc())){
+            if (roleEntity.getRoleCode().endsWith("COMMUNITY_REMARK")){
                 //评分员可以平分
                 flag = true;
             }
-            if ("COMMUNITY_ADMIN".equals(roleEntity.getRoleDesc())){
+            if (roleEntity.getRoleCode().endsWith("COMMUNITY_ADMIN")){
                 //小区管理员可以查看
                 flag = true;
             }
@@ -344,11 +348,11 @@ public class GarbageCollectorService {
                 if (items.length > 1){
                     property = items[0];
                     switch (property){
-                        case "rolecode":
-                            property = "roleCode";
+                        case "garbageweight":
+                            property = "garbageWeight";
                             break;
-                        case "rolename":
-                            property = "roleName";
+                        case "garbagepoint":
+                            property = "garbagePoint";
                             break;
                         default:
                             property = "id";
@@ -381,11 +385,11 @@ public class GarbageCollectorService {
         List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
         Boolean flag = false;
         for (GarbageRoleEntity roleEntity:roleEntities) {
-            if ("COMMUNITY_REMARK".equals(roleEntity.getRoleDesc())){
+            if (roleEntity.getRoleCode().endsWith("COMMUNITY_REMARK")){
                 //评分员可以平分
                 flag = true;
             }
-            if ("COMMUNITY_ADMIN".equals(roleEntity.getRoleDesc())){
+            if (roleEntity.getRoleCode().endsWith("COMMUNITY_ADMIN")){
                 //小区管理员可以查看
                 flag = true;
             }
@@ -438,7 +442,7 @@ public class GarbageCollectorService {
             userPointEntity.setPoint(pointScore);
             userPointEntity.setProvinceName(userEntity.getProvinceName());
             userPointEntity.setCityName(userEntity.getCityName());
-            userPointEntity.setCountryName(userEntity.getDistrictName());
+            userPointEntity.setCountryName(userEntity.getCountryName());
             userPointEntity.setTownName(userEntity.getTownName());
             userPointEntity.setVillageName(userEntity.getVillageName());
             userPointEntity.setAddress(userEntity.getAddress());
@@ -454,8 +458,8 @@ public class GarbageCollectorService {
     }
 
     @Transactional
-    public ResponseData getGarbageCollectorSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime,
-                                              String type, String phone, String name, String jwt, String[] orderBys, Integer provinceId,
+    public ResponseData getGarbageCollectSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime,
+                                              String type, String phone, String name, String jwt, String[] orderBys,
                                               Integer cityId, Integer countryId, Integer townId, Integer villageId) {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
@@ -464,7 +468,7 @@ public class GarbageCollectorService {
         Long end = 0L;
         if ("day".equals(type)){
             start = DateFormatUtil.parse(startTime,"yyyy-MM-dd").getTime();
-            end = DateFormatUtil.parse(endTime + " 23:59:59", "yyyy-MM-dd HH:mm:ss").getTime();
+            end = DateFormatUtil.getLastTimeOfDay(startTime).getTime();
         } else if ("month".equals(type)){
             start = DateFormatUtil.getFirstDateOfMonth(startTime).getTime();
             end = DateFormatUtil.getLastDateOfMonth(endTime).getTime();
@@ -512,7 +516,7 @@ public class GarbageCollectorService {
                 }
             }
             if (roles.contains("COUNTRY_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
                 }
@@ -524,7 +528,7 @@ public class GarbageCollectorService {
             if (roles.contains("CITY_ADMIN")){
                 criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
                 if (countryId!=null &&  countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
                 }
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
@@ -540,7 +544,7 @@ public class GarbageCollectorService {
                     criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), cityId));
                 }
                 if (countryId!=null && countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
                 }
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
@@ -610,8 +614,8 @@ public class GarbageCollectorService {
         Long start = 0L;
         Long end = 0L;
         if ("day".equals(type)){
-            start = DateFormatUtil.parse(startTime,"yyyy-MM-dd").getTime();
-            end = DateFormatUtil.parse(endTime + " 23:59:59", "yyyy-MM-dd HH:mm:ss").getTime();
+            start = DateFormatUtil.getFirstTimeOfDay(startTime).getTime();
+            end = DateFormatUtil.getFirstTimeOfDay(startTime).getTime();
         } else if ("month".equals(type)){
             start = DateFormatUtil.getFirstDateOfMonth(startTime).getTime();
             end = DateFormatUtil.getLastDateOfMonth(endTime).getTime();
@@ -652,7 +656,7 @@ public class GarbageCollectorService {
                     }
                     if (roles.contains("COUNTRY_ADMIN")){
                         if (countryId !=null && countryId != 0){
-                            Predicate predicateCountryId = criteriaBuilder.equal(root.get("districtId"), userEntity.getDistrictId());
+                            Predicate predicateCountryId = criteriaBuilder.equal(root.get("districtId"), userEntity.getCountryId());
                             predicates.add(predicateCountryId);
                         }
                         if (townId !=null && townId != 0 ){
@@ -763,7 +767,7 @@ public class GarbageCollectorService {
                 }
             }
             if (roles.contains("COUNTRY_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
                 }
@@ -775,7 +779,7 @@ public class GarbageCollectorService {
             if (roles.contains("CITY_ADMIN")){
                 criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
                 if (countryId!=null &&  countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
                 }
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
@@ -791,7 +795,7 @@ public class GarbageCollectorService {
                     criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), cityId));
                 }
                 if (countryId!=null && countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getDistrictId()));
+                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
                 }
                 if (townId!=null && townId !=0){
                     criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
@@ -868,6 +872,7 @@ public class GarbageCollectorService {
             }
         }
         List<GarbageCollectCountDto> garbageQualityCount = entityManager.createQuery(criteriaQuery).getResultList();
+
         Map<String, Long> qualityMap = new HashMap<>();
         for (GarbageCollectCountDto dto: garbageQualityCount){
             qualityMap.put(dto.getPlaceId() + "-" + dto.getGarbageQuality(), dto.getCount());
@@ -948,11 +953,25 @@ public class GarbageCollectorService {
             } else {
                 dto.setCollectDate(dto.getYear() + "");
             }
-            dto.setEmptyRate(String.format("{0:P}",emptyCount.doubleValue()/sum));
-            dto.setNotQualityRate(String.format("{0:P}", notQualityCount.doubleValue()/sum));
-            dto.setEmptyRate(String.format("{0:P}", emptyCount.doubleValue()/sum));
+            DecimalFormat df = new DecimalFormat("0.00%");
+            String emptuRate = df.format(emptyCount.doubleValue()/sum);
+            String notQualityRate = df.format(notQualityCount.doubleValue()/sum);
+            String qualityRate = df.format(qualityCount.doubleValue()/sum);
+            dto.setEmptyRate(emptuRate);
+            dto.setNotQualityRate(notQualityRate);
+            dto.setQualityRate(qualityRate);
+            dtos.add(dto);
         });
-        return null;
+        ResponsePageData responsePageData = new ResponsePageData();
+        responsePageData.setPageNo(pageNo);
+        responsePageData.setPageSize(pageSize);
+        responsePageData.setCount(page.getTotalPages());
+        responsePageData.setLastPage(page.isLast());
+        responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
+        responsePageData.setMsg("查询成功");
+        responsePageData.setData(page.getContent());
+        return responsePageData;
     }
 
     public ResponseData getNotSentGarbageInfoToSystemUser(Integer pageNo, Integer pageSize, String startTime, String endTime, String phone, String name, String jwt, String[] orderBys) {
@@ -961,8 +980,8 @@ public class GarbageCollectorService {
         Integer fromType = userEntity.getFromType();
         List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
         List<String> roleCodes = roleEntityList.stream().map(role -> role.getRoleCode()).collect(Collectors.toList());
-        Long  start = DateFormatUtil.parse(startTime,"yyyy-MM-dd").getTime();
-        Long  end = DateFormatUtil.parse(endTime + " 23:59:59", "yyyy-MM-dd HH:mm:ss").getTime();
+        Long  start = DateFormatUtil.getFirstTimeOfDay(startTime).getTime();
+        Long  end = DateFormatUtil.getLastTimeOfDay(endTime).getTime();
         Pageable pageable = PageRequest.of(pageNo-1, pageSize, getGarbageCollectorSummaryInfo(orderBys));
         Page<GarbageUserEntity> garbageUserEntityPage = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
             @Nullable
@@ -999,7 +1018,7 @@ public class GarbageCollectorService {
                         selectList.add(townPredicate);
                     }
                     if (roleCodes.contains("COUNTRY_ADMIN")){
-                        Predicate countryPredicate = criteriaBuilder.equal(subRoot.get("countryId"), userEntity.getDistrictId());
+                        Predicate countryPredicate = criteriaBuilder.equal(subRoot.get("countryId"), userEntity.getCountryId());
                         selectList.add(countryPredicate);
                     }
                     if (roleCodes.contains("CITY_ADMIN")){
@@ -1030,5 +1049,16 @@ public class GarbageCollectorService {
         responsePageData.setMsg("查询成功");
         responsePageData.setData(garbageUserEntityPage.getContent());
         return responsePageData;
+    }
+
+    public ResponseData getGarbageWeightCurrentYear() {
+        Calendar calendar = Calendar.getInstance();
+        Integer year = calendar.get(Calendar.YEAR);
+        List<GarbageWeightInMonth> weightInMonths = garbageCollectorDao.getGarbageWeightInMonth(year);
+        ResponseData responseData = new ResponseData();
+        responseData.setData(weightInMonths);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("统计信息获取成功");
+        return responseData;
     }
 }

@@ -47,4 +47,8 @@ public class JPositionController {
     public ResponseData addVillage(Integer townId, String villageName){
         return jPositionService.addVillage(townId,villageName);
     }
+    @RequestMapping(value = "addCommunity", method = RequestMethod.POST)
+    public ResponseData addCommunity(Integer provinceId, Integer cityId, Integer countryId, String address, String communityName){
+        return jPositionService.addCommunity(provinceId,cityId,countryId,address, communityName);
+    }
 }
