@@ -33,6 +33,8 @@ public class GarbageCommunityController {
      */
     @RequestMapping(value = "addCommunityToRole", method = RequestMethod.POST)
     public ResponseData addCommunityToRole(Integer roleId, Integer[] communityIds){
+        Assert.state(roleId != null, "角色id 不能为空");
+        Assert.state(communityIds.length > 0, "请选择小区资源");
         ResponseData responseData = garbageCommunityService.addCommunityToRole(roleId, communityIds);
         return responseData;
     }

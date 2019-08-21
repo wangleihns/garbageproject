@@ -6,6 +6,7 @@ import com.jin.env.garbage.dao.garbage.GarbageQualityPointDao;
 import com.jin.env.garbage.dao.image.GarbageImageDao;
 import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
+import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.garbage.CollectorDto;
@@ -18,6 +19,7 @@ import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
 import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
+import com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
@@ -83,6 +85,9 @@ public class GarbageCollectorService {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private GarbageRoleCommunityDao garbageRoleCommunityDao;
 
     @Transactional
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, String jwt) {
@@ -481,7 +486,7 @@ public class GarbageCollectorService {
         List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
 
         List<String> roles = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
-
+        List<Integer> communityIds = getCommunityResource(roleEntityList);
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, getGarbageCollectorSummaryInfo(orderBys));
         Long finalStart = start;
         Long finalEnd = end;
@@ -504,7 +509,10 @@ public class GarbageCollectorService {
             criteriaQuery.where(criteriaBuilder.lessThanOrEqualTo(root.<Long>get("collectDate"), finalEnd));
         }
         if (fromType == 1){
-            criteriaQuery.where(criteriaBuilder.equal(root.get("communityId"),userEntity.getCommunityId()));
+            if (communityIds.size() > 0){
+                criteriaQuery.where(root.get("communityId").in(communityIds));
+            }
+
         } else {
             if (roles.contains("VILLAGE_ADMIN")){
                 criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
@@ -628,6 +636,7 @@ public class GarbageCollectorService {
         List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
         List<String> roles = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
         //用户数
+        List<Integer> communityIds = getCommunityResource(roleEntityList);
         Long userCount = garbageUserDao.count(new Specification<GarbageUserEntity>() {
             @Nullable
             @Override
@@ -635,8 +644,10 @@ public class GarbageCollectorService {
                 List<Predicate> predicates = new ArrayList<>();
                 if (fromType == 1){
                     //小区
-                    Predicate predicateCommunityId = criteriaBuilder.equal(root.get("communityId"),userEntity.getCommunityId());
-                    predicates.add(predicateCommunityId);
+                    if (communityIds.size() > 0){
+                        Predicate predicate =  root.get("communityId").in(communityIds);
+                        predicates.add(predicate);
+                    }
                 }else{
                     if (roles.contains("VILLAGE_ADMIN")){
                         if (townId !=null && townId != 0 ){
@@ -755,7 +766,10 @@ public class GarbageCollectorService {
         }
         criteriaQuery.where(criteriaBuilder.isTrue(root.get("check")));
         if (fromType == 1){
-            criteriaQuery.where(criteriaBuilder.equal(root.get("communityId"),userEntity.getCommunityId()));
+            if (communityIds.size() > 0){
+                Predicate predicate =  root.get("communityId").in(communityIds);
+                criteriaQuery.where(predicate);
+            }
         } else {
             if (roles.contains("VILLAGE_ADMIN")){
                 criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
@@ -979,6 +993,7 @@ public class GarbageCollectorService {
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();
         List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
+        List<Integer> communityIds = getCommunityResource(roleEntityList);
         List<String> roleCodes = roleEntityList.stream().map(role -> role.getRoleCode()).collect(Collectors.toList());
         Long  start = DateFormatUtil.getFirstTimeOfDay(startTime).getTime();
         Long  end = DateFormatUtil.getLastTimeOfDay(endTime).getTime();
@@ -1030,8 +1045,10 @@ public class GarbageCollectorService {
                         selectList.add(ProvincePredicate);
                     }
                     if (fromType == 1){
-                        Predicate predicate =  criteriaBuilder.equal(subRoot.get("communityId"), userEntity.getCommunityId());
-                        selectList.add(predicate);
+                        if (communityIds.size() > 0){
+                            Predicate predicate =  subRoot.get("communityId").in(communityIds);
+                            selectList.add(predicate);
+                        }
                     }
                     Predicate not = criteriaBuilder.not(criteriaBuilder.exists(subquery.where(selectList.toArray(new Predicate[selectList.size()]))));
                     predicateList.add(not);
@@ -1060,5 +1077,19 @@ public class GarbageCollectorService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("统计信息获取成功");
         return responseData;
+    }
+
+    public  List<Integer>  getCommunityResource(List<GarbageRoleEntity> roleEntityList){
+        List<GarbageRoleEntity> collect = roleEntityList.stream().filter(role -> role.getRoleCode().endsWith("COMMUNITY_ADMIN") || role.getRoleCode().endsWith("COMMUNITY_REMARK")).collect(Collectors.toList());
+        List<Integer> roleIds = collect.stream().map(role -> role.getId()).collect(Collectors.toList());
+        List<GarbageRoleCommunityEntity> roleCommunityEntityList = garbageRoleCommunityDao.findAll(new Specification<GarbageRoleCommunityEntity>() {
+            @Nullable
+            @Override
+            public Predicate toPredicate(Root<GarbageRoleCommunityEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return root.get("roleId").in(roleIds);
+            }
+        });
+        List<Integer> communityIds = roleCommunityEntityList.stream().map(garbageRoleCommunityEntity -> garbageRoleCommunityEntity.getCommunityId()).collect(Collectors.toList());
+        return communityIds;
     }
 }

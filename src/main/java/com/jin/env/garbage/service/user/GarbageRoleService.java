@@ -8,6 +8,7 @@ import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleResourceEntity;
 import com.jin.env.garbage.utils.Constants;
+import com.jin.env.garbage.utils.PinYinUtil;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
 import org.apache.commons.lang.StringUtils;
@@ -266,9 +267,9 @@ public class GarbageRoleService {
         ResponseData responseData = new ResponseData();
         roleEntity.setRoleName(roleName);
         if (isAdmin) {
-            roleEntity.setRoleCode( " " +"COMMUNITY_ADMIN");
+            roleEntity.setRoleCode(PinYinUtil.converterToSpell(roleName) +"COMMUNITY_ADMIN");
         } else {
-            roleEntity.setRoleDesc( " " +"COMMUNITY_REMARK");
+            roleEntity.setRoleDesc(PinYinUtil.converterToSpell(roleName) +"COMMUNITY_REMARK");
         }
         roleEntity.setRoleDesc(roleDesc);
         roleEntity.setStatus(Constants.dataType.ENABLE.getType());
