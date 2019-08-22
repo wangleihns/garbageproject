@@ -7,6 +7,7 @@ import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
+import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.dto.user.GarbageUserDto;
 import com.jin.env.garbage.dto.user.QRcodeDto;
 import com.jin.env.garbage.dto.user.SummaryCountInfo;
@@ -18,9 +19,9 @@ import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
+import com.jin.env.garbage.service.garbage.GarbageCollectorService;
 import com.jin.env.garbage.utils.*;
 import net.sf.json.JSONObject;
-import org.apache.tomcat.util.bcel.Const;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.*;
-import javax.persistence.metamodel.EntityType;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +74,9 @@ public class GarbageUserService {
     @Autowired
     private GarbageCollectorDao garbageCollectorDao;
 
+    @Autowired
+    private GarbageCollectorService garbageCollectorService;
+
     public ResponseData findByPhoneOrLoginNameOrENoOrIdCard(String password, String username, String from) {
         ResponseData responseData = new ResponseData();
         GarbageUserEntity userEntity = garbageUserDao.findByPhoneOrENoOrIdCard(username);
@@ -107,11 +110,24 @@ public class GarbageUserService {
             String refreshToken = jwtUtil.getRefresh(accessToken);
             redisTemplate.opsForValue().set("accessToken:"+username, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
             String a =  redisTemplate.opsForValue().get("accessToken:" + username);
+            //组资源
             List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(userEntity.getId());
+            //子资源
+            List<UserResourceDto> subResourceList = garbageResourceDao.getUserSubResourceInfoList();
+            Map<Integer, List<UserResourceDto>> collectMap = subResourceList.stream().collect(Collectors.groupingBy(UserResourceDto::getSuqId));
+            List<UserResourceDto> userResourceDtos = new ArrayList<>();
+            resourceEntityList.stream().forEach(resourceEntity -> {
+                UserResourceDto dto = new UserResourceDto();
+                dto.setDtos(collectMap.get(resourceEntity.getId()));
+                dto.setIcon(resourceEntity.getIcon());
+                dto.setName(resourceEntity.getName());
+                dto.setUrl(resourceEntity.getUrl());
+                userResourceDtos.add(dto);
+            });
             token.put("accessToken", accessToken);
             token.put("refreshToken", refreshToken);
             token.put("userEntity", userEntity);
-            token.put("resources", resourceEntityList);
+            token.put("resources", userResourceDtos);
             logger.info(a);
             responseData.setMsg("登录成功");
             responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
@@ -285,8 +301,7 @@ public class GarbageUserService {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByUserId(sub);
-        List<Integer> roleIds = roleEntityList.stream().map(role-> role.getId()).collect(Collectors.toList());
-        List<Integer> communityIds = garbageResourceDao.getAllCommunityIdsByRoleIds(roleIds);
+        List<Integer> communityIds = garbageCollectorService.getCommunityResource(roleEntityList);
         List<String> roleCodeList = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
         Page<GarbageUserEntity> page = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
             @Override
@@ -534,7 +549,7 @@ public class GarbageUserService {
         List<Integer> roleIds = roleEntityList.stream().map(role-> role.getId()).collect(Collectors.toList());
         List<String> roleCodeList = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
 
-        List<Integer> communityIds = garbageResourceDao.getAllCommunityIdsByRoleIds(roleIds);
+        List<Integer> communityIds = garbageCollectorService.getCommunityResource(roleEntityList);
 
         Page<GarbageUserEntity> page = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
             @Nullable

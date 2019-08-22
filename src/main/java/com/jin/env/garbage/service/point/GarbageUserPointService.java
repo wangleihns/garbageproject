@@ -2,6 +2,7 @@ package com.jin.env.garbage.service.point;
 
 import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
+import com.jin.env.garbage.dto.point.RedAndBlackRankDto;
 import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
@@ -21,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -183,6 +182,153 @@ public class GarbageUserPointService {
                 Sort.Direction direction = null;
                 return new Sort.Order(direction, property);
             }).collect(Collectors.toList()));
+        }
+        return sort;
+    }
+
+    public ResponseData redAndBlackRank(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        Pageable pageableFirst = PageRequest.of(0, 10, redAndBlackRankSort("first"));
+        Pageable pageableLast = PageRequest.of(0, 10, redAndBlackRankSort("last"));
+        Page<GarbageUserPointEntity> userPointFirstPage = null;
+        Page<GarbageUserPointEntity> userPointLastPage = null;
+        List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<Integer> communityIds = collectorService.getCommunityResource(roleEntityList);
+        List<String> roleCodes = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        userPointFirstPage  = garbageUserPointDao.findAll(new Specification<GarbageUserPointEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicateList = new ArrayList<>();
+                if (communityIds.size() > 0){
+                    Predicate predicate = root.get("communityId").in(communityIds);
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("VILLAGE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                    predicateList.add(predicate);
+                }
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            }
+        }, pageableFirst);
+
+        userPointLastPage = garbageUserPointDao.findAll(new Specification<GarbageUserPointEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicateList = new ArrayList<>();
+                if (communityIds.size() > 0){
+                    Predicate predicate = root.get("communityId").in(communityIds);
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("VILLAGE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                    predicateList.add(predicate);
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                    predicateList.add(predicate);
+                }
+                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            }
+        }, pageableLast);
+
+        List<RedAndBlackRankDto> redRankDtos = new ArrayList<>();
+        userPointFirstPage.getContent().forEach(garbageUserPointEntity -> {
+            RedAndBlackRankDto dto = new RedAndBlackRankDto();
+            if (fromType == 1){
+                dto.setPlaceName(garbageUserPointEntity.getCommunityName());
+            } else {
+                if (roleCodes.contains("VILLAGE_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getVillageName());
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getTownName());
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getCountryName());
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getCityName());
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getProvinceName());
+                }
+                dto.setPoint(garbageUserPointEntity.getPoint());
+                redRankDtos.add(dto);
+            }
+        });
+
+        List<RedAndBlackRankDto> blackRankDtos = new ArrayList<>();
+        userPointFirstPage.getContent().forEach(garbageUserPointEntity -> {
+            RedAndBlackRankDto dto = new RedAndBlackRankDto();
+            if (fromType == 1){
+                dto.setPlaceName(garbageUserPointEntity.getCommunityName());
+            } else {
+                if (roleCodes.contains("VILLAGE_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getVillageName());
+                }
+                if (roleCodes.contains("TOWN_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getTownName());
+                }
+                if (roleCodes.contains("COUNTRY_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getCountryName());
+                }
+                if (roleCodes.contains("CITY_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getCityName());
+                }
+                if (roleCodes.contains("PROVINCE_ADMIN")){
+                    dto.setPlaceName(garbageUserPointEntity.getProvinceName());
+                }
+                dto.setPoint(garbageUserPointEntity.getPoint());
+                blackRankDtos.add(dto);
+            }
+
+        });
+        Map<String, List<RedAndBlackRankDto>> redAndBlackRankMap = new HashMap<>();
+        redAndBlackRankMap.put("redRank", redRankDtos);
+        redAndBlackRankMap.put("blackRank", blackRankDtos);
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("红黑榜查询成功");
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setData(redAndBlackRankMap);
+        return  responseData;
+    }
+
+    private Sort redAndBlackRankSort(String type){
+        Sort sort = null;
+        if ("first".equals(type) ){
+            sort = Sort.by("point").descending();
+        }else {
+            sort = Sort.by("point").ascending();
         }
         return sort;
     }

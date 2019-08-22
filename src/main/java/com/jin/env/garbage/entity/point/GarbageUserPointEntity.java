@@ -18,6 +18,14 @@ public class GarbageUserPointEntity  extends BaseEntity{
     private Integer point;
     private String phone;
 
+    private Integer provinceId;
+    private Integer cityId;
+    private Integer countryId;
+    private Integer townId;
+    private Integer villageId;
+    private Integer communityId;
+    private String communityName;
+
     @Basic
     @Column(name = "user_id")
     public Integer getUserId() {
@@ -116,6 +124,77 @@ public class GarbageUserPointEntity  extends BaseEntity{
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+
+    @Basic
+    @Column(name = "province_id")
+    public Integer getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(Integer provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    @Basic
+    @Column(name = "city_id")
+    public Integer getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(Integer cityId) {
+        this.cityId = cityId;
+    }
+
+    @Basic
+    @Column(name = "country_id")
+    public Integer getCountryId() {
+        return countryId;
+    }
+
+    public void setCountryId(Integer countryId) {
+        this.countryId = countryId;
+    }
+
+    @Basic
+    @Column(name = "town_id")
+    public Integer getTownId() {
+        return townId;
+    }
+
+    public void setTownId(Integer townId) {
+        this.townId = townId;
+    }
+
+    @Basic
+    @Column(name = "village_id")
+    public Integer getVillageId() {
+        return villageId;
+    }
+
+    public void setVillageId(Integer villageId) {
+        this.villageId = villageId;
+    }
+
+    @Basic
+    @Column(name = "community_id")
+    public Integer getCommunityId() {
+        return communityId;
+    }
+
+    public void setCommunityId(Integer communityId) {
+        this.communityId = communityId;
+    }
+
+    @Basic
+    @Column(name = "community_name")
+    public String getCommunityName() {
+        return communityName;
+    }
+
+    public void setCommunityName(String communityName) {
+        this.communityName = communityName;
     }
 
     @Override

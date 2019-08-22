@@ -19,6 +19,8 @@
       <mapping class="com.jin.env.garbage.entity.garbage.GarbageCollectorEntity"/>
       <mapping class="com.jin.env.garbage.entity.position.GarbageCommunityEntity"/>
       <mapping class="com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity"/>
+      <mapping class="com.jin.env.garbage.entity.point.GarbagePointRecordEntity"/>
+      <mapping class="com.jin.env.garbage.entity.point.GarbageUserPointEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

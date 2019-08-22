@@ -233,33 +233,6 @@ public class GarbageRoleService {
         return responseData;
     }
 
-    public ResponseData getCommunityList(Integer placeId) {
-        ResponseData responseData = new ResponseData();
-        List<GarbageResourceEntity> communityList = garbageResourceDao.findBySupIdAndFtType(placeId, "community");
-        responseData.setData(communityList);
-        responseData.setStatus(Constants.responseStatus.Success.getStatus());
-        responseData.setMsg("获取小区资源成功");
-        return  responseData;
-    }
-
-    @Transactional
-    public ResponseData addCommunity(Integer placeId, String communityName) {
-        ResponseData responseData = new ResponseData();
-        GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
-        resourceEntity.setName(communityName);
-        resourceEntity.setSeq(1);
-        resourceEntity.setSupId(placeId);
-        try {
-            garbageResourceDao.save(resourceEntity);
-            responseData.setStatus(Constants.responseStatus.Success.getStatus());
-            responseData.setMsg("添加小区资源成功");
-        } catch (Exception e) {
-            e.printStackTrace();
-            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
-            responseData.setMsg("添加失败");
-        }
-        return responseData;
-    }
 
     @Transactional
     public ResponseData addRoleForCommunity(String roleName, String roleDesc, Boolean isAdmin) {

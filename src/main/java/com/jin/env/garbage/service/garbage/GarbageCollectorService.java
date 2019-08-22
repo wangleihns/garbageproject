@@ -4,6 +4,7 @@ import com.jin.env.garbage.controller.garbage.GarbageCollectorController;
 import com.jin.env.garbage.dao.garbage.GarbageCollectorDao;
 import com.jin.env.garbage.dao.garbage.GarbageQualityPointDao;
 import com.jin.env.garbage.dao.image.GarbageImageDao;
+import com.jin.env.garbage.dao.point.GarbagePointRecordDao;
 import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
@@ -17,6 +18,7 @@ import com.jin.env.garbage.dto.user.UserVillageDto;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
+import com.jin.env.garbage.entity.point.GarbagePointRecordEntity;
 import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity;
@@ -89,6 +91,9 @@ public class GarbageCollectorService {
     @Autowired
     private GarbageRoleCommunityDao garbageRoleCommunityDao;
 
+    @Autowired
+    private GarbagePointRecordDao garbagePointRecordDao;
+
     @Transactional
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, String jwt) {
         Integer sub = jwtUtil.getSubject(jwt);
@@ -127,6 +132,7 @@ public class GarbageCollectorService {
         Constants.garbageQuality garbageQuality = null;
         GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(villageId, Constants.garbageFromType.TOWN.getType());
         Integer pointScore = 0;
+        String desc = "";
         switch (quality){
             case "1":
                 garbageQuality = Constants.garbageQuality.QUALIFIED;
@@ -135,6 +141,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getQualified();
                 }
+                desc = "垃圾分类合格积分";
                 break;
             case "2":
                 garbageQuality = Constants.garbageQuality.NOTQUALIFIED;
@@ -143,6 +150,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getNoQualified();
                 }
+                desc = "垃圾分类不合格积分";
                 break;
             default:
                 garbageQuality = Constants.garbageQuality.EMPTY;
@@ -151,6 +159,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getEmpty();
                 }
+                desc = "垃圾分类空桶积分";
                 break;
         }
         collectorEntity.setGarbageQuality(garbageQuality.getType());
@@ -179,9 +188,24 @@ public class GarbageCollectorService {
             userPointEntity.setVillageName(collector.getVillageName());
             userPointEntity.setAddress(userEntity.getAddress());
             userPointEntity.setPhone(userEntity.getPhone());
+            userPointEntity.setProvinceId(collectorEntity.getProvinceId());
+            userPointEntity.setCityId(collectorEntity.getCityId());
+            userPointEntity.setCountryId(collectorEntity.getCountryId());
+            userPointEntity.setTownId(collectorEntity.getTownId());
+            userPointEntity.setVillageId(collectorEntity.getVillageId());
+            userPointEntity.setCommunityId(collectorEntity.getCommunityId());
         }
         //计算总积分
         garbageUserPointDao.save(userPointEntity);
+        //生成积分记录
+        GarbagePointRecordEntity recordEntity = new GarbagePointRecordEntity();
+        recordEntity.setBusId(collectorEntity.getId());
+        recordEntity.setSourceName(GarbageCollectorEntity.class.getName());
+        recordEntity.setPoint(pointScore);
+        recordEntity.setDesc(desc);
+        recordEntity.setUserId(eNoEntity.getUserId());
+        garbagePointRecordDao.save(recordEntity);
+
         ResponseData responseData = new ResponseData();
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("添加成功");
@@ -405,6 +429,7 @@ public class GarbageCollectorService {
         Integer communityId = userEntity.getCommunityId();
         GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId, Constants.garbageFromType.COMMUNITY.getType());
         Integer pointScore = 0;
+        String desc = "";
         Constants.garbageQuality garbageQuality = null;
         switch (quality){
             case 1:
@@ -414,6 +439,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getQualified();
                 }
+                desc = "垃圾分类人工审核合格积分";
                 break;
             case 2:
                 garbageQuality = Constants.garbageQuality.NOTQUALIFIED;
@@ -422,6 +448,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getNoQualified();
                 }
+                desc = "垃圾分类人工审核不合格积分";
                 break;
             default:
                 garbageQuality = Constants.garbageQuality.EMPTY;
@@ -430,6 +457,7 @@ public class GarbageCollectorService {
                 } else {
                     pointScore = qualityPointEntity.getEmpty();
                 }
+                desc = "垃圾分类人工审核空桶积分";
                 break;
         }
         GarbageCollectorEntity collectorEntity = garbageCollectorDao.findById(id).get();
@@ -452,9 +480,24 @@ public class GarbageCollectorService {
             userPointEntity.setVillageName(userEntity.getVillageName());
             userPointEntity.setAddress(userEntity.getAddress());
             userPointEntity.setPhone(userEntity.getPhone());
+            userPointEntity.setProvinceId(collectorEntity.getProvinceId());
+            userPointEntity.setCityId(collectorEntity.getCityId());
+            userPointEntity.setCountryId(collectorEntity.getCountryId());
+            userPointEntity.setTownId(collectorEntity.getTownId());
+            userPointEntity.setVillageId(collectorEntity.getVillageId());
+            userPointEntity.setCommunityId(collectorEntity.getCommunityId());
         }
         //计算总积分
         garbageUserPointDao.save(userPointEntity);
+
+        //生成积分记录
+        GarbagePointRecordEntity recordEntity = new GarbagePointRecordEntity();
+        recordEntity.setBusId(collectorEntity.getId());
+        recordEntity.setSourceName(GarbageCollectorEntity.class.getName());
+        recordEntity.setPoint(pointScore);
+        recordEntity.setDesc(desc);
+        recordEntity.setUserId(collectorEntity.getUserId());
+        garbagePointRecordDao.save(recordEntity);
         ResponseData responseData = new ResponseData();
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("垃圾分类质量判定成功");
@@ -1086,7 +1129,11 @@ public class GarbageCollectorService {
             @Nullable
             @Override
             public Predicate toPredicate(Root<GarbageRoleCommunityEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                return root.get("roleId").in(roleIds);
+               Predicate predicate = null;
+                if (roleIds.size()> 0){
+                    predicate =  root.get("roleId").in(roleIds)  ;
+               }
+                return predicate;
             }
         });
         List<Integer> communityIds = roleCommunityEntityList.stream().map(garbageRoleCommunityEntity -> garbageRoleCommunityEntity.getCommunityId()).collect(Collectors.toList());

@@ -27,4 +27,11 @@ public class GarbageUserPointController {
         ResponseData responseData =garbageUserPointService.getPointRankList(pageNo, pageSize, name, phone, jwt, cityId, countryId, townId, villageId, orderBys);
         return responseData;
     }
+
+    @RequestMapping(value = "redAndBlackRank", method = RequestMethod.GET)
+    public ResponseData redAndBlackRank(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(": ")[1];
+        ResponseData responseData =garbageUserPointService.redAndBlackRank(jwt);
+        return responseData;
+    }
 }

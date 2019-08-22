@@ -41,6 +41,7 @@ public class ControllerExceptionHandle {
             } else{
                 responseData.setMsg(throwable.getMessage());
             }
+            logger.error("异常日志", throwable);
             responseData.setStatus(Constants.responseStatus.Failure.getStatus());
             return responseData;
         }
