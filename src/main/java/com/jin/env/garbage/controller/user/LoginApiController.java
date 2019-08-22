@@ -177,10 +177,10 @@ public class LoginApiController {
      * @param request
      * @return
      */
-    @RequestMapping(value = "getSummaryInfo", method = RequestMethod.GET)
-    public ResponseData getSummaryInfo(HttpServletRequest request){
+    @RequestMapping(value = "getSummaryInfoInManagerCenter", method = RequestMethod.GET)
+    public ResponseData getSummaryInfoInManagerCenter(HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(": ")[1];
-        ResponseData responseData = garbageUserService.getSummaryInfo(jwt);
+        ResponseData responseData = garbageUserService.getSummaryInfoInManagerCenter(jwt);
         return responseData;
     }
 
@@ -194,6 +194,10 @@ public class LoginApiController {
         return responseData;
     }
 
-
+    @RequestMapping(value = "getSummaryInfoInBigDataCenter", method = RequestMethod.GET)
+    public ResponseData getSummaryInfoInBigDataCenter(HttpServletRequest request){
+        ResponseData responseData = garbageUserService.getSummaryInfoInBigDataCenter();
+        return responseData;
+    }
 
 }

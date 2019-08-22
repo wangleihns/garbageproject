@@ -12,4 +12,11 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
 
     @Query(value = "select new com.jin.env.garbage.dto.garbage.GarbageWeightInMonth(u.month, sum(u.garbageWeight)) from GarbageCollectorEntity u where u.year = ?1 group by  u.month")
     List<GarbageWeightInMonth> getGarbageWeightInMonth(Integer year);
+
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(qualified) FROM  garbage_collector  WHERE  collect_date BETWEEN ?1 AND  ?2")
+    Long countQualityToday(Long start, Long end);
+
+    @Query(value = " select sum(c.garbageWeight) from GarbageCollectorEntity c where c.collectDate between ?1 and ?2")
+    Double countGarbageWieght(Long start, Long end);
 }

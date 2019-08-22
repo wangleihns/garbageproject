@@ -40,6 +40,7 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.*;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -704,7 +705,7 @@ public class GarbageUserService {
         return pageData;
     }
 
-    public ResponseData getSummaryInfo(String jwt) {
+    public ResponseData getSummaryInfoInManagerCenter(String jwt) {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();
@@ -808,5 +809,43 @@ public class GarbageUserService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("统计信息获取成功");
         return responseData;
+    }
+
+    public ResponseData getSummaryInfoInBigDataCenter() {
+        Long userCount = garbageUserDao.count();
+        String todayString = DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd");
+        Long start = DateFormatUtil.getFirstTimeOfDay(todayString).getTime();
+        Long end = DateFormatUtil.getLastTimeOfDay(todayString).getTime();
+        Long participationCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
+            @Nullable
+            @Override
+            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                Predicate collectDate = criteriaBuilder.between(root.get("collectDate"), start, end);
+
+                return collectDate;
+            }
+        });
+        Long qualityCount = garbageCollectorDao.countQualityToday(start, end);
+        String qualityRate = "0%";
+        DecimalFormat df = new DecimalFormat("0.00%");
+        if (participationCount > 0){
+            qualityRate = df.format(qualityCount.doubleValue()/participationCount);
+        } else {
+            qualityRate = "0%";
+        }
+        String participationRate = df.format(participationCount.doubleValue()/userCount);
+        Double garbageWeight = garbageCollectorDao.countGarbageWieght(start, end);
+        Map<String, Object> map = new HashMap<>();
+        map.put("userCount", userCount);
+        map.put("permanentCount", userCount);
+        map.put("participationCount", participationCount);
+        map.put("qualityRate", qualityRate);
+        map.put("participationRate", participationRate);
+        map.put("garbageWeight", garbageWeight);
+        ResponseData responseData = new ResponseData();
+        responseData.setData(map);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("查询成功");
+        return  responseData;
     }
 }
