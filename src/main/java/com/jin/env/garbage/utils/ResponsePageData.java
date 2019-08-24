@@ -4,6 +4,7 @@ public class ResponsePageData extends ResponseData {
     private Integer pageSize;
     private Integer pageNo;
     private Integer count;
+    private Long totalElement;
     private Boolean isFirstPage;
     private Boolean isLastPage;
 
@@ -45,5 +46,13 @@ public class ResponsePageData extends ResponseData {
 
     public void setLastPage(Boolean lastPage) {
         isLastPage = lastPage;
+    }
+
+    public Long getTotalElement() {
+        return totalElement;
+    }
+
+    public void setTotalElement(Long totalElement) {
+        this.totalElement = totalElement;
     }
 }

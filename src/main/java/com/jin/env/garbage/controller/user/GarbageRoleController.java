@@ -4,6 +4,7 @@ import com.jin.env.garbage.service.user.GarbageRoleService;
 import com.jin.env.garbage.utils.ResponseData;
 import com.jin.env.garbage.utils.ResponsePageData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +16,9 @@ public class GarbageRoleController {
     private GarbageRoleService garbageRoleService;
 
     @RequestMapping(value = "roleList", method = RequestMethod.GET)
-    public ResponsePageData roleList(int pageSize, int pageNo,String search, String  ...orderBys){
+    public ResponsePageData roleList(Integer pageSize, Integer pageNo,String search, String  ...orderBys){
+        Assert.state(pageNo != null, "pageNo 不能为空");
+        Assert.state(pageSize != null, "pageSize 不能为空");
         ResponsePageData responsePageData =garbageRoleService.roleList(pageNo, pageSize,search, orderBys);
         return responsePageData;
     }

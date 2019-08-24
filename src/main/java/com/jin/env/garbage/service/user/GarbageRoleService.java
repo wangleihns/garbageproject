@@ -3,7 +3,10 @@ package com.jin.env.garbage.service.user;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageRoleResourceDao;
+import com.jin.env.garbage.dto.resource.ResourceChildrenList;
 import com.jin.env.garbage.dto.resource.ResourceListDto;
+import com.jin.env.garbage.dto.resource.ResourceListLabelDto;
+import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleResourceEntity;
@@ -39,7 +42,7 @@ public class GarbageRoleService {
 
     public ResponsePageData roleList(int pageNo, int pageSize, String search, String[] orderBys) {
         Sort sort = getSort(orderBys);
-        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        Pageable pageable = PageRequest.of(pageNo-1, pageSize, sort);
         ResponsePageData responsePageData = new ResponsePageData();
         try {
             Page<GarbageRoleEntity> roleEntityPage = garbageRoleDao.findAll(new Specification<GarbageRoleEntity>() {
@@ -59,6 +62,7 @@ public class GarbageRoleService {
             responsePageData.setData(roleEntityPage.getContent());
             responsePageData.setPageNo(pageNo);
             responsePageData.setPageSize(pageSize);
+            responsePageData.setTotalElement(roleEntityPage.getTotalElements());
             responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
             responsePageData.setMsg("角色列表查询成功");
         } catch (Exception e) {
@@ -124,30 +128,46 @@ public class GarbageRoleService {
                 return criteriaBuilder.notEqual(root.get("supId"), 0);
             }
         }, Sort.by(orders));
-        Map<Integer, List<GarbageResourceEntity>> childResourceMap = new HashMap<>();
+        Map<Integer, List<ResourceChildrenList>> childResourceMap = new HashMap<>();
         childResourceList.forEach(resourceEntity -> {
             if (childResourceMap.containsKey(resourceEntity.getSupId())){
-                List<GarbageResourceEntity> list = childResourceMap.get(resourceEntity.getSupId());
-                list.add(resourceEntity);
+                List<ResourceChildrenList> list = childResourceMap.get(resourceEntity.getSupId());
+                ResourceChildrenList resourceChildrenList = new ResourceChildrenList();
+                resourceChildrenList.setId(resourceEntity.getId());
+                resourceChildrenList.setLabel(resourceEntity.getName());
+                resourceChildrenList.setSeq(resourceEntity.getSeq());
+                resourceChildrenList.setSupId(resourceEntity.getSupId());
+                resourceChildrenList.setPath(resourceEntity.getPath());
+                resourceChildrenList.setIcon(resourceEntity.getIcon());
+                resourceChildrenList.setActive(resourceEntity.getActive());
+                list.add(resourceChildrenList);
                 childResourceMap.put(resourceEntity.getSupId(), list);
             }else {
-                List<GarbageResourceEntity> list = new ArrayList<>();
-                list.add(resourceEntity);
+                List<ResourceChildrenList> list = new ArrayList<>();
+                ResourceChildrenList resourceChildrenList = new ResourceChildrenList();
+                resourceChildrenList.setId(resourceEntity.getId());
+                resourceChildrenList.setLabel(resourceEntity.getName());
+                resourceChildrenList.setSeq(resourceEntity.getSeq());
+                resourceChildrenList.setSupId(resourceEntity.getSupId());
+                resourceChildrenList.setPath(resourceEntity.getPath());
+                resourceChildrenList.setIcon(resourceEntity.getIcon());
+                resourceChildrenList.setActive(resourceEntity.getActive());
+                list.add(resourceChildrenList);
                 childResourceMap.put(resourceEntity.getSupId(), list);
             }
     });
-        List<ResourceListDto> dtos = new ArrayList<>();
+        List<ResourceListLabelDto> dtos = new ArrayList<>();
         resourceEntityList.forEach(resourceEntity -> {
-            ResourceListDto dto = new ResourceListDto();
-            dto.setId(resourceEntity.getId());
-            dto.setCode(resourceEntity.getCode());
-            dto.setIcon(resourceEntity.getIcon());
-            dto.setName(resourceEntity.getName());
-            dto.setPath(resourceEntity.getPath());
-            dto.setNoDropdown(false);
-            dto.setEnabled(true);
-            dto.setChildren(childResourceMap.get(resourceEntity.getId()));
-            dtos.add(dto);
+            ResourceListLabelDto resourceListLabelDto = new ResourceListLabelDto();
+            resourceListLabelDto.setId(resourceEntity.getId());
+            resourceListLabelDto.setIcon(resourceEntity.getIcon());
+            resourceListLabelDto.setLabel(resourceEntity.getName());
+            resourceListLabelDto.setSeq(resourceEntity.getSeq());
+            resourceListLabelDto.setSupId(resourceEntity.getSupId());
+            resourceListLabelDto.setActive(resourceEntity.getActive());
+            resourceListLabelDto.setPath(resourceEntity.getPath());
+            resourceListLabelDto.setChildren(childResourceMap.get(resourceEntity.getId()));
+            dtos.add(resourceListLabelDto);
         });
         responseData.setData(dtos);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
@@ -192,13 +212,13 @@ public class GarbageRoleService {
     }
 
     @Transactional
-    public ResponseData addResourceTile(String icon, String name, String path) {
+    public ResponseData addResourceTile(String icon, String name, String path, Integer seq) {
         ResponseData responseData = new ResponseData();
         GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
         resourceEntity.setName(name);
         resourceEntity.setIcon(icon);
         resourceEntity.setPath(path);
-        resourceEntity.setSeq(1);
+        resourceEntity.setSeq(seq);
         resourceEntity.setSupId(0);
         try {
             garbageResourceDao.save(resourceEntity);
@@ -213,7 +233,7 @@ public class GarbageRoleService {
     }
 
     @Transactional
-    public ResponseData addSubResourceTile(int parentId, String icon, String name, String path, int seq) {
+    public ResponseData addSubResourceTile(Integer parentId, String icon, String name, String path, int seq, Integer active, Integer id) {
         ResponseData responseData = new ResponseData();
         GarbageResourceEntity resourceEntity = new GarbageResourceEntity();
         resourceEntity.setName(name);
@@ -221,14 +241,20 @@ public class GarbageRoleService {
         resourceEntity.setPath(path);
         resourceEntity.setSeq(seq);
         resourceEntity.setSupId(parentId);
+        resourceEntity.setActive(active);
+        String msg = "资源添加成功";
+        if (id != null){
+            resourceEntity.setId(id);
+            msg = "资源修改成功";
+        }
         try {
             garbageResourceDao.save(resourceEntity);
             responseData.setStatus(Constants.responseStatus.Success.getStatus());
-            responseData.setMsg("子资源添加成功");
+            responseData.setMsg(msg);
         } catch (Exception e) {
             e.printStackTrace();
             responseData.setStatus(Constants.responseStatus.Failure.getStatus());
-            responseData.setMsg("子资源添加失败");
+            responseData.setMsg("资源添加或修改失败");
         }
         return responseData;
     }
@@ -239,10 +265,17 @@ public class GarbageRoleService {
         GarbageRoleEntity roleEntity = new GarbageRoleEntity();
         ResponseData responseData = new ResponseData();
         roleEntity.setRoleName(roleName);
+        String roleCode = "";
         if (isAdmin) {
-            roleEntity.setRoleCode(PinYinUtil.converterToSpell(roleName) +"COMMUNITY_ADMIN");
+            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_ADMIN";
+            roleEntity.setRoleCode(roleCode);
         } else {
-            roleEntity.setRoleDesc(PinYinUtil.converterToSpell(roleName) +"COMMUNITY_REMARK");
+            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK";
+            roleEntity.setRoleCode(PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK");
+        }
+        GarbageRoleEntity role = garbageRoleDao.findByRoleCode(roleCode);
+        if (role !=null){
+            throw  new RuntimeException("角色名称重复， 角色编码重复");
         }
         roleEntity.setRoleDesc(roleDesc);
         roleEntity.setStatus(Constants.dataType.ENABLE.getType());

@@ -32,33 +32,33 @@ public class GarbageResourceController {
     }
 
     /**
-     * 添加主资源
+     * 添加资源
      * @param icon
-     * @param name
+     * @param label
      * @param path
      * @return
      */
-    @RequestMapping(value = "addResourceTile", method = RequestMethod.POST)
-    public ResponseData addResourceTile(String icon, String name, String path){
-        Assert.hasText("name", "导航名称");
-        ResponseData responseData = garbageRoleService.addResourceTile(icon, name, path);
+    @RequestMapping(value = "addSubResourceTile", method = RequestMethod.POST)
+    public ResponseData addSubResourceTile(String icon, String label, String path, Integer seq){
+        Assert.hasText(label, "导航名称");
+        ResponseData responseData = garbageRoleService.addResourceTile(icon, label, path, seq);
         return responseData;
     }
 
     /**
-     * 添加子资源
-     * @param parentId
+     * 添加资源
+     * @param supId
      * @param icon
-     * @param name
+     * @param label
      * @param path
      * @param seq
      * @return
      */
-    @RequestMapping(value = "addSubResourceTile", method = RequestMethod.POST)
-    public ResponseData addSubResourceTile(int parentId, String icon, String name, String path, int seq){
-        Assert.hasText(name, "导航名称");
+    @RequestMapping(value = "addResourceTile", method = RequestMethod.POST)
+    public ResponseData addResourceTile(Integer supId, String icon, String label, String path, Integer seq, Integer active, Integer id){
+        Assert.hasText(label, "导航名称不能为空");
         Assert.hasText(path, "路径不能为空");
-        ResponseData responseData = garbageRoleService.addSubResourceTile(parentId, icon, name, path ,seq);
+        ResponseData responseData = garbageRoleService.addSubResourceTile(supId, icon, label, path ,seq, active, id);
         return responseData;
     }
 

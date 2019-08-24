@@ -8,7 +8,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "garbage_resource", schema = "garbage_db", catalog = "")
 public class GarbageResourceEntity  extends BaseEntity{
-    private String active;
+    private Integer active;
     private String code;
     private Long depth;
     private String description;
@@ -27,11 +27,11 @@ public class GarbageResourceEntity  extends BaseEntity{
 
     @Basic
     @Column(name = "active")
-    public String getActive() {
+    public Integer getActive() {
         return active;
     }
 
-    public void setActive(String active) {
+    public void setActive(Integer active) {
         this.active = active;
     }
 

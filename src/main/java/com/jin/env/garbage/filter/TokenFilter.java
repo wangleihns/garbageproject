@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 @WebFilter(filterName = "tokenFilter",urlPatterns = "/api/*")
 public class TokenFilter implements Filter {
@@ -21,8 +22,11 @@ public class TokenFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         logger.info(request.getRequestURI());
-        String cookie = request.getHeader("Cookie");
-        logger.info(cookie);
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setCharacterEncoding("utf-8");
         filterChain.doFilter(servletRequest, servletResponse);
     }
 
