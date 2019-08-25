@@ -1114,7 +1114,14 @@ public class GarbageCollectorService {
     public ResponseData getGarbageWeightCurrentYear() {
         Calendar calendar = Calendar.getInstance();
         Integer year = calendar.get(Calendar.YEAR);
-        List<GarbageWeightInMonth> weightInMonths = garbageCollectorDao.getGarbageWeightInMonth(year);
+        Integer month = calendar.get(Calendar.MONTH);
+        List<GarbageWeightInMonth> weightInMonths = null;
+        if (month < 5){
+            weightInMonths  = garbageCollectorDao.getGarbageWeightInMonthBetween(year, 0, month);
+        } else {
+            weightInMonths  = garbageCollectorDao.getGarbageWeightInMonthBetween(year, month - 5, month );
+        }
+
         ResponseData responseData = new ResponseData();
         responseData.setData(weightInMonths);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());

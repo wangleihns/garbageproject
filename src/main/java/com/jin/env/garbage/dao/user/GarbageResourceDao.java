@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Set;
 
 public interface GarbageResourceDao extends JpaRepository<GarbageResourceEntity, Integer>, JpaSpecificationExecutor<GarbageResourceEntity> {
 
@@ -30,4 +31,6 @@ public interface GarbageResourceDao extends JpaRepository<GarbageResourceEntity,
     @Query(value = "select new com.jin.env.garbage.dto.resource.UserResourceDto(r.id, r.name, r.url, r.icon, r.supId) " +
             " from GarbageResourceEntity r  where r.supId <> 0")
     List<UserResourceDto> getUserSubResourceInfoList();
+
+    List<GarbageResourceEntity> findByIdIn(Set<Integer> ids);
 }

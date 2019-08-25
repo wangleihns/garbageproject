@@ -1,24 +1,17 @@
 package com.jin.env.garbage.entity.user;
 
+import com.jin.env.garbage.entity.base.BaseEntity;
+
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "garbage_role_community", schema = "garbage_db", catalog = "")
-public class GarbageRoleCommunityEntity {
+public class GarbageRoleCommunityEntity  extends BaseEntity{
     private int id;
     private Integer roleId;
     private Integer communityId;
 
-    @Id
-    @Column(name = "id")
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     @Basic
     @Column(name = "role_id")

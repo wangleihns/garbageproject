@@ -18,8 +18,8 @@ public class JPositionController {
     private JPositionService jPositionService;
 
 
-    @RequestMapping(value = "getProvince", method = RequestMethod.GET)
-    public ResponseData getProvince(){
+    @RequestMapping(value = "getProvinceList", method = RequestMethod.GET)
+    public ResponseData getProvinceList(){
         return jPositionService.getProvince();
     }
 
@@ -29,17 +29,17 @@ public class JPositionController {
     }
 
     @RequestMapping(value = "getCountyListByCityId", method = RequestMethod.GET)
-    public ResponseData getCountyListByCityId(Integer cityId){
+    public ResponseData getCountyListByCityId(Long cityId){
         return jPositionService.getCountyListByCityId(cityId);
     }
 
     @RequestMapping(value = "getTownListByCountyId", method = RequestMethod.GET)
-    public ResponseData getTownListByCountyId(Integer countyId){
+    public ResponseData getTownListByCountyId(Long countyId){
         return jPositionService.getTownListByCountyId(countyId);
     }
 
     @RequestMapping(value = "getVillageListByTownId", method = RequestMethod.GET)
-    public ResponseData getVillageListByTownId(Integer townId){
+    public ResponseData getVillageListByTownId(Long townId){
         return jPositionService.getVillageListByTownId(townId);
     }
 
@@ -48,7 +48,7 @@ public class JPositionController {
         return jPositionService.addVillage(townId,villageName);
     }
     @RequestMapping(value = "addCommunity", method = RequestMethod.POST)
-    public ResponseData addCommunity(Integer provinceId, Integer cityId, Integer countryId, String address, String communityName){
-        return jPositionService.addCommunity(provinceId,cityId,countryId,address, communityName);
+    public ResponseData addCommunity(Integer provinceId, Long cityId, Long countryId, String address, String communityName, String desc, String fullAddress){
+        return jPositionService.addCommunity(provinceId,cityId,countryId,address, communityName, desc, fullAddress);
     }
 }

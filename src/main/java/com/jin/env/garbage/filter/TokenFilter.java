@@ -26,8 +26,11 @@ public class TokenFilter implements Filter {
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
         response.setHeader("Access-Control-Max-Age", "3600");
+        response.addHeader("Access-Control-Allow-Headers","*");
         response.setCharacterEncoding("utf-8");
         filterChain.doFilter(servletRequest, servletResponse);
+        String token = request.getHeader("Authorization");
+        logger.info(token);
     }
 
     @Override

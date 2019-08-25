@@ -803,7 +803,14 @@ public class GarbageUserService {
     public ResponseData getRegisterUserCountInMonth() {
         Calendar calendar = Calendar.getInstance();
         Integer year = calendar.get(Calendar.YEAR);
-        List<UserCountInMonth> userCountInMonths = garbageUserDao.countUserInMonth(year);
+        Integer month = calendar.get(Calendar.MONTH);
+        List<UserCountInMonth> userCountInMonths = null;
+        if (month < 5){
+            userCountInMonths = garbageUserDao.countUserInMonthBetween(year, 0, month);
+        } else {
+            userCountInMonths = garbageUserDao.countUserInMonthBetween(year, month - 5, month);
+        }
+
         ResponseData responseData = new ResponseData();
         responseData.setData(userCountInMonths);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());

@@ -3,6 +3,8 @@ package com.jin.env.garbage.controller.user;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.service.user.GarbageRoleService;
 import com.jin.env.garbage.utils.ResponseData;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.criteria.Predicate;
+import java.util.HashSet;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/api/v1/resource")
@@ -72,6 +76,48 @@ public class GarbageResourceController {
         return responseData;
     }
 
+
+    /**
+     * Integer roleId, Integer[] resourceIds, Integer[] communityIds, Integer type
+     * @return
+     */
+
+    @RequestMapping(value = "addResourceAndCommunity", method = RequestMethod.POST)
+    public ResponseData addResourceAndCommunity(String value){
+        JSONObject jsonObject = JSONObject.fromObject(value);
+        Integer roleId = jsonObject.getInt("roleId");
+        JSONArray resourceIds = jsonObject.getJSONArray("resourceIds");
+        JSONArray communityIds = jsonObject.getJSONArray("communityIds");
+        Integer type = jsonObject.getInt("type");
+        Assert.state(roleId !=null, "请选择角色");
+        if (type == 1){
+            Assert.state(resourceIds.size() > 0, "请选择资源");
+            Assert.state(communityIds.size() > 0, "请选择小区资源");
+        } else {
+            Assert.state(resourceIds.size() > 0, "请选择资源");
+        }
+
+        Set<Integer> resourceIdSet = new HashSet<>();
+        resourceIds.stream().forEach(id-> resourceIdSet.add((Integer) id));
+        Set<Integer> communityIdSet = new HashSet<>();
+        communityIds.stream().forEach(id-> communityIdSet.add((Integer) id));
+
+        ResponseData responseData = garbageRoleService.addResourceAndCommunity(roleId, resourceIdSet, communityIdSet, type);
+        return responseData;
+    }
+
+
+    @RequestMapping(value = "findResourceAndCommunity", method = RequestMethod.GET)
+    public ResponseData findResourceAndCommunity(Integer type, Integer roleId){
+        ResponseData responseData = garbageRoleService.findResourceAndCommunity(type, roleId);
+        return responseData;
+    }
+
+    @RequestMapping(value = "getCheckResourceAndCommunity", method = RequestMethod.GET)
+    public ResponseData getCheckResourceAndCommunity(Integer type){
+        ResponseData responseData = garbageRoleService.getCheckResourceAndCommunity(type);
+        return responseData;
+    }
 
 
 }

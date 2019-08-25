@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntity, Integer>, JpaSpecificationExecutor<GarbageCollectorEntity> {
 
-    @Query(value = "select new com.jin.env.garbage.dto.garbage.GarbageWeightInMonth(u.month, sum(u.garbageWeight)) from GarbageCollectorEntity u where u.year = ?1 group by  u.month")
-    List<GarbageWeightInMonth> getGarbageWeightInMonth(Integer year);
+    @Query(value = "select new com.jin.env.garbage.dto.garbage.GarbageWeightInMonth(u.month, sum(u.garbageWeight)) from GarbageCollectorEntity u where u.year = ?1 and u.month >=?2 and u.month <=?3 group by  u.month")
+    List<GarbageWeightInMonth> getGarbageWeightInMonthBetween(Integer year, Integer startMonth, Integer endMonth);
 
 
     @Query(nativeQuery = true, value = "SELECT COUNT(qualified) FROM  garbage_collector  WHERE  collect_date BETWEEN ?1 AND  ?2")

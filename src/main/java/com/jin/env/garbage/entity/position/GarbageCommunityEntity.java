@@ -10,14 +10,15 @@ import java.util.Objects;
 @Table(name = "garbage_community", schema = "garbage_db", catalog = "")
 public class GarbageCommunityEntity extends BaseEntity{
     private Integer provinceId;
-    private Integer cityId;
-    private Integer countryId;
+    private Long cityId;
+    private Long countryId;
     private String communityName;
     private Double lat;
     private Double lon;
     private String address;
     private Integer status;
-
+    private String desc;
+    private String fullAddress;
     @Basic
     @Column(name = "province_id")
     public Integer getProvinceId() {
@@ -30,21 +31,21 @@ public class GarbageCommunityEntity extends BaseEntity{
 
     @Basic
     @Column(name = "city_id")
-    public Integer getCityId() {
+    public Long getCityId() {
         return cityId;
     }
 
-    public void setCityId(Integer cityId) {
+    public void setCityId(Long cityId) {
         this.cityId = cityId;
     }
 
     @Basic
     @Column(name = "country_id")
-    public Integer getCountryId() {
+    public Long getCountryId() {
         return countryId;
     }
 
-    public void setCountryId(Integer countryId) {
+    public void setCountryId(Long countryId) {
         this.countryId = countryId;
     }
 
@@ -96,6 +97,26 @@ public class GarbageCommunityEntity extends BaseEntity{
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    @Basic
+    @Column(name = "`desc`")
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    @Basic
+    @Column(name = "full_address")
+    public String getFullAddress() {
+        return fullAddress;
+    }
+
+    public void setFullAddress(String fullAddress) {
+        this.fullAddress = fullAddress;
     }
 
     @Override

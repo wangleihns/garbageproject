@@ -19,6 +19,6 @@ public interface GarbageUserDao extends JpaRepository<GarbageUserEntity, Integer
     @Query(value = "select new com.jin.env.garbage.dto.user.UserVillageDto(u.id, u.villageName) from GarbageUserEntity u where u.id in (?1)")
     List<UserVillageDto> getUserVillageNameByIds(List ids);
 
-    @Query(value =  "select new com.jin.env.garbage.dto.user.UserCountInMonth(u.month, count(u.id)) from GarbageUserEntity u where u.year = ?1 group by u.month")
-    List<UserCountInMonth> countUserInMonth(Integer year);
+    @Query(value =  "select new com.jin.env.garbage.dto.user.UserCountInMonth(u.month, count(u.id)) from GarbageUserEntity u where u.year = ?1 and u.month >=?2 and u.month<=?3  group by u.month")
+    List<UserCountInMonth> countUserInMonthBetween(Integer year, Integer startMonth, Integer endMonth);
 }

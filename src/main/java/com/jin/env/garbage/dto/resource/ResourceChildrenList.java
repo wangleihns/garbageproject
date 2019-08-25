@@ -8,6 +8,7 @@ public class ResourceChildrenList {
     private Integer supId;
     private Integer active;
     private String icon;
+    private Boolean isCheck;
 
     public Integer getId() {
         return id;
@@ -63,5 +64,13 @@ public class ResourceChildrenList {
 
     public void setIcon(String icon) {
         this.icon = icon;
+    }
+
+    public Boolean getCheck() {
+        return isCheck;
+    }
+
+    public void setCheck(Boolean check) {
+        isCheck = check;
     }
 }

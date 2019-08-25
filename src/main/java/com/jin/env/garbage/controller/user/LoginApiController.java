@@ -110,7 +110,7 @@ public class LoginApiController {
         Assert.hasText(newPassword, "新密码不能空");
         Assert.hasText(repeatPassword, "重复密码不能为空");
         Assert.state(newPassword.equals(repeatPassword), "新密码与重复密码不一致");
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageUserService.updatePassword(jwt, oldPassword, newPassword);
         return responseData;
     }
@@ -134,7 +134,7 @@ public class LoginApiController {
     public ResponsePageData collectorList(String name, String phone, String idCard, String value, Integer provinceId,
                                           Integer cityId, Integer countryId, Integer townId, Integer villageId,
                                           String[] orderBys, HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
         ResponsePageData responsePageData = garbageUserService.collectorList(name, phone, idCard, value,provinceId, cityId, countryId, townId, villageId, jwt, pageNo, pageSize, orderBys);
@@ -143,14 +143,14 @@ public class LoginApiController {
 
     @RequestMapping(value = "getUserInfoById", method = RequestMethod.GET)
     public ResponseData getUserInfoById(HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageUserService.getUserInfoById(jwt);
         return responseData;
     }
 
     @RequestMapping(value = "deleteUserById", method = RequestMethod.DELETE)
     public ResponseData deleteUserById(HttpServletRequest request, Integer status){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageUserService.deleteUserById(jwt, status);
         return responseData;
     }
@@ -165,7 +165,7 @@ public class LoginApiController {
     public ResponseData residentList(String name, String phone, String idCard, String eNo, Integer provinceId,
                                      Integer cityId, Integer countryId,  Integer townId, Integer villageId,
                                      String checkType, String[] orderBys, HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
         ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, checkType, jwt, pageNo, pageSize, orderBys);
@@ -179,13 +179,13 @@ public class LoginApiController {
      */
     @RequestMapping(value = "getSummaryInfoInManagerCenter", method = RequestMethod.GET)
     public ResponseData getSummaryInfoInManagerCenter(HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageUserService.getSummaryInfoInManagerCenter(jwt);
         return responseData;
     }
 
     /**
-     * 今年的用户注册量
+     * 近5个月的用户注册量
      * @return
      */
     @RequestMapping(value = "getRegisterUserCountInMonth", method = RequestMethod.GET)

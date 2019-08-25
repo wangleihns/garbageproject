@@ -10,6 +10,7 @@ public class ResourceListLabelDto {
     private Integer seq;
     private Integer supId;
     private Integer active;
+    private Boolean isCheck;
     private List<ResourceChildrenList> children;
 
     public Integer getId() {
@@ -74,6 +75,14 @@ public class ResourceListLabelDto {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public Boolean getCheck() {
+        return isCheck;
+    }
+
+    public void setCheck(Boolean check) {
+        isCheck = check;
     }
 }
 

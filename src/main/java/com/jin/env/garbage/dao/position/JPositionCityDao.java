@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface JPositionCityDao extends JpaRepository<JPositionCityEntity, Integer>, JpaSpecificationExecutor<JPositionCityEntity> {
+    JPositionCityEntity findByCityId(Long cityId);
 }

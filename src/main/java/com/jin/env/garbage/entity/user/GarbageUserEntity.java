@@ -1,6 +1,8 @@
 package com.jin.env.garbage.entity.user;
 
 import com.jin.env.garbage.entity.base.BaseEntity;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.context.annotation.Lazy;
@@ -13,6 +15,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "garbage_user", schema = "garbage_db", catalog = "")
+@DynamicUpdate(value = true)
+@DynamicInsert(value = true)
 public class GarbageUserEntity extends BaseEntity{
     private String email;
     private String phone;

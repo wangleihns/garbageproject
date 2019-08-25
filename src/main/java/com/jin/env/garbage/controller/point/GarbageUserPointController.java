@@ -21,7 +21,7 @@ public class GarbageUserPointController {
     @RequestMapping(value = "getPointRankList", method = RequestMethod.GET)
     public ResponseData getPointRankList(Integer pageNo, Integer pageSize, String name, String phone, HttpServletRequest request,
                                          Integer cityId, Integer countryId, Integer townId, Integer villageId, String[] orderBys){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.state(pageNo !=null && pageNo> 0, "请输入页数");
         Assert.state(pageSize != null && pageSize> 0, "输入显示的size");
         ResponseData responseData =garbageUserPointService.getPointRankList(pageNo, pageSize, name, phone, jwt, cityId, countryId, townId, villageId, orderBys);
@@ -30,7 +30,7 @@ public class GarbageUserPointController {
 
     @RequestMapping(value = "redAndBlackRank", method = RequestMethod.GET)
     public ResponseData redAndBlackRank(HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(": ")[1];
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData =garbageUserPointService.redAndBlackRank(jwt);
         return responseData;
     }

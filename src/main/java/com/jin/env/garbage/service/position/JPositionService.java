@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -80,14 +81,14 @@ public class JPositionService {
         return responseData;
     }
 
-    public ResponseData getCountyListByCityId(Integer cityId) {
+    public ResponseData getCountyListByCityId(Long cityId) {
         ResponseData responseData = new ResponseData();
         List<JPositionCountyEntity> jPositionCountyEntityList = null;
         try {
             jPositionCountyEntityList = jPositionCountyDao.findAll(new Specification<JPositionCountyEntity>() {
                 @Override
                 public Predicate toPredicate(Root<JPositionCountyEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                    return criteriaBuilder.equal(root.get("provinceId"), cityId);
+                    return criteriaBuilder.equal(root.get("cityId"), cityId);
                 }
             });
             responseData.setData(jPositionCountyEntityList);
@@ -102,7 +103,7 @@ public class JPositionService {
 
     }
 
-    public ResponseData getTownListByCountyId(Integer countyId) {
+    public ResponseData getTownListByCountyId(Long countyId) {
         ResponseData responseData = new ResponseData();
         List<JPositionTownEntity> jPositionTownEntityList = null;
         try {
@@ -123,7 +124,7 @@ public class JPositionService {
         return responseData;
     }
 
-    public ResponseData getVillageListByTownId(Integer townId) {
+    public ResponseData getVillageListByTownId(Long townId) {
         ResponseData responseData = new ResponseData();
         List<JPositionVillageEntity> jPositionVillageEntityList = null;
         try {
@@ -182,13 +183,20 @@ public class JPositionService {
     }
 
     @Transactional
-    public ResponseData addCommunity(Integer provinceId, Integer cityId, Integer countryId, String address, String communityName) {
-        String baseUrl = "http://api.map.baidu.com/geocoding/v3/";
+    public ResponseData addCommunity(Integer provinceId, Long cityId, Long countryId, String address, String communityName, String  desc, String fullAddress) {
+        JPositionProvinceEntity jPositionProvinceEntity = jPositionProvinceDao.findByProvinceId(provinceId);
+        JPositionCityEntity jPositionCityEntity = jPositionCityDao.findByCityId(cityId);
+        JPositionCountyEntity jPositionCountyEntity = jPositionCountyDao.findByCountyId(countryId);
+        if (StringUtils.isEmpty(fullAddress)){
+            fullAddress = jPositionProvinceEntity.getProvinceName() + jPositionCityEntity.getCityName() + jPositionCountyEntity.getCountyName() + address;
+        }
+       String baseUrl = "http://api.map.baidu.com/geocoding/v3/";
         Map<String, Object> map = new HashMap<>();
-        map.put("address", address.replaceAll(" ", ""));
+        map.put("address", fullAddress.replaceAll(" ", ""));
         map.put("output", "json");
         map.put("ak", ak);
         String s = null;
+
         ResponseData responseData = new ResponseData();
         try {
             s = HttpClientUtil.sendGet(baseUrl, map);
@@ -204,19 +212,22 @@ public class JPositionService {
                 communityEntity.setCountryId(countryId);
                 communityEntity.setCommunityName(communityName);
                 communityEntity.setAddress(address);
+                communityEntity.setFullAddress(fullAddress);
                 communityEntity.setLat(lat);
                 communityEntity.setLon(lng);
+                communityEntity.setDesc(desc);
                 communityEntity.setStatus(Constants.dataType.ENABLE.getType());
                 garbageCommunityDao.save(communityEntity);
                 responseData.setStatus(Constants.responseStatus.Success.getStatus());
                 responseData.setMsg("添加成功");
             } else {
                 logger.info(s);
+                throw new RuntimeException(jsonObject.getString("message"));
             }
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("获取小区经纬度坐标出现错误");
         }
-         return null;
+         return responseData;
     }
 }

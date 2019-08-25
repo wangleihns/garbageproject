@@ -1,13 +1,14 @@
 package com.jin.env.garbage.service.user;
 
+import com.jin.env.garbage.dao.position.GarbageCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
+import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageRoleResourceDao;
-import com.jin.env.garbage.dto.resource.ResourceChildrenList;
-import com.jin.env.garbage.dto.resource.ResourceListDto;
-import com.jin.env.garbage.dto.resource.ResourceListLabelDto;
-import com.jin.env.garbage.dto.resource.UserResourceDto;
+import com.jin.env.garbage.dto.resource.*;
+import com.jin.env.garbage.entity.position.GarbageCommunityEntity;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
+import com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleResourceEntity;
 import com.jin.env.garbage.utils.Constants;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@SuppressWarnings("ALL")
 public class GarbageRoleService {
 
     @Autowired
@@ -39,6 +41,12 @@ public class GarbageRoleService {
 
     @Autowired
     private GarbageRoleResourceDao garbageRoleResourceDao;
+
+    @Autowired
+    private GarbageRoleCommunityDao garbageRoleCommunityDao;
+
+    @Autowired
+    private GarbageCommunityDao garbageCommunityDao;
 
     public ResponsePageData roleList(int pageNo, int pageSize, String search, String[] orderBys) {
         Sort sort = getSort(orderBys);
@@ -284,5 +292,150 @@ public class GarbageRoleService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("添加小区角色名称成功");
         return responseData;
+    }
+
+    @Transactional
+    public ResponseData addResourceAndCommunity(Integer roleId, Set<Integer> resourceIdSet, Set<Integer> communityIdSet, Integer type) {
+        ResponseData responseData = new ResponseData();
+        List<GarbageRoleResourceEntity> roleResourceEntityList = new ArrayList<>();
+        List<GarbageResourceEntity> childresList = garbageResourceDao.findByIdIn(resourceIdSet);
+        Set<Integer> parentIds = childresList.stream().map(garbageResourceEntity -> garbageResourceEntity.getSupId()).collect(Collectors.toSet());
+        resourceIdSet.addAll(parentIds);
+        resourceIdSet.stream().forEach(resourceId ->{
+            GarbageRoleResourceEntity roleResourceEntity = new GarbageRoleResourceEntity();
+            roleResourceEntity.setResourceId(resourceId);
+            roleResourceEntity.setRoleId(roleId);
+            roleResourceEntityList.add(roleResourceEntity);
+        });
+        List<GarbageRoleCommunityEntity> roleCommunityList = new ArrayList<>();
+        communityIdSet.stream().forEach(communityId ->{
+            GarbageRoleCommunityEntity entity = new GarbageRoleCommunityEntity();
+            entity.setRoleId(roleId);
+            entity.setCommunityId(communityId);
+            roleCommunityList.add(entity);
+        });
+        try {
+            garbageRoleResourceDao.deleteAllByRoleId(roleId);
+            garbageRoleCommunityDao.deleteAllByRoleId(roleId);
+            garbageRoleResourceDao.saveAll(roleResourceEntityList);
+            garbageRoleCommunityDao.saveAll(roleCommunityList);
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("添加成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(Constants.responseStatus.Failure.getStatus());
+            responseData.setMsg("添加失败");
+        }
+        return responseData;
+    }
+
+    public ResponseData findResourceAndCommunity(Integer type, Integer roleId ) {
+        List<GarbageRoleResourceEntity> roleResourceEntities = garbageRoleResourceDao.findByRoleId(roleId);
+        List<Integer> resourceIds = roleResourceEntities.stream().map(garbageRoleResourceEntity -> garbageRoleResourceEntity.getResourceId()).collect(Collectors.toList());
+
+        //主标题
+        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findAll(new Specification<GarbageResourceEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageResourceEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("supId"), 0);
+            }
+        });
+        List<Sort.Order> orders = new ArrayList<>();
+        orders.add(Sort.Order.asc("seq"));
+        //子标题
+        List<GarbageResourceEntity> childResourceList = garbageResourceDao.findAll(new Specification<GarbageResourceEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageResourceEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.notEqual(root.get("supId"), 0);
+            }
+        }, Sort.by(orders));
+        Map<Integer, List<ResourceChildrenList>> childResourceMap = new HashMap<>();
+        childResourceList.forEach(resourceEntity -> {
+            if (childResourceMap.containsKey(resourceEntity.getSupId())){
+                List<ResourceChildrenList> list = childResourceMap.get(resourceEntity.getSupId());
+                ResourceChildrenList resourceChildrenList = new ResourceChildrenList();
+                resourceChildrenList.setId(resourceEntity.getId());
+                resourceChildrenList.setLabel(resourceEntity.getName());
+                resourceChildrenList.setSeq(resourceEntity.getSeq());
+                resourceChildrenList.setSupId(resourceEntity.getSupId());
+                resourceChildrenList.setPath(resourceEntity.getPath());
+                resourceChildrenList.setIcon(resourceEntity.getIcon());
+                resourceChildrenList.setActive(resourceEntity.getActive());
+                if (resourceIds.contains(resourceEntity.getId())){
+                    resourceChildrenList.setCheck(true);
+                } else {
+                    resourceChildrenList.setCheck(false);
+                }
+                list.add(resourceChildrenList);
+                childResourceMap.put(resourceEntity.getSupId(), list);
+            }else {
+                List<ResourceChildrenList> list = new ArrayList<>();
+                ResourceChildrenList resourceChildrenList = new ResourceChildrenList();
+                resourceChildrenList.setId(resourceEntity.getId());
+                resourceChildrenList.setLabel(resourceEntity.getName());
+                resourceChildrenList.setSeq(resourceEntity.getSeq());
+                resourceChildrenList.setSupId(resourceEntity.getSupId());
+                resourceChildrenList.setPath(resourceEntity.getPath());
+                resourceChildrenList.setIcon(resourceEntity.getIcon());
+                resourceChildrenList.setActive(resourceEntity.getActive());
+                if (resourceIds.contains(resourceEntity.getId())){
+                    resourceChildrenList.setCheck(true);
+                } else {
+                    resourceChildrenList.setCheck(false);
+                }
+                list.add(resourceChildrenList);
+                childResourceMap.put(resourceEntity.getSupId(), list);
+            }
+        });
+        List<ResourceListLabelDto> dtos = new ArrayList<>();
+        resourceEntityList.forEach(resourceEntity -> {
+            ResourceListLabelDto resourceListLabelDto = new ResourceListLabelDto();
+            resourceListLabelDto.setId(resourceEntity.getId());
+            resourceListLabelDto.setIcon(resourceEntity.getIcon());
+            resourceListLabelDto.setLabel(resourceEntity.getName());
+            resourceListLabelDto.setSeq(resourceEntity.getSeq());
+            resourceListLabelDto.setSupId(resourceEntity.getSupId());
+            resourceListLabelDto.setActive(resourceEntity.getActive());
+            resourceListLabelDto.setPath(resourceEntity.getPath());
+            resourceListLabelDto.setChildren(childResourceMap.get(resourceEntity.getId()));
+            if (resourceIds.contains(resourceEntity.getId())){
+                resourceListLabelDto.setCheck(true);
+            } else {
+                resourceListLabelDto.setCheck(false);
+            }
+            dtos.add(resourceListLabelDto);
+        });
+       List<GarbageCommunityEntity> communityEntities = garbageCommunityDao.findAll();
+       List<GarbageRoleCommunityEntity> roleCommunityEntityList = garbageRoleCommunityDao.findByRoleId(roleId);
+       List<Integer> communityIds = roleCommunityEntityList.stream().map(garbageRoleCommunityEntity -> garbageRoleCommunityEntity.getCommunityId()).collect(Collectors.toList());
+       List<CommunityResourceDto> communityResourceDtos = new ArrayList<>();
+        communityEntities.stream().forEach(garbageCommunityEntity -> {
+            CommunityResourceDto dto = new CommunityResourceDto();
+            dto.setCommunityName(garbageCommunityEntity.getCommunityName());
+            dto.setId(garbageCommunityEntity.getId());
+            if (resourceIds.contains(garbageCommunityEntity.getId())){
+                dto.setCheck(true);
+            } else {
+                dto.setCheck(false);
+            }
+            communityResourceDtos.add(dto);
+        });
+       ResponseData response = new ResponseData();
+       Map<String, Object> map = new HashMap<>();
+       if (type == 1){
+            map.put("resourceList", dtos);
+            map.put("communityList", communityResourceDtos);
+       } else {
+           map.put("resourceList", dtos);
+           map.put("communityList", communityResourceDtos);
+       }
+       response.setMsg("资源列表查询成功");
+       response.setData(map);
+       response.setStatus(Constants.responseStatus.Success.getStatus());
+       return response;
+    }
+
+    public ResponseData getCheckResourceAndCommunity(Integer type) {
+        return  null;
     }
 }
