@@ -16,10 +16,10 @@ public class GarbageRoleController {
     private GarbageRoleService garbageRoleService;
 
     @RequestMapping(value = "roleList", method = RequestMethod.GET)
-    public ResponsePageData roleList(Integer pageSize, Integer pageNo,String search, String  ...orderBys){
+    public ResponseData roleList(Integer pageSize, Integer pageNo,String search, String  ...orderBys){
         Assert.state(pageNo != null, "pageNo 不能为空");
         Assert.state(pageSize != null, "pageSize 不能为空");
-        ResponsePageData responsePageData =garbageRoleService.roleList(pageNo, pageSize,search, orderBys);
+        ResponseData responsePageData =garbageRoleService.roleList(pageNo, pageSize,search, orderBys);
         return responsePageData;
     }
 

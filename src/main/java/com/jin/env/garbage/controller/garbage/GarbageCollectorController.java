@@ -48,7 +48,8 @@ public class GarbageCollectorController {
      */
     @RequestMapping(value = "addGarbageByAuto", method = RequestMethod.POST)
     public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, HttpServletRequest request){
-        String jwt = request.getHeader("Authorization").split(" ")[1];
+        String jwtArr[] = request.getHeader("Authorization").split(" ");
+        String jwt = jwtArr[1];
         ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt);
         return  responseData;
     }
@@ -104,7 +105,6 @@ public class GarbageCollectorController {
      * @param phone
      * @param name
      * @param orderBys
-     * @param provinceId
      * @param cityId
      * @param countryId
      * @param townId

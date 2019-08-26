@@ -55,7 +55,7 @@ public class EntityListener {
             //表示直接由硬件系统添加
             return 1;
         }
-        String jwt = token.split(": ")[1];
+        String jwt = token.split(" ")[1];
         Integer sub = null;
         JwtUtil jwtUtil = (JwtUtil) SpringContextUtil.getBean("jwtUtil");
         try {

@@ -249,7 +249,13 @@ public class GarbageCollectorService {
         collectorEntity.setGarbageWeight(weight);
         collectorEntity.setCheck(false);
         garbageCollectorDao.save(collectorEntity);
-        GarbageImageEntity imageEntity = garbageImageDao.findById(imageId).get();
+        GarbageImageEntity imageEntity = null;
+        try {
+            imageEntity = garbageImageDao.findById(imageId).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("还没有上传图片，请上传图片");
+        }
         imageEntity.setSourceName(GarbageCollectorEntity.class.getName());
         imageEntity.setBusId(collectorEntity.getId());
         //图片类型为垃圾
