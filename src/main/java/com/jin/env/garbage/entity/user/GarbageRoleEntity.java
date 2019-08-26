@@ -2,6 +2,7 @@ package com.jin.env.garbage.entity.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jin.env.garbage.entity.base.BaseEntity;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.context.annotation.Lazy;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "garbage_role", schema = "garbage_db", catalog = "")
+@DynamicUpdate
 public class GarbageRoleEntity extends BaseEntity{
     private String roleCode;
     private String roleName;

@@ -115,7 +115,7 @@ public class GarbageCollectorController {
     @RequestMapping(value = "getGarbageCollectorSummaryInfo", method = RequestMethod.GET)
     public ResponseData getGarbageCollectorSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
                                               String phone, String name, String[] orderBys,
-                                              Integer cityId, Integer countryId, Integer townId, Integer villageId,  HttpServletRequest request){
+                                                       Long cityId, Long countryId, Long townId, Long villageId,  HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, cityId, countryId, townId, villageId);
         return  responseData;
@@ -139,7 +139,7 @@ public class GarbageCollectorController {
      */
     @RequestMapping(value = "getGarbageCollectSummaryInfoInPlace", method = RequestMethod.GET)
     public ResponseData getGarbageCollectSummaryInfoInPlace(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
-                                      String[] orderBys, Integer provinceId, Integer cityId, Integer countryId, Integer townId, Integer villageId,  HttpServletRequest request){
+                                      String[] orderBys, Integer provinceId, Long cityId, Long countryId, Long townId, Long villageId,  HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfoInPlace(pageNo, pageSize, startTime, endTime, type, provinceId,
                 cityId, countryId, townId, villageId, orderBys, jwt);

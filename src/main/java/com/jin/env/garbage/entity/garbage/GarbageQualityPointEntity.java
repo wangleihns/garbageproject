@@ -10,7 +10,7 @@ public class GarbageQualityPointEntity extends BaseEntity {
     private Integer empty;
     private Integer noQualified;
     private Integer qualified;
-    private Integer placeId;
+    private Long placeId;
     private Integer type;
 
     @Basic
@@ -45,11 +45,11 @@ public class GarbageQualityPointEntity extends BaseEntity {
 
     @Basic
     @Column(name = "place_id")
-    public Integer getPlaceId() {
+    public Long getPlaceId() {
         return placeId;
     }
 
-    public void setPlaceId(Integer placeId) {
+    public void setPlaceId(Long placeId) {
         this.placeId = placeId;
     }
 
