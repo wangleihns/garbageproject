@@ -15,7 +15,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -53,29 +55,9 @@ public class LoginApiController {
 
 
     @RequestMapping(value = "refreshAccessToken",method = RequestMethod.GET)
-    public ResponseData refreshAccessToken(String jwt){
-        ResponseData responseData = new ResponseData();
-        responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
-        String accessToken = null;
-        String refreshToken = null;
-        try {
-            Integer sub = jwtUtil.getSubject(jwt);
-            accessToken = jwtUtil.generateJwtToken(sub.toString(),"garbage", null);
-//            KnUserEntity userEntity = knUserEntityService.findByUserId(Long.valueOf(sub));
-//            String username = userEntity.getPhone();
-//            redisTemplate.opsForValue().set("accessToken:"+username, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
-//            refreshToken = jwtUtil.getRefresh(accessToken);
-        } catch (Exception e) {
-            e.printStackTrace();
-            responseData.setStatus(500);
-            responseData.setMsg("token 不合法");
-            return responseData;
-        }
-        Map<String, String> token= new HashMap<>();
-        token.put("accessToken",accessToken);
-        token.put("refreshToken",refreshToken);
-        responseData.setMsg("refresh success");
-        responseData.setData(token);
+    public ResponseData refreshAccessToken(String refreshToken, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+       ResponseData  responseData=  garbageUserService.refreshAccessToken(refreshToken,jwt);
         return responseData;
     }
 
@@ -148,7 +130,7 @@ public class LoginApiController {
         return responseData;
     }
 
-    @RequestMapping(value = "deleteUserById", method = RequestMethod.DELETE)
+    @RequestMapping(value = "deleteUserById", method = RequestMethod.POST)
     public ResponseData deleteUserById(HttpServletRequest request, Integer status){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageUserService.deleteUserById(jwt, status);
@@ -194,9 +176,20 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 大数据中心的统计信息
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "getSummaryInfoInBigDataCenter", method = RequestMethod.GET)
     public ResponseData getSummaryInfoInBigDataCenter(HttpServletRequest request){
         ResponseData responseData = garbageUserService.getSummaryInfoInBigDataCenter();
+        return responseData;
+    }
+
+    @RequestMapping(value = "insertUserInfoBatch", method = RequestMethod.POST)
+    public ResponseData insertUserInfoBatch(@RequestParam("file") MultipartFile multipartFile, HttpServletRequest request){
+        ResponseData responseData = garbageUserService.insertUserInfoBatch(multipartFile);
         return responseData;
     }
 

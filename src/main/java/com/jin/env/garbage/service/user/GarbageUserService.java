@@ -22,6 +22,8 @@ import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.service.garbage.GarbageCollectorService;
 import com.jin.env.garbage.utils.*;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.http.NameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.criteria.*;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -50,7 +54,9 @@ public class GarbageUserService {
     private Logger logger = LoggerFactory.getLogger(LoginApiController.class);
 
     @Value(value = "${garbageTokenTime}")
-    private Integer garbageTokenTime;
+    private Long garbageTokenTime;
+    @Value(value = "${noGarbageTokenTime}")
+    private Long noGarbageTokenTime ;
 
     @Autowired
     private GarbageUserDao garbageUserDao;
@@ -99,18 +105,6 @@ public class GarbageUserService {
         if(!CommonUtil.md5(password).equals(userEntity.getPassword())){
             throw new RuntimeException("账号或密码不正确");
         } else {
-            String accessToken =  "";
-            Map<String, Object> token= new HashMap<>();
-            if (Constants.loginType.GarbageCar.getType().equals(from)){
-                //垃圾车 token 有效时长
-                accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", garbageTokenTime);
-            } else {
-                //其他客户端使用默认有效时长
-                accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", null);
-            }
-            String refreshToken = jwtUtil.getRefresh(accessToken);
-            redisTemplate.opsForValue().set("accessToken:"+username, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
-            String a =  redisTemplate.opsForValue().get("accessToken:" + username);
             //组资源
             List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(userEntity.getId());
             //子资源
@@ -125,10 +119,25 @@ public class GarbageUserService {
                 dto.setUrl(resourceEntity.getUrl());
                 userResourceDtos.add(dto);
             });
+            String accessToken =  "";
+            Map<String, Object> token= new HashMap<>();
+            if (Constants.loginType.GarbageCar.getType().equals(from)){
+                //垃圾车 token 有效时长
+                accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", garbageTokenTime);
+            } else if (Constants.loginType.NoGarbageCar.getType().equals(from)){
+                accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", noGarbageTokenTime);
+            } else {
+                //其他客户端使用默认有效时长
+                accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", null);
+                token.put("userEntity", userEntity);
+                token.put("resources", userResourceDtos);
+            }
+            String refreshToken = jwtUtil.getRefresh(accessToken);
+            redisTemplate.opsForValue().set("accessToken:"+userEntity.getPhone(), accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
+            String a =  redisTemplate.opsForValue().get("accessToken:" + username);
+            redisTemplate.opsForValue().set("refreshToken:" +userEntity.getPhone(), refreshToken, 7*24*60*60*1000, TimeUnit.MILLISECONDS);
             token.put("accessToken", accessToken);
             token.put("refreshToken", refreshToken);
-            token.put("userEntity", userEntity);
-            token.put("resources", userResourceDtos);
             logger.info(a);
             responseData.setMsg("登录成功");
             responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
@@ -854,5 +863,54 @@ public class GarbageUserService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("查询成功");
         return  responseData;
+    }
+
+    public ResponseData insertUserInfoBatch(MultipartFile multipartFile) {
+        InputStream inputStream = null;
+
+        try {
+            inputStream = multipartFile.getInputStream();
+            String fileName = multipartFile.getOriginalFilename();
+            String suffix  = FilenameUtils.getExtension(fileName);
+            List<NameValuePair> list = ReadExcelUtil.readExcel(inputStream, suffix);
+            list.stream().forEach(n->{
+                logger.info("--- > " + n.getValue());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ResponseData responseData = new ResponseData();
+        return responseData;
+    }
+
+    public ResponseData refreshAccessToken(String refreshToken, String jwt) {
+        ResponseData responseData = new ResponseData();
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
+        String accessToken = null;
+        String refreshTokenNew = null;
+        try {
+            String a =  redisTemplate.opsForValue().get("accessToken:" + userEntity.getPhone());
+            if (!a.equals(refreshToken)){
+                throw new RuntimeException("refreshToken 不合法");
+            }
+            accessToken = jwtUtil.generateJwtToken(sub.toString(),"garbage", null);
+            String phone = userEntity.getPhone();
+            redisTemplate.opsForValue().set("accessToken:"+phone, accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
+            refreshTokenNew = jwtUtil.getRefresh(accessToken);
+            redisTemplate.opsForValue().set("refreshToken:" +phone, refreshTokenNew, 7*24*60*60*1000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+            responseData.setStatus(500);
+            responseData.setMsg("token 不合法");
+            return responseData;
+        }
+        Map<String, String> token= new HashMap<>();
+        token.put("accessToken",accessToken);
+        token.put("refreshToken",refreshTokenNew);
+        responseData.setMsg("refresh success");
+        responseData.setData(token);
+        return responseData;
     }
 }

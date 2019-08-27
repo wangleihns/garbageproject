@@ -24,6 +24,7 @@ public class Constants {
 
     public enum loginType{
         GarbageCar("garbage_car"),
+        NoGarbageCar("no_garbage_car"),
         Android("android"),
         IPhone("iphone"),
         Web("web"),

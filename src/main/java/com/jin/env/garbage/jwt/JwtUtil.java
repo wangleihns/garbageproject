@@ -60,7 +60,7 @@ public class JwtUtil {
      * @param expTime
      * @return
      */
-    public Claims getClaim(String subject,String issuer,int expTime){
+    public Claims getClaim(String subject,String issuer,Long expTime){
         Date iat = new Date();
         Date exp = new Date(iat.getTime() + expTime);
         Claims claims = Jwts.claims()
@@ -101,7 +101,7 @@ public class JwtUtil {
      * @param issuer
      * @return
      */
-    public String generateJwtToken(String subject,String issuer, Integer expTime){
+    public String generateJwtToken(String subject,String issuer, Long expTime){
         return Jwts.builder()
                 .setHeader(getHeader())
                 .setClaims(getClaim(subject, issuer, (expTime == null ?exp:expTime)))
