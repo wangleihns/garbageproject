@@ -3,7 +3,6 @@ package com.jin.env.garbage.entity.position;
 import com.jin.env.garbage.entity.base.BaseEntity;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
@@ -12,6 +11,7 @@ public class GarbageCommunityEntity extends BaseEntity{
     private Integer provinceId;
     private Long cityId;
     private Long countryId;
+    private Long townId;
     private String communityName;
     private Double lat;
     private Double lon;
@@ -47,6 +47,16 @@ public class GarbageCommunityEntity extends BaseEntity{
 
     public void setCountryId(Long countryId) {
         this.countryId = countryId;
+    }
+
+    @Basic
+    @Column(name = "town_id")
+    public Long getTownId() {
+        return townId;
+    }
+
+    public void setTownId(Long townId) {
+        this.townId = townId;
     }
 
     @Basic

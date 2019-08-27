@@ -18,6 +18,20 @@ public class GarbageUserPointController {
     @Autowired
     private GarbageUserPointService garbageUserPointService;
 
+    /**
+     * 积分排行榜
+     * @param pageNo
+     * @param pageSize
+     * @param name
+     * @param phone
+     * @param request
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param orderBys
+     * @return
+     */
     @RequestMapping(value = "getPointRankList", method = RequestMethod.GET)
     public ResponseData getPointRankList(Integer pageNo, Integer pageSize, String name, String phone, HttpServletRequest request,
                                          Integer cityId, Integer countryId, Integer townId, Integer villageId, String[] orderBys){
@@ -28,6 +42,11 @@ public class GarbageUserPointController {
         return responseData;
     }
 
+    /**
+     * 主页红黑榜
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "redAndBlackRank", method = RequestMethod.GET)
     public ResponseData redAndBlackRank(HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];

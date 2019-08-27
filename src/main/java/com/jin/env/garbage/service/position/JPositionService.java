@@ -183,7 +183,7 @@ public class JPositionService {
     }
 
     @Transactional
-    public ResponseData addCommunity(Integer provinceId, Long cityId, Long countryId, String address, String communityName, String  desc, String fullAddress) {
+    public ResponseData addCommunity(Integer provinceId, Long cityId, Long countryId, Long townId,  String address, String communityName, String  desc, String fullAddress) {
         JPositionProvinceEntity jPositionProvinceEntity = jPositionProvinceDao.findByProvinceId(provinceId);
         JPositionCityEntity jPositionCityEntity = jPositionCityDao.findByCityId(cityId);
         JPositionCountyEntity jPositionCountyEntity = jPositionCountyDao.findByCountyId(countryId);
@@ -210,6 +210,7 @@ public class JPositionService {
                 communityEntity.setProvinceId(provinceId);
                 communityEntity.setCityId(cityId);
                 communityEntity.setCountryId(countryId);
+                communityEntity.setTownId(townId);
                 communityEntity.setCommunityName(communityName);
                 communityEntity.setAddress(address);
                 communityEntity.setFullAddress(fullAddress);
