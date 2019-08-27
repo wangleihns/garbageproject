@@ -1,12 +1,16 @@
 package com.jin.env.garbage.entity.user;
 
 import com.jin.env.garbage.entity.base.BaseEntity;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "garbage_resource", schema = "garbage_db", catalog = "")
+@DynamicInsert(value = true)
+@DynamicUpdate
 public class GarbageResourceEntity  extends BaseEntity{
     private Integer active;
     private String code;

@@ -101,10 +101,10 @@ public class GarbageCollectorService {
         GarbageUserEntity collector = garbageUserDao.findById(sub).get();
 
         Integer provinceId = collector.getProvinceId();
-        Integer cityId = collector.getCityId();
-        Integer countryId = collector.getCountryId();
-        Integer townId = collector.getTownId();
-        Integer villageId = collector.getVillageId();
+        Long cityId = collector.getCityId();
+        Long countryId = collector.getCountryId();
+        Long townId = collector.getTownId();
+        Long villageId = collector.getVillageId();
         Calendar calendar = Calendar.getInstance();
         Integer year = calendar.get(Calendar.YEAR);
         Integer month = calendar.get(Calendar.MONTH);
@@ -219,10 +219,10 @@ public class GarbageCollectorService {
         //垃圾收集员
         GarbageUserEntity collector = garbageUserDao.findById(sub).get();
         Integer provinceId = collector.getProvinceId();
-        Integer cityId = collector.getCityId();
-        Integer countryId = collector.getCountryId();
-        Integer townId = collector.getTownId();
-        Integer villageId = collector.getVillageId();
+        Long cityId = collector.getCityId();
+        Long countryId = collector.getCountryId();
+        Long townId = collector.getTownId();
+        Long villageId = collector.getVillageId();
         Calendar calendar = Calendar.getInstance();
         Integer year = calendar.get(Calendar.YEAR);
         Integer month = calendar.get(Calendar.MONTH);
@@ -514,7 +514,7 @@ public class GarbageCollectorService {
     @Transactional
     public ResponseData getGarbageCollectSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime,
                                               String type, String phone, String name, String jwt, String[] orderBys,
-                                              Integer cityId, Integer countryId, Integer townId, Integer villageId) {
+                                                     Long cityId, Long countryId, Long townId, Long villageId) {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();
@@ -664,7 +664,7 @@ public class GarbageCollectorService {
     }
 
 
-    public ResponseData getGarbageCollectSummaryInfoInPlace(Integer pageNo, Integer pageSize, String startTime, String endTime, String type, Integer provinceId, Integer cityId, Integer countryId, Integer townId, Integer villageId, String[] orderBys, String jwt) {
+    public ResponseData getGarbageCollectSummaryInfoInPlace(Integer pageNo, Integer pageSize, String startTime, String endTime, String type, Integer provinceId, Long cityId, Long countryId, Long townId, Long villageId, String[] orderBys, String jwt) {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();// 0农村  1城市

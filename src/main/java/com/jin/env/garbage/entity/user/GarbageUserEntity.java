@@ -36,13 +36,13 @@ public class GarbageUserEntity extends BaseEntity{
     private Boolean cleaner;
     private Integer provinceId;
     private String provinceName;
-    private Integer cityId;
+    private Long cityId;
     private String cityName;
-    private Integer countryId;
+    private Long countryId;
     private String countryName;
-    private Integer townId;
+    private Long townId;
     private String townName;
-    private Integer villageId;
+    private Long villageId;
     private String villageName;
     private String address;
     private Integer communityId;
@@ -239,11 +239,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "city_id")
-    public Integer getCityId() {
+    public Long getCityId() {
         return cityId;
     }
 
-    public void setCityId(Integer cityId) {
+    public void setCityId(Long cityId) {
         this.cityId = cityId;
     }
 
@@ -259,11 +259,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "country_id")
-    public Integer getCountryId() {
+    public Long getCountryId() {
         return countryId;
     }
 
-    public void setCountryId(Integer countryId) {
+    public void setCountryId(Long countryId) {
         this.countryId = countryId;
     }
 
@@ -279,11 +279,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "town_id")
-    public Integer getTownId() {
+    public Long getTownId() {
         return townId;
     }
 
-    public void setTownId(Integer townId) {
+    public void setTownId(Long townId) {
         this.townId = townId;
     }
 
@@ -299,11 +299,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "village_id")
-    public Integer getVillageId() {
+    public Long getVillageId() {
         return villageId;
     }
 
-    public void setVillageId(Integer villageId) {
+    public void setVillageId(Long villageId) {
         this.villageId = villageId;
     }
 

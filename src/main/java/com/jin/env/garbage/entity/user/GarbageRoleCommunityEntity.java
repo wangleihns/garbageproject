@@ -1,12 +1,14 @@
 package com.jin.env.garbage.entity.user;
 
 import com.jin.env.garbage.entity.base.BaseEntity;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "garbage_role_community", schema = "garbage_db", catalog = "")
+@DynamicUpdate
 public class GarbageRoleCommunityEntity  extends BaseEntity{
     private int id;
     private Integer roleId;

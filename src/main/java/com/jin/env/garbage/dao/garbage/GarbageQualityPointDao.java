@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface GarbageQualityPointDao extends JpaRepository<GarbageQualityPointEntity, Integer>, JpaSpecificationExecutor<GarbageQualityPointEntity> {
 
-    GarbageQualityPointEntity findByPlaceIdAndType(Integer placeId, Integer type);
+    GarbageQualityPointEntity findByPlaceIdAndType(Long placeId, Integer type);
 
 }
