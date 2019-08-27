@@ -433,7 +433,7 @@ public class GarbageCollectorService {
             throw new RuntimeException("没有权限访问");
         }
         Integer communityId = userEntity.getCommunityId();
-        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId, Constants.garbageFromType.COMMUNITY.getType());
+        GarbageQualityPointEntity qualityPointEntity = garbageQualityPointDao.findByPlaceIdAndType(communityId.longValue(), Constants.garbageFromType.COMMUNITY.getType());
         Integer pointScore = 0;
         String desc = "";
         Constants.garbageQuality garbageQuality = null;

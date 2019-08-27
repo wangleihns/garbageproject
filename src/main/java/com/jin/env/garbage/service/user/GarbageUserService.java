@@ -187,13 +187,13 @@ public class GarbageUserService {
         Boolean cleaner = object.getBoolean("cleaner");
         Integer provinceId = object.getInt("provinceId");
         String provinceName = object.getString("provinceName");
-        Integer cityId = object.getInt("cityId");
+        Long cityId = object.getLong("cityId");
         String cityName = object.getString("cityName");
-        Integer districtId = object.getInt("districtId");
+        Long districtId = object.getLong("districtId");
         String districtName = object.getString("districtName");
-        Integer townId = object.getInt("townId");
+        Long townId = object.getLong("townId");
         String townName = object.getString("townName");
-        Integer villageId = object.getInt("villageId");
+        Long villageId = object.getLong("villageId");
         String villageName = object.getString("villageName");
         String address = object.getString("address");
         Boolean isCollector = object.getBoolean("isCollector");
