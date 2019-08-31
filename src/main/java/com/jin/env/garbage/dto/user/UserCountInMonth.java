@@ -3,6 +3,7 @@ package com.jin.env.garbage.dto.user;
 public class UserCountInMonth {
     private Integer month;
     private Long count;
+    private String time;
 
     public UserCountInMonth() {
     }
@@ -26,5 +27,13 @@ public class UserCountInMonth {
 
     public void setCount(Long count) {
         this.count = count;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 }

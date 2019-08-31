@@ -3,6 +3,7 @@ package com.jin.env.garbage.dto.garbage;
 public class GarbageWeightInMonth {
     private Integer month;
     private Double weight;
+    private String time;
 
     public GarbageWeightInMonth() {
     }
@@ -26,5 +27,13 @@ public class GarbageWeightInMonth {
 
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 }

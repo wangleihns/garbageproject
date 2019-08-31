@@ -283,12 +283,13 @@ public class GarbageUserPointService {
                     dto.setPlaceName(garbageUserPointEntity.getProvinceName());
                 }
                 dto.setPoint(garbageUserPointEntity.getPoint());
+                dto.setUserName(garbageUserPointEntity.getUserName());
                 redRankDtos.add(dto);
             }
         });
 
         List<RedAndBlackRankDto> blackRankDtos = new ArrayList<>();
-        userPointFirstPage.getContent().forEach(garbageUserPointEntity -> {
+        userPointLastPage.getContent().forEach(garbageUserPointEntity -> {
             RedAndBlackRankDto dto = new RedAndBlackRankDto();
             if (fromType == 1){
                 dto.setPlaceName(garbageUserPointEntity.getCommunityName());
@@ -309,6 +310,7 @@ public class GarbageUserPointService {
                     dto.setPlaceName(garbageUserPointEntity.getProvinceName());
                 }
                 dto.setPoint(garbageUserPointEntity.getPoint());
+                dto.setUserName(garbageUserPointEntity.getUserName());
                 blackRankDtos.add(dto);
             }
 

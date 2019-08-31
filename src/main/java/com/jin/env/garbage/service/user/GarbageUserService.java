@@ -819,7 +819,9 @@ public class GarbageUserService {
         } else {
             userCountInMonths = garbageUserDao.countUserInMonthBetween(year, month - 5, month);
         }
-
+        userCountInMonths.forEach(userCountInMonth -> {
+            userCountInMonth.setTime(year + "-" + (userCountInMonth.getMonth() + 1));
+        });
         ResponseData responseData = new ResponseData();
         responseData.setData(userCountInMonths);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
