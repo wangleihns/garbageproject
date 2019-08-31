@@ -26,7 +26,7 @@ public class GarbagePointRecordEntity extends BaseEntity{
     }
 
     @Basic
-    @Column(name = "desc")
+    @Column(name = "`desc`")
     public String getDesc() {
         return desc;
     }

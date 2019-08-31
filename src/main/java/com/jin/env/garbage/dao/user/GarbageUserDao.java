@@ -24,4 +24,7 @@ public interface GarbageUserDao extends JpaRepository<GarbageUserEntity, Integer
 
     @Query(value = "SELECT new com.jin.env.garbage.dto.user.UserDto(u.id, u.name) from  GarbageUserEntity u where u.id in(?1)")
     List<UserDto> selectUserInfoByIdIn(List<Integer> ids);
+
+    @Query(value = "select new com.jin.env.garbage.dto.user.UserDto(u.id, u.name, u.phone, CONCAT(u.provinceName, u.cityName, u.countryName, u.townName)) from GarbageUserEntity u where u.id = ?1")
+    UserDto selectUserInfoByUserId(Integer id);
 }

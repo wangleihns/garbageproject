@@ -8,10 +8,7 @@ import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.resource.UserResourceDto;
-import com.jin.env.garbage.dto.user.GarbageUserDto;
-import com.jin.env.garbage.dto.user.QRcodeDto;
-import com.jin.env.garbage.dto.user.SummaryCountInfo;
-import com.jin.env.garbage.dto.user.UserCountInMonth;
+import com.jin.env.garbage.dto.user.*;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
@@ -124,8 +121,10 @@ public class GarbageUserService {
             if (Constants.loginType.GarbageCar.getType().equals(from)){
                 //垃圾车 token 有效时长
                 accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", garbageTokenTime);
+                token.put("userEntity", userEntity);
             } else if (Constants.loginType.NoGarbageCar.getType().equals(from)){
                 accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", noGarbageTokenTime);
+                token.put("userEntity", userEntity);
             } else {
                 //其他客户端使用默认有效时长
                 accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", null);
@@ -724,31 +723,34 @@ public class GarbageUserService {
             @Override
             public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicateList = new ArrayList<>();
-                if (roleCodes.contains("VILLAGE_ADMIN")|| roleCodes.contains("RESIDENT") || roleCodes.contains("COLLECTOR")){
-                    //查看本村的注册量
-                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("TOWN_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getVillageId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("COUNTRY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("CITY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("PROVINCE_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 || roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_REMARK")).count() > 0){
-                    //小区管理员
-                    Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
-                    predicateList.add(predicate);
+                if(fromType == 0){
+                    if (roleCodes.contains("VILLAGE_ADMIN")|| roleCodes.contains("RESIDENT") || roleCodes.contains("COLLECTOR")){
+                        //查看本村的注册量
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("TOWN_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("COUNTRY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("CITY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("PROVINCE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                        predicateList.add(predicate);
+                    }
+                } else {
+                    if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 || roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_REMARK")).count() > 0){
+                        //小区管理员
+                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                        predicateList.add(predicate);
+                    }
                 }
                 if (roleCodes.contains("SYSTEM_ADMIN")){
 
@@ -852,7 +854,7 @@ public class GarbageUserService {
             qualityRate = "0%";
         }
         String participationRate = df.format(participationCount.doubleValue()/userCount);
-        Double garbageWeight = garbageCollectorDao.countGarbageWieght(start, end);
+        Double garbageWeight = garbageCollectorDao.countGarbageWeight(start, end);
         Map<String, Object> map = new HashMap<>();
         map.put("userCount", userCount);
         map.put("permanentCount", userCount);
@@ -913,6 +915,21 @@ public class GarbageUserService {
         token.put("refreshToken",refreshTokenNew);
         responseData.setMsg("refresh success");
         responseData.setData(token);
+        return responseData;
+    }
+
+
+    public ResponseData getUserInfoByEno(String eNo) {
+        GarbageENoEntity eNoEntity = garbageENoDao.findByENo(eNo);
+        if (eNoEntity == null){
+            throw  new RuntimeException("此电子卡未录入系统中，请联系管理员");
+        }
+        UserDto userDto = garbageUserDao.selectUserInfoByUserId(eNoEntity.getUserId());
+        userDto.seteNo(eNo);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("用户信息获取成功");
+        responseData.setData(userDto);
         return responseData;
     }
 }

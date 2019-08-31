@@ -419,9 +419,9 @@ public class GarbageCollectorService {
             dto.setType(garbageCollectorEntity.getGarbageFromType() == 0?"农村":"小区");
             dto.setAddress(communityMap.get(garbageCollectorEntity.getCommunityId()));
             String qualityString = "";
-            if(garbageCollectorEntity.getGarbageFromType() == 1){
+            if(garbageCollectorEntity.getGarbageQuality() == 1){
                 qualityString = "合格";
-            } else if(garbageCollectorEntity.getGarbageFromType() == 2){
+            } else if(garbageCollectorEntity.getGarbageQuality() == 2){
                 qualityString = "不合格";
             } else {
                 qualityString = "空桶";
@@ -491,10 +491,6 @@ public class GarbageCollectorService {
         return sort;
     }
 
-    public void tst(){
-        System.out.println(222);
-    }
-
     @Transactional
     public ResponseData remarkCommunityGarbage(Integer id, Integer quality,Integer garbageType, String jwt) {
         Integer sub = jwtUtil.getSubject(jwt);
@@ -553,14 +549,17 @@ public class GarbageCollectorService {
         collectorEntity.setGarbageQuality(garbageQuality.getType());
         collectorEntity.setGarbagePoint(pointScore);
         collectorEntity.setGarbageType(garbageType);
+        collectorEntity.setCheck(true);
         garbageCollectorDao.save(collectorEntity);
-
+        GarbageUserEntity garbageUserEntity = garbageUserDao.findById(collectorEntity.getUserId()).get();
+        GarbageCommunityEntity communityEntity = garbageCommunityDao.findById(collectorEntity.getCommunityId()).get();
         GarbageUserPointEntity userPointEntity = garbageUserPointDao.findByUserId(collectorEntity.getUserId());
         if (userPointEntity != null) {
             userPointEntity.setPoint(userPointEntity.getPoint() + pointScore);
         } else {
             userPointEntity = new GarbageUserPointEntity();
             userPointEntity.setUserId(collectorEntity.getUserId());
+            userPointEntity.setUserName(garbageUserEntity.getName());
             userPointEntity.setPoint(pointScore);
             userPointEntity.setProvinceName(userEntity.getProvinceName());
             userPointEntity.setCityName(userEntity.getCityName());
@@ -568,13 +567,14 @@ public class GarbageCollectorService {
             userPointEntity.setTownName(userEntity.getTownName());
             userPointEntity.setVillageName(userEntity.getVillageName());
             userPointEntity.setAddress(userEntity.getAddress());
-            userPointEntity.setPhone(userEntity.getPhone());
+            userPointEntity.setPhone(garbageUserEntity.getPhone());
             userPointEntity.setProvinceId(collectorEntity.getProvinceId());
             userPointEntity.setCityId(collectorEntity.getCityId());
             userPointEntity.setCountryId(collectorEntity.getCountryId());
             userPointEntity.setTownId(collectorEntity.getTownId());
             userPointEntity.setVillageId(collectorEntity.getVillageId());
             userPointEntity.setCommunityId(collectorEntity.getCommunityId());
+            userPointEntity.setCommunityName(communityEntity.getCommunityName());
         }
         //计算总积分
         garbageUserPointDao.save(userPointEntity);

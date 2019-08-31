@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -130,6 +131,8 @@ public class GarbageCollectorController {
     @RequestMapping(value = "remarkCommunityGarbage", method = RequestMethod.POST)
     public ResponseData remarkCommunityGarbage(Integer id, Integer quality, Integer garbageType, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
+        Assert.state(quality != null, "请选择评分结果");
+        Assert.state(garbageType != null, "请选择评分结果");
         ResponseData responseData = garbageCollectorService.remarkCommunityGarbage(id, quality, garbageType,jwt);
         return  responseData;
     }

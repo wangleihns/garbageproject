@@ -47,6 +47,8 @@ public class GarbageUserEntity extends BaseEntity{
     private String address;
     private Integer communityId;
 
+    private String communityName;
+
     private Integer fromType;
 
     private Set<GarbageRoleEntity> roles=new HashSet<>(); // 有序的关联对象集合
@@ -400,6 +402,16 @@ public class GarbageUserEntity extends BaseEntity{
 
     public void setYear(Integer year) {
         this.year = year;
+    }
+
+    @Basic
+    @Column(name = "community_name")
+    public String getCommunityName() {
+        return communityName;
+    }
+
+    public void setCommunityName(String communityName) {
+        this.communityName = communityName;
     }
 
     @Override

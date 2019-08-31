@@ -192,5 +192,11 @@ public class LoginApiController {
         ResponseData responseData = garbageUserService.insertUserInfoBatch(multipartFile);
         return responseData;
     }
+    @RequestMapping(value = "getUserInfoByEno", method = RequestMethod.GET)
+    public ResponseData getUserInfoByEno(String eNo){
+        Assert.hasText(eNo, "请输入电子卡eNo");
+        ResponseData responseData = garbageUserService.getUserInfoByEno(eNo);
+        return responseData;
+    }
 
 }

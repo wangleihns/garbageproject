@@ -18,5 +18,5 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     Long countQualityToday(Long start, Long end);
 
     @Query(value = " select sum(c.garbageWeight) from GarbageCollectorEntity c where c.collectDate between ?1 and ?2")
-    Double countGarbageWieght(Long start, Long end);
+    Double countGarbageWeight(Long start, Long end);
 }
