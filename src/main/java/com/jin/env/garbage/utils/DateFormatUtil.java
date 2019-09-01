@@ -102,16 +102,18 @@ public class DateFormatUtil {
     }
 
     public static Date getFirstDayOfYear(String dateString){
+        String date[] = dateString.split("-");
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
-        calendar.set(Calendar.YEAR, Integer.valueOf(dateString));
+        calendar.set(Calendar.YEAR, Integer.valueOf(date[0]));
         Date currYearFirst = calendar.getTime();
         return currYearFirst;
     }
     public static Date getLastDayOfYear(String dateString){
+        String date[] = dateString.split("-");
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
-        calendar.set(Calendar.YEAR, Integer.valueOf(dateString));
+        calendar.set(Calendar.YEAR, Integer.valueOf(date[0]));
         calendar.set(Calendar.MONTH, Calendar.DECEMBER);
         calendar.set(Calendar.DAY_OF_MONTH, 31);
         calendar.set(Calendar.HOUR_OF_DAY, 23);

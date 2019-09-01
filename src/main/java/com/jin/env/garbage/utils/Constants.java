@@ -195,7 +195,7 @@ public class Constants {
     /**
      * 垃圾来源客户端
      */
-    public enum garbageFrom{
+    public enum garbageFromClient{
         /**
          * 人工环卫车
          */
@@ -206,7 +206,7 @@ public class Constants {
         AUTOTRUCK(1);
         private Integer type;
 
-        garbageFrom(Integer type) {
+        garbageFromClient(Integer type) {
             this.type = type;
         }
 

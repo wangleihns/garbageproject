@@ -10,8 +10,13 @@ public class GarbageQualityPointEntity extends BaseEntity {
     private Integer empty;
     private Integer noQualified;
     private Integer qualified;
+    private Integer provinceId;
+    private Long cityId;
+    private Long countyId;
+    private Long townId;
     private Long placeId;
     private Integer type;
+    private String placeName;
 
     @Basic
     @Column(name = "empty")
@@ -61,6 +66,54 @@ public class GarbageQualityPointEntity extends BaseEntity {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    @Basic
+    @Column(name = "province_id")
+    public Integer getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(Integer provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    @Basic
+    @Column(name = "city_id")
+    public Long getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(Long cityId) {
+        this.cityId = cityId;
+    }
+
+    @Basic
+    @Column(name = "county_id")
+    public Long getCountyId() {
+        return countyId;
+    }
+
+    public void setCountyId(Long countyId) {
+        this.countyId = countyId;
+    }
+
+    @Basic
+    @Column(name = "town_id")
+    public Long getTownId() {
+        return townId;
+    }
+
+    public void setTownId(Long townId) {
+        this.townId = townId;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
     }
 
     @Override

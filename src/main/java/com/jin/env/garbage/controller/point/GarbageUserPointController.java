@@ -53,4 +53,17 @@ public class GarbageUserPointController {
         ResponseData responseData =garbageUserPointService.redAndBlackRank(jwt);
         return responseData;
     }
+
+    /**
+     * 获取每个地区设定的合格，不合格，空桶 对应积分
+     * @param placeId
+     * @param type
+     * @return
+     */
+    @RequestMapping(value = "findPlacePointByPlaceId", method = RequestMethod.GET)
+    public ResponseData findPlacePointByPlaceId(Integer pageNo, Integer pageSize, Integer type, HttpServletRequest request, String search, Long cityId, Long countyId, Long townId, Long placeId){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData =garbageUserPointService.findPlacePointByPlaceId(pageNo, pageSize,type, jwt, search, cityId, countyId, townId, placeId);
+        return responseData;
+    }
 }

@@ -3,6 +3,7 @@ package com.jin.env.garbage.service.user;
 import com.jin.env.garbage.controller.user.LoginApiController;
 import com.jin.env.garbage.dao.garbage.GarbageCollectorDao;
 import com.jin.env.garbage.dao.image.GarbageImageDao;
+import com.jin.env.garbage.dao.position.GarbageCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
@@ -11,6 +12,7 @@ import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.dto.user.*;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
+import com.jin.env.garbage.entity.position.GarbageCommunityEntity;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
@@ -21,6 +23,7 @@ import com.jin.env.garbage.utils.*;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +84,9 @@ public class GarbageUserService {
     @Autowired
     private GarbageCollectorService garbageCollectorService;
 
+    @Autowired
+    private GarbageCommunityDao garbageCommunityDao;
+
     public ResponseData findByPhoneOrLoginNameOrENoOrIdCard(String password, String username, String from) {
         ResponseData responseData = new ResponseData();
         GarbageUserEntity userEntity = garbageUserDao.findByPhoneOrENoOrIdCard(username);
@@ -102,6 +108,7 @@ public class GarbageUserService {
         if(!CommonUtil.md5(password).equals(userEntity.getPassword())){
             throw new RuntimeException("账号或密码不正确");
         } else {
+            Map<String, Object> token= new HashMap<>();
             //组资源
             List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(userEntity.getId());
             //子资源
@@ -116,8 +123,20 @@ public class GarbageUserService {
                 dto.setUrl(resourceEntity.getUrl());
                 userResourceDtos.add(dto);
             });
+            List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
+            List<Integer> roleIds = roleEntityList.stream().map(roleEntity->roleEntity.getId()).collect(Collectors.toList());
+            List<GarbageCommunityEntity> communityEntities = new ArrayList<>();
+            if (roleIds.size()> 0){
+              communityEntities = garbageCommunityDao.findByRoleIds(roleIds);
+            }
+            List<NameValuePair> communityList = new ArrayList<>();
+            communityEntities.stream().forEach(n->{
+                NameValuePair nameValuePair = new BasicNameValuePair(n.getId().toString(), n.getCommunityName());
+                communityList.add(nameValuePair);
+            });
+            token.put("communityEntities",communityList);
             String accessToken =  "";
-            Map<String, Object> token= new HashMap<>();
+
             if (Constants.loginType.GarbageCar.getType().equals(from)){
                 //垃圾车 token 有效时长
                 accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", garbageTokenTime);
@@ -137,6 +156,7 @@ public class GarbageUserService {
             redisTemplate.opsForValue().set("refreshToken:" +userEntity.getPhone(), refreshToken, 7*24*60*60*1000, TimeUnit.MILLISECONDS);
             token.put("accessToken", accessToken);
             token.put("refreshToken", refreshToken);
+            token.put("resources", userResourceDtos);
             logger.info(a);
             responseData.setMsg("登录成功");
             responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());

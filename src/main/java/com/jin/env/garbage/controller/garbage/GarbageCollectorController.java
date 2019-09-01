@@ -35,6 +35,10 @@ public class GarbageCollectorController {
     @RequestMapping(value = "addGarbageByCollector", method = RequestMethod.POST)
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
+        Assert.hasText(eNo, "请传入电子卡Id");
+        Assert.state(weight == null, "上传垃圾重量");
+        Assert.state(imageId == null, "上传图片id");
+        Assert.hasText(quality, "请评价垃圾是否合格");
         ResponseData responseData = garbageCollectorService.addGarbageByCollector(eNo, quality, weight, imageId, jwt);
         return  responseData;
     }
@@ -51,6 +55,9 @@ public class GarbageCollectorController {
     public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, HttpServletRequest request){
         String jwtArr[] = request.getHeader("Authorization").split(" ");
         String jwt = jwtArr[1];
+        Assert.hasText(eNo, "请传入电子卡Id");
+        Assert.state(weight == null, "上传垃圾重量");
+        Assert.state(imageId == null, "上传图片id");
         ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt);
         return  responseData;
     }
@@ -157,9 +164,9 @@ public class GarbageCollectorController {
     @RequestMapping(value = "getGarbageCollectorSummaryInfo", method = RequestMethod.GET)
     public ResponseData getGarbageCollectorSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
                                               String phone, String name, String[] orderBys,
-                                                       Long cityId, Long countryId, Long townId, Long villageId,  HttpServletRequest request){
+                                                       Long cityId, Long countryId, Long townId, Long villageId, Long communityId,  HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
-        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, cityId, countryId, townId, villageId);
+        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfo(pageNo, pageSize,startTime, endTime, type, phone, name,jwt, orderBys, cityId, countryId, townId, villageId, communityId);
         return  responseData;
     }
 

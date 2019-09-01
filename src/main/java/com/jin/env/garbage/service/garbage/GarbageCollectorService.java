@@ -229,6 +229,7 @@ public class GarbageCollectorService {
         Long countryId = collector.getCountryId();
         Long townId = collector.getTownId();
         Long villageId = collector.getVillageId();
+        Integer communityId = collector.getCommunityId();
         Calendar calendar = Calendar.getInstance();
         Integer year = calendar.get(Calendar.YEAR);
         Integer month = calendar.get(Calendar.MONTH);
@@ -243,7 +244,10 @@ public class GarbageCollectorService {
         collectorEntity.setCountryId(countryId);
         collectorEntity.setTownId(townId);
         collector.setVillageId(villageId);
+        collector.setCommunityId(communityId);
+        collectorEntity.setCollectorName(collector.getCommunityName());
         collectorEntity.setCollectDate(new Date().getTime());
+        collectorEntity.setCollectorPhone(collector.getPhone());
         collectorEntity.setDay(day);
         collectorEntity.setMonth(month);
         collectorEntity.setYear(year);
@@ -393,7 +397,7 @@ public class GarbageCollectorService {
         if (userIds.size() > 0){
             userDtos = garbageUserDao.selectUserInfoByIdIn(userIds);
         }
-        List<Integer> communityIds = page.getContent().stream().map(garbageCollectorEntity -> garbageCollectorEntity.getCommunityId()).collect(Collectors.toList());
+        List<Integer> communityIds = page.getContent().stream().map(garbageCollectorEntity -> garbageCollectorEntity.getCommunityId()).distinct().collect(Collectors.toList());
         Map<Integer, String> userMap = userDtos.stream().collect(Collectors.toMap(UserDto::getUserId, UserDto::getUsername));
         List<CommunityGarbageCollectDto> dtos = new ArrayList<>();
         List<GarbageCommunityEntity> communityEntities = garbageCommunityDao.findAll(new Specification<GarbageCommunityEntity>() {
@@ -419,20 +423,22 @@ public class GarbageCollectorService {
             dto.setType(garbageCollectorEntity.getGarbageFromType() == 0?"农村":"小区");
             dto.setAddress(communityMap.get(garbageCollectorEntity.getCommunityId()));
             String qualityString = "";
-            if(garbageCollectorEntity.getGarbageQuality() == 1){
-                qualityString = "合格";
-            } else if(garbageCollectorEntity.getGarbageQuality() == 2){
-                qualityString = "不合格";
-            } else {
-                qualityString = "空桶";
+            String garbgetTypeString = "";
+            if (isCheck){
+                if(garbageCollectorEntity.getGarbageQuality() == 1){
+                    qualityString = "合格";
+                } else if(garbageCollectorEntity.getGarbageQuality() == 2){
+                    qualityString = "不合格";
+                } else {
+                    qualityString = "空桶";
+                }
+                if (garbageCollectorEntity.getGarbageType() == 1){
+                    garbgetTypeString = "厨余垃圾";
+                } else {
+                    garbgetTypeString = "其他垃圾";
+                }
             }
             dto.setQualityType(qualityString);
-            String garbgetTypeString = "";
-            if (garbageCollectorEntity.getGarbageType() == 1){
-                garbgetTypeString = "厨余垃圾";
-            } else {
-                garbgetTypeString = "其他垃圾";
-            }
             dto.setGarbageType(garbgetTypeString);
             dto.setPoint(garbageCollectorEntity.getGarbagePoint());
             dto.setWeight(garbageCollectorEntity.getGarbageWeight());
@@ -596,8 +602,8 @@ public class GarbageCollectorService {
 
     @Transactional
     public ResponseData getGarbageCollectSummaryInfo(Integer pageNo, Integer pageSize, String startTime, String endTime,
-                                              String type, String phone, String name, String jwt, String[] orderBys,
-                                                     Long cityId, Long countryId, Long townId, Long villageId) {
+                                                     String type, String phone, String name, String jwt, String[] orderBys,
+                                                     Long cityId, Long countryId, Long townId, Long villageId, Long communityId) {
         Integer sub = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();
@@ -605,7 +611,7 @@ public class GarbageCollectorService {
         Long end = 0L;
         if ("day".equals(type)){
             start = DateFormatUtil.parse(startTime,"yyyy-MM-dd").getTime();
-            end = DateFormatUtil.getLastTimeOfDay(startTime).getTime();
+            end = DateFormatUtil.getLastTimeOfDay(endTime).getTime();
         } else if ("month".equals(type)){
             start = DateFormatUtil.getFirstDateOfMonth(startTime).getTime();
             end = DateFormatUtil.getLastDateOfMonth(endTime).getTime();
@@ -629,71 +635,97 @@ public class GarbageCollectorService {
         criteriaQuery.multiselect(root.get("collectorId"),root.get("collectorName"), root.get("collectorPhone"),root.get("collectDate"),
                 criteriaBuilder.count(root.get("userId")), criteriaBuilder.sum(root.get("garbageWeight")), root.get("day"),
                 root.get("month"), root.get("year"));
-        criteriaQuery.where(criteriaBuilder.equal(root.get("garbageFromType"), fromType));
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(root.get("garbageFromType"), fromType));
         if (!StringUtils.isEmpty(name)){
-            criteriaQuery.where(criteriaBuilder.like(root.get("collectorName"), "%" + name +"%"));
+            Predicate pre = criteriaBuilder.like(root.get("collectorName"), "%" + name +"%");
+            predicates.add(pre);
         }
         if (!StringUtils.isEmpty(phone)){
-            criteriaQuery.where(criteriaBuilder.like(root.get("collectorPhone"), "%" + phone +"%"));
+            Predicate predicate = criteriaBuilder.like(root.get("collectorPhone"), "%" + phone +"%");
+            predicates.add(predicate);
         }
         if (!StringUtils.isEmpty(startTime)&& !StringUtils.isEmpty(endTime)){
-            criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(root.<Long>get("collectDate"), finalStart));
-            criteriaQuery.where(criteriaBuilder.lessThanOrEqualTo(root.<Long>get("collectDate"), finalEnd));
+            Predicate predicate = criteriaBuilder.and(criteriaBuilder.greaterThanOrEqualTo(root.<Long>get("collectDate"), finalStart),
+                    criteriaBuilder.lessThanOrEqualTo(root.<Long>get("collectDate"), finalEnd));
+            predicates.add(predicate);
         }
         if (fromType == 1){
-            if (communityIds.size() > 0){
-                criteriaQuery.where(root.get("communityId").in(communityIds));
+            if (communityId != null ){
+                Predicate predicate = criteriaBuilder.equal(root.get("communityId"), communityId);
+                predicates.add(predicate);
+            } else {
+                if (communityIds.size() > 0){
+                    Predicate predicate = root.get("communityId").in(communityIds);
+                    predicates.add(predicate);
+                }
             }
+
 
         } else {
             if (roles.contains("VILLAGE_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+                Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                predicates.add(predicate);
             }
             if (roles.contains("TOWN_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), userEntity.getTownId()));
+                Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                predicates.add(predicate);
                 if (villageId!=null && villageId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), villageId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("villageId"), villageId);
+                    predicates.add(predicate1);
                 }
             }
             if (roles.contains("COUNTRY_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
+                Predicate pre = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                predicates.add(pre);
                 if (townId!=null && townId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
+                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), townId);
+                    predicates.add(predicate);
                 }
                 if (villageId!=null && villageId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), villageId));
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), villageId);
+                    predicates.add(predicate);
                 }
             }
 
             if (roles.contains("CITY_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
+                Predicate predicate =criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                predicates.add(predicate);
                 if (countryId!=null &&  countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("countryId"), countryId);
+                    predicates.add(predicate1);
                 }
                 if (townId!=null && townId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("townId"), townId);
+                    predicates.add(predicate1);
                 }
                 if (villageId!=null && villageId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), villageId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("villageId"), villageId);
+                    predicates.add(predicate1);
                 }
             }
 
             if (roles.contains("PROVINCE_ADMIN")){
-                criteriaQuery.where(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
+                Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
                 if (cityId != null && cityId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("cityId"), cityId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("cityId"), cityId);
+                    predicates.add(predicate1);
                 }
                 if (countryId!=null && countryId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("countryId"), countryId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("countryId"), countryId);
+                    predicates.add(predicate1);
                 }
                 if (townId!=null && townId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("townId"), townId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("townId"), townId);
+                    predicates.add(predicate1);
                 }
                 if (villageId!=null && villageId !=0){
-                    criteriaQuery.where(criteriaBuilder.equal(root.get("villageId"), villageId));
+                    Predicate predicate1 = criteriaBuilder.equal(root.get("villageId"), villageId);
+                    predicates.add(predicate1);
                 }
             }
         }
+        criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
         if ("day".equals(type)){
             criteriaQuery.groupBy(root.get("collectorId"), root.get("day"), root.get("month"), root.get("year"));
         } else if ("month".equals(type)){
@@ -707,7 +739,11 @@ public class GarbageCollectorService {
         List<CollectorDto> counts = entityManager.createQuery(criteriaQuery).getResultList();
         PageImpl<CollectorDto> page = new PageImpl<>(counts, pageable, Long.valueOf(counts.size()));
         List<Integer> collectorIds = page.getContent().stream().map(dto->dto.getCollectorId()).collect(Collectors.toList());
-        List<UserVillageDto> villageDtos = garbageUserDao.getUserVillageNameByIds(collectorIds);
+        List<UserVillageDto> villageDtos = new ArrayList<>();
+        if (collectorIds.size() > 0){
+            villageDtos  = garbageUserDao.getUserVillageNameByIds(collectorIds);
+        }
+
         Map<Integer, String> map = villageDtos.stream().collect(Collectors.toMap(UserVillageDto::getId, UserVillageDto::getVillageName));
         for (CollectorDto dto:page.getContent()) {
             dto.setAddress(map.get(dto.getCollectorId()));
