@@ -4,12 +4,12 @@ package com.jin.env.garbage.dto.garbage;
  * 收集统计报表分析
  */
 public class GarbageCollectCountDto {
-    private Integer placeId;
+    private Long placeId;
     private String placeName;
     private Double garbageWeight;
     private Integer userCount;
-    private Long count;
-    private Integer participationCount;
+    private Long count; //分类数量
+    private Long participationCount;
     private String participationRate;//参与率
     private Integer qualityCount;
     private String qualityRate;//正确率
@@ -29,12 +29,14 @@ public class GarbageCollectCountDto {
     public GarbageCollectCountDto() {
     }
 
-    public GarbageCollectCountDto(Integer placeId, Double garbageWeight, Integer day, Integer month, Integer year) {
+    //分页dto
+    public GarbageCollectCountDto(Long placeId, Double garbageWeight, Integer day, Integer month, Integer year, Long participationCount) {
         this.placeId = placeId;
         this.garbageWeight = garbageWeight;
         this.day = day;
         this.month = month;
         this.year = year;
+        this.participationCount = participationCount;
     }
 
     public GarbageCollectCountDto(Long count, Integer garbageQuality) {
@@ -42,17 +44,20 @@ public class GarbageCollectCountDto {
         this.garbageQuality = garbageQuality;
     }
 
-    public GarbageCollectCountDto(Integer placeId, Long count, Integer garbageQuality) {
+    public GarbageCollectCountDto(Long placeId, Long count, Integer garbageQuality, Integer day, Integer month, Integer year) {
         this.placeId = placeId;
         this.count = count;
         this.garbageQuality = garbageQuality;
+        this.day = day;
+        this.month = month;
+        this.year = year;
     }
 
-    public Integer getPlaceId() {
+    public Long getPlaceId() {
         return placeId;
     }
 
-    public void setPlaceId(Integer placeId) {
+    public void setPlaceId(Long placeId) {
         this.placeId = placeId;
     }
 
@@ -88,11 +93,11 @@ public class GarbageCollectCountDto {
         this.count = count;
     }
 
-    public Integer getParticipationCount() {
+    public Long getParticipationCount() {
         return participationCount;
     }
 
-    public void setParticipationCount(Integer participationCount) {
+    public void setParticipationCount(Long participationCount) {
         this.participationCount = participationCount;
     }
 

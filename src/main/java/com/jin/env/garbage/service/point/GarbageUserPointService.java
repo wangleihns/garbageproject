@@ -6,11 +6,13 @@ import com.jin.env.garbage.dao.position.GarbageCommunityDao;
 import com.jin.env.garbage.dao.position.JPositionVillageDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.point.RedAndBlackRankDto;
+import com.jin.env.garbage.dto.point.UserPointRankDto;
 import com.jin.env.garbage.dto.position.UserPositionDto;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
 import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.position.GarbageCommunityEntity;
 import com.jin.env.garbage.entity.position.JPositionVillageEntity;
+import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
@@ -57,7 +59,7 @@ public class GarbageUserPointService {
     @Autowired
     private JPositionVillageDao jPositionVillageDao;
 
-    public ResponseData getPointRankList(Integer pageNo, Integer pageSize, String name, String phone, String jwt, Integer cityId, Integer countryId, Integer townId, Integer villageId, String[] orderBys) {
+    public ResponseData getPointRankList(Integer pageNo, Integer pageSize, String type, String keyWord, String jwt, Long cityId, Long countryId, Long townId, Long villageId, Integer communityId, String[] orderBys) {
         Integer sub  = jwtUtil.getSubject(jwt);
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType(); // 0农村  1小区
@@ -70,122 +72,126 @@ public class GarbageUserPointService {
             @Override
             public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
-                if (!StringUtils.isEmpty(name)){
-                    Predicate predicate = criteriaBuilder.like(root.get("userName"), "%" + name + "%");
-                    predicates.add(predicate);
+                if (!StringUtils.isEmpty(type)){
+                    if (!StringUtils.isEmpty(keyWord) && "name".equals(type)){
+                        Predicate predicate = criteriaBuilder.like(root.get("userName"), "%" + keyWord + "%");
+                        predicates.add(predicate);
+                    }
+                    if (!StringUtils.isEmpty(keyWord) && "phone".equals(type)){
+                        Predicate predicate = criteriaBuilder.like(root.get("phone"), "%" + keyWord + "%");
+                        predicates.add(predicate);
+                    }
+                    if (!StringUtils.isEmpty(keyWord) && "eNo".equals(type)){
+                        Subquery subquery = criteriaQuery.subquery(GarbageENoEntity.class);
+                        Root subRoot = subquery.from(GarbageENoEntity.class);
+                        subquery.select(subRoot.get("userId"));
+                        Predicate equal = criteriaBuilder.equal(root.get("userId"), subRoot.get("userId"));
+                        List<Predicate> selectList = new ArrayList<>();
+                        selectList.add(equal);
+                        Predicate elike = criteriaBuilder.like(subRoot.get("eNo"), "%" + keyWord + "%");
+                        selectList.add(elike);
+                        Predicate predicateExits = criteriaBuilder.exists(subquery.where(selectList.toArray(new Predicate[selectList.size()])));
+                        predicates.add(predicateExits);
+                    }
                 }
-                if (!StringUtils.isEmpty(phone)){
-                    Predicate predicate = criteriaBuilder.like(root.get("userName"), "%" + name + "%");
-                    predicates.add(predicate);
-                }
-                Subquery subquery = criteriaQuery.subquery(GarbageUserEntity.class);
-                Root subRoot = subquery.from(GarbageUserEntity.class);
-                subquery.select(subRoot.get("id"));
-                Predicate equal = criteriaBuilder.equal(root.get("userId"), subRoot.get("id"));
-                List<Predicate> selectList = new ArrayList<>();
                 if (fromType == 1){
-                    if (communityIds.size()> 0){
-                        Predicate predicate = subRoot.get("communityId").in(communityIds);
-                        selectList.add(predicate);
+                    if (communityId != null){
+                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), communityId);
+                    } else {
+                        if (communityIds.size()> 0){
+                            Predicate predicate = root.get("communityId").in(communityIds);
+                            predicates.add(predicate);
+                        }
                     }
                 }else {
                     if (roleCodes.contains("VILLAGE_ADMIN")){
-
-                        Predicate predicateVillageId= criteriaBuilder.equal(subRoot.get("villageId"), userEntity.getVillageId());
-                        selectList.add(predicateVillageId);
-
+                        Predicate predicateVillageId= criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicates.add(predicateVillageId);
                     }
                     if (roleCodes.contains("TOWN_ADMIN")){
-
-                        Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), userEntity.getTownId());
-                        selectList.add(predicateTownId);
-
-                        if (villageId !=null && villageId != 0 ){
-                            Predicate predicateVillageId= criteriaBuilder.equal(subRoot.get("villageId"), villageId);
-                            selectList.add(predicateVillageId);
+                        if ( townId != null && villageId !=null){
+                            Predicate predicateVillageId= criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicates.add(predicateVillageId);
+                        } else {
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                            predicates.add(predicateTownId);
                         }
                     }
                     if (roleCodes.contains("COUNTRY_ADMIN")){
-
-                        Predicate predicateCountryId = criteriaBuilder.equal(subRoot.get("countryId"), userEntity.getCountryId());
-                        selectList.add(predicateCountryId);
-
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateVillageId= criteriaBuilder.equal(subRoot.get("villageId"), villageId);
-                            selectList.add(predicateVillageId);
+                        if (townId !=null ){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("townId"), townId);
+                            predicates.add(predicateTownId);
+                        } else if (countryId != null && townId !=null && villageId !=null){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("townId"), townId);
+                            predicates.add(predicateTownId);
+                        }else {
+                            Predicate predicateCountryId = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                            predicates.add(predicateCountryId);
                         }
                     }
                     if (roleCodes.contains("CITY_ADMIN")){
-
-                        Predicate predicateCityId = criteriaBuilder.equal(subRoot.get("cityId"), userEntity.getCityId());
-                        selectList.add(predicateCityId);
-
-                        if (countryId !=null && countryId != 0){
-                            Predicate predicateCountryId = criteriaBuilder.equal(subRoot.get("countryId"), countryId);
-                            selectList.add(predicateCountryId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateVillageId= criteriaBuilder.equal(subRoot.get("villageId"), villageId);
-                            selectList.add(predicateVillageId);
+                        if (countryId !=null){
+                            Predicate predicateCountryId = criteriaBuilder.equal(root.get("countryId"), countryId);
+                            predicates.add(predicateCountryId);
+                        } else if (cityId !=null && countryId !=null && townId !=null){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("townId"), townId);
+                            predicates.add(predicateTownId);
+                        } else if (cityId !=null && countryId !=null && townId !=null && villageId != null){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicates.add(predicateTownId);
+                        } else {
+                            Predicate predicateCityId = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                            predicates.add(predicateCityId);
                         }
                     }
                     if (roleCodes.contains("PROVINCE_ADMIN")){
-
-                        Predicate predicateProvinceId = criteriaBuilder.equal(subRoot.get("provinceId"), userEntity.getProvinceId());
-                        selectList.add(predicateProvinceId);
-
-                        if (cityId !=null && cityId != 0){
-                            Predicate predicateCityId = criteriaBuilder.equal(subRoot.get("cityId"), cityId);
-                            selectList.add(predicateCityId);
-                        }
-                        if (countryId !=null && countryId != 0){
-                            Predicate predicateCountryId = criteriaBuilder.equal(subRoot.get("countryId"), countryId);
-                            selectList.add(predicateCountryId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateTownId= criteriaBuilder.equal(subRoot.get("townId"), townId);
-                            selectList.add(predicateTownId);
-                        }
-                        if (townId !=null && townId != 0 ){
-                            Predicate predicateVillageId= criteriaBuilder.equal(subRoot.get("villageId"), villageId);
-                            selectList.add(predicateVillageId);
+                        if (cityId !=null){
+                            Predicate predicateCityId = criteriaBuilder.equal(root.get("cityId"), cityId);
+                            predicates.add(predicateCityId);
+                        } else if (cityId !=null && countryId !=null){
+                            Predicate predicateCountryId = criteriaBuilder.equal(root.get("countryId"), countryId);
+                            predicates.add(predicateCountryId);
+                        } else if (cityId !=null && countryId !=null && townId !=null){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("townId"), townId);
+                            predicates.add(predicateTownId);
+                        } else if (cityId !=null && countryId !=null && townId !=null && villageId != null  ){
+                            Predicate predicateTownId= criteriaBuilder.equal(root.get("villageId"), villageId);
+                            predicates.add(predicateTownId);
+                        } else {
+                            Predicate predicateProvinceId = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                            predicates.add(predicateProvinceId);
                         }
                     }
                 }
-                Predicate predicateExits = criteriaBuilder.exists(subquery.where(selectList.toArray(new Predicate[selectList.size()])));
-                predicates.add(predicateExits);
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         },pageable);
+        List<UserPointRankDto> rankDtos = new ArrayList<>();
+        Integer rank = (pageNo - 1)*pageSize;
+        for (GarbageUserPointEntity pointEntity :page.getContent()) {
+            rank ++;
+            UserPointRankDto dto = new UserPointRankDto();
+            dto.setRank(rank);
+            dto.setUserName(pointEntity.getUserName());
+            dto.setPhone(pointEntity.getPhone());
+            dto.setPoint(pointEntity.getPoint());
+            String address = pointEntity.getProvinceName() + pointEntity.getCityName() + pointEntity.getCountryName() +
+                    pointEntity.getTownName() == null ?"": pointEntity.getTownName() +
+                    pointEntity.getVillageName() == null ?"":pointEntity.getVillageName() +
+                    pointEntity.getCommunityName() == null ?"":pointEntity.getCommunityName();
+            dto.setAddress(address);
+            rankDtos.add(dto);
+        }
         ResponsePageData responsePageData = new ResponsePageData();
         responsePageData.setPageNo(pageNo);
         responsePageData.setPageSize(pageSize);
         responsePageData.setCount(page.getTotalPages());
         responsePageData.setLastPage(page.isLast());
         responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setTotalElement(page.getTotalElements());
         responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
         responsePageData.setMsg("查询成功");
-        responsePageData.setData(page.getContent());
+        responsePageData.setData(rankDtos);
         return responsePageData;
     }
 

@@ -36,8 +36,8 @@ public class GarbageCollectorController {
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.hasText(eNo, "请传入电子卡Id");
-        Assert.state(weight == null, "上传垃圾重量");
-        Assert.state(imageId == null, "上传图片id");
+        Assert.state(weight != null, "上传垃圾重量");
+        Assert.state(imageId != null, "上传图片id");
         Assert.hasText(quality, "请评价垃圾是否合格");
         ResponseData responseData = garbageCollectorService.addGarbageByCollector(eNo, quality, weight, imageId, jwt);
         return  responseData;
@@ -56,8 +56,8 @@ public class GarbageCollectorController {
         String jwtArr[] = request.getHeader("Authorization").split(" ");
         String jwt = jwtArr[1];
         Assert.hasText(eNo, "请传入电子卡Id");
-        Assert.state(weight == null, "上传垃圾重量");
-        Assert.state(imageId == null, "上传图片id");
+        Assert.state(weight != null, "上传垃圾重量");
+        Assert.state(imageId != null, "上传图片id");
         ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt);
         return  responseData;
     }
@@ -93,9 +93,8 @@ public class GarbageCollectorController {
      * @param weight
      * @param point
      * @param quality
-     * @param eNo
-     * @param name
-     * @param phone
+     * @param type
+     * @param keyWord
      * @param garbageType
      * @param orderBys
      * @param request
@@ -104,11 +103,11 @@ public class GarbageCollectorController {
 
     @RequestMapping(value = "villageGarbageList", method = RequestMethod.GET)
     public ResponseData villageGarbageList(Integer pageNo, Integer pageSize, Boolean isCheck, Double weight, Integer point,
-                                             Integer quality, String eNo, String name, String phone, Integer garbageType, String[] orderBys, HttpServletRequest request,
-                                            String startTime, String endTime, Long cityId, Long countyId, Long townId, Long villageId){
+                                             Integer quality, String type, String keyWord, Integer garbageType, String[] orderBys, HttpServletRequest request,
+                                            String startTime, String endTime, Long cityId, Long countryId, Long townId, Long villageId){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponsePageData responseData = garbageCollectorService.villageGarbageList(pageNo,pageSize, isCheck, weight, point, quality,
-                eNo, name, phone, garbageType, jwt, orderBys, startTime, endTime, cityId,countyId, townId, villageId);
+                type, keyWord, garbageType, jwt, orderBys, startTime, endTime, cityId,countryId, townId, villageId);
         return  responseData;
     }
 
@@ -178,7 +177,6 @@ public class GarbageCollectorController {
      * @param endTime
      * @param type
      * @param orderBys
-     * @param provinceId
      * @param cityId
      * @param countryId
      * @param townId
@@ -188,10 +186,10 @@ public class GarbageCollectorController {
      */
     @RequestMapping(value = "getGarbageCollectSummaryInfoInPlace", method = RequestMethod.GET)
     public ResponseData getGarbageCollectSummaryInfoInPlace(Integer pageNo, Integer pageSize, String startTime, String endTime, String type,
-                                      String[] orderBys, Integer provinceId, Long cityId, Long countryId, Long townId, Long villageId,  HttpServletRequest request){
+                                      String[] orderBys, Long cityId, Long countryId, Long townId, Long villageId, Integer communityId, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
-        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfoInPlace(pageNo, pageSize, startTime, endTime, type, provinceId,
-                cityId, countryId, townId, villageId, orderBys, jwt);
+        ResponseData responseData = garbageCollectorService.getGarbageCollectSummaryInfoInPlace(pageNo, pageSize, startTime, endTime, type,
+                cityId, countryId, townId, villageId,communityId, orderBys, jwt);
         return  responseData;
     }
 
@@ -201,16 +199,18 @@ public class GarbageCollectorController {
      * @param pageSize
      * @param startTime
      * @param endTime
-     * @param phone
-     * @param name
+     * @param type
+     * @param keyWord
      * @param orderBys
      * @param request
      * @return
      */
     @RequestMapping(value = "getNotSentGarbageInfoToSystemUser", method = RequestMethod.GET)
-    public ResponseData getNotSentGarbageInfoToSystemUser(Integer pageNo, Integer pageSize, String startTime, String endTime,String phone, String name, String[] orderBys , HttpServletRequest request){
+    public ResponseData getNotSentGarbageInfoToSystemUser(Integer pageNo, Integer pageSize, String startTime, String endTime,String type, String keyWord,
+                                                          Long cityId, Long countryId, Long townId, Long villageId, Long communityId,
+                                                          String[] orderBys , HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
-        ResponseData responseData = garbageCollectorService.getNotSentGarbageInfoToSystemUser(pageNo, pageSize, startTime, endTime, phone, name, jwt, orderBys);
+        ResponseData responseData = garbageCollectorService.getNotSentGarbageInfoToSystemUser(pageNo, pageSize, startTime, endTime, type, keyWord, jwt, orderBys,cityId,countryId,townId, villageId, communityId);
         return  responseData;
     }
 

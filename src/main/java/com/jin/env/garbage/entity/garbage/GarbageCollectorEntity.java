@@ -23,12 +23,12 @@ public class GarbageCollectorEntity extends BaseEntity{
     private Integer day;
     private Integer month;
     private Integer year;
-    private Integer provinceId;
+    private Long provinceId;
     private Long cityId;
     private Long countryId;
     private Long townId;
     private Integer garbageFromType;
-    private Integer communityId;
+    private Long communityId;
 
     private Boolean isCheck; //true 审核 false 未审核
 
@@ -184,11 +184,11 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     @Basic
     @Column(name = "province_id")
-    public Integer getProvinceId() {
+    public Long getProvinceId() {
         return provinceId;
     }
 
-    public void setProvinceId(Integer provinceId) {
+    public void setProvinceId(Long provinceId) {
         this.provinceId = provinceId;
     }
 
@@ -234,11 +234,11 @@ public class GarbageCollectorEntity extends BaseEntity{
 
     @Basic
     @Column(name = "community_id")
-    public Integer getCommunityId() {
+    public Long getCommunityId() {
         return communityId;
     }
 
-    public void setCommunityId(Integer communityId) {
+    public void setCommunityId(Long communityId) {
         this.communityId = communityId;
     }
 

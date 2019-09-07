@@ -19,4 +19,6 @@ public interface GarbageCommunityDao extends JpaRepository<GarbageCommunityEntit
 
     @Query(nativeQuery = true, value = "select com.* from garbage_community com LEFT JOIN garbage_role_community rc on com.id = rc.community_id where rc.role_id in(?1)")
     List<GarbageCommunityEntity> findByRoleIds(List<Integer> roleIds);
+
+    List<GarbageCommunityEntity> findByIdIn(List<Integer> ids);
 }

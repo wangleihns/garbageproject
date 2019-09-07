@@ -180,7 +180,7 @@ public class Constants {
         /**
          * 空桶
          */
-        EMPTY(0);
+        EMPTY(3);
         private Integer type;
 
         garbageQuality(Integer type) {

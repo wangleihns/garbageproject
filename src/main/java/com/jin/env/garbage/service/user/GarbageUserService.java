@@ -204,7 +204,7 @@ public class GarbageUserService {
         String idCard = object.getString("idCard");
         Integer sex = object.getInt("sex");
         Boolean cleaner = object.getBoolean("cleaner");
-        Integer provinceId = object.getInt("provinceId");
+        Long provinceId = object.getLong("provinceId");
         String provinceName = object.getString("provinceName");
         Long cityId = object.getLong("cityId");
         String cityName = object.getString("cityName");

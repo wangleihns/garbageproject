@@ -34,7 +34,7 @@ public class GarbageUserEntity extends BaseEntity{
     private String idCard;
     private Integer sex;
     private Boolean cleaner;
-    private Integer provinceId;
+    private Long provinceId;
     private String provinceName;
     private Long cityId;
     private String cityName;
@@ -45,7 +45,7 @@ public class GarbageUserEntity extends BaseEntity{
     private Long villageId;
     private String villageName;
     private String address;
-    private Integer communityId;
+    private Long communityId;
 
     private String communityName;
 
@@ -221,11 +221,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "province_id")
-    public Integer getProvinceId() {
+    public Long getProvinceId() {
         return provinceId;
     }
 
-    public void setProvinceId(Integer provinceId) {
+    public void setProvinceId(Long provinceId) {
         this.provinceId = provinceId;
     }
 
@@ -356,11 +356,11 @@ public class GarbageUserEntity extends BaseEntity{
 
     @Basic
     @Column(name = "community_id")
-    public Integer getCommunityId() {
+    public Long getCommunityId() {
         return communityId;
     }
 
-    public void setCommunityId(Integer communityId) {
+    public void setCommunityId(Long communityId) {
         this.communityId = communityId;
     }
 
