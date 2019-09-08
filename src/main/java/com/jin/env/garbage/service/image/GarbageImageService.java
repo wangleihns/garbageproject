@@ -44,8 +44,9 @@ public class GarbageImageService {
         imageEntity.setOriginalFilename(root_fileName);
         imageEntity.setImageSize(fileSize);
         imageEntity.setImagePath(path);
-        garbageImageDao.save(imageEntity);
+        imageEntity = garbageImageDao.save(imageEntity);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setData(imageEntity);
         responseData.setMsg("上传成功");
         return responseData;
     }

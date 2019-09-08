@@ -11,10 +11,7 @@ import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
-import com.jin.env.garbage.dto.garbage.CollectorDto;
-import com.jin.env.garbage.dto.garbage.CommunityGarbageCollectDto;
-import com.jin.env.garbage.dto.garbage.GarbageCollectCountDto;
-import com.jin.env.garbage.dto.garbage.GarbageWeightInMonth;
+import com.jin.env.garbage.dto.garbage.*;
 import com.jin.env.garbage.dto.user.UserCountInMonth;
 import com.jin.env.garbage.dto.user.UserDto;
 import com.jin.env.garbage.dto.user.UserVillageDto;
@@ -50,6 +47,7 @@ import javax.persistence.criteria.*;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1856,5 +1854,303 @@ public class GarbageCollectorService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("小区列表成功");
         return responseData;
+    }
+
+    public ResponseData userCollectDataAnalysis(Integer pageNo, Integer pageSize, String startTime, String endTime, String type, String keyWord, String jwt, String[] orderBys,
+                                                Long cityId, Long countryId, Long townId, Long villageId, Long communityId) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<GarbageRoleEntity> roleEntityList =userEntity.getRoles().stream().collect(Collectors.toList());
+        List<Integer> communityIds = getCommunityResource(roleEntityList);
+        List<String> roles = roleEntityList.stream().map(role -> role.getRoleCode()).collect(Collectors.toList());
+        Long  start = DateFormatUtil.getFirstTimeOfDay(startTime).getTime();
+        Long  end = DateFormatUtil.getLastTimeOfDay(endTime).getTime();
+        Pageable pageable = PageRequest.of(pageNo-1, pageSize, userCollectDataAnalysisSort(orderBys));
+
+        //分页统计dto
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<UserCollectDataAnalysisDto> cq = cb.createQuery(UserCollectDataAnalysisDto.class);
+        Root<GarbageCollectorEntity> root = cq.from(GarbageCollectorEntity.class);
+        List<Predicate> predicates = new ArrayList<>();
+        //垃圾质量统计dto
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<UserCollectDataAnalysisDto> criteriaQuery = criteriaBuilder.createQuery(UserCollectDataAnalysisDto.class);
+        Root<GarbageCollectorEntity> rootP = criteriaQuery.from(GarbageCollectorEntity.class);
+        List<Predicate> predicateList = new ArrayList<>();
+
+        List<Expression<?>> expressionList = new ArrayList<>();
+        List<Expression<?>> expressionListQuality = new ArrayList<>();
+
+        if (fromType == 1){
+            Predicate garbageFromType = cb.equal(root.get("garbageFromType"), Constants.garbageFromType.COMMUNITY.getType());
+            predicates.add(garbageFromType);
+        } else {
+            Predicate garbageFromType = cb.equal(root.get("garbageFromType"), Constants.garbageFromType.TOWN.getType());
+            predicates.add(garbageFromType);
+        }
+        cq.multiselect(root.get("userId"), cb.count(root.get("userId")), cb.sum(root.get("garbageWeight")), root.get("day"), root.get("month"), root.get("year"));
+        expressionList.add(root.get("userId"));
+        expressionList.add(root.get("day"));
+        expressionList.add(root.get("monht"));
+        expressionList.add(root.get("year"));
+        Predicate checkPredicate = cb.isTrue(root.get("check"));
+        if (!StringUtils.isEmpty(startTime) && !StringUtils.isEmpty(endTime)){
+            Predicate predicateStart = cb.greaterThanOrEqualTo(root.get("collectDate"), start);
+            Predicate predicateEnd = cb.greaterThanOrEqualTo(root.get("collectDate"), end);
+            predicates.add(predicateStart);
+            predicates.add(predicateEnd);
+        }
+        if (roles.contains("PROVINCE_ADMIN")){
+            if (cityId != null){
+                Predicate predicate = cb.equal(root.get("cityId"), cityId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("cityId"), cityId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+                expressionList.add(root.get("cityId"));
+                expressionListQuality.add(root.get("cityId"));
+            } else if (cityId !=null && countryId !=null){
+                expressionList.add(root.get("countryId"));
+                expressionListQuality.add(root.get("countryId"));
+                Predicate predicate = cb.equal(root.get("countryId"), countryId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("countryId"), countryId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else if (cityId !=null && countryId !=null && townId != null){
+                expressionList.add(root.get("townId"));
+                expressionListQuality.add(root.get("townId"));
+                Predicate predicate = cb.equal(root.get("townId"), townId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("townId"), townId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else if (cityId !=null && countryId !=null && townId != null && villageId !=null){
+                expressionList.add(root.get("villageId"));
+                expressionListQuality.add(root.get("villageId"));
+                Predicate predicate = cb.equal(root.get("villageId"), villageId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("villageId"), villageId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else {
+                expressionList.add(root.get("provinceId"));
+                expressionListQuality.add(root.get("provinceId"));
+                Predicate predicate = cb.equal(root.get("provinceId"), userEntity.getProvinceId());
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("provinceId"), userEntity.getProvinceId());
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            }
+        }
+        if (roles.contains("CITY_ADMIN")){
+            if (countryId !=null){
+                expressionList.add(root.get("countryId"));
+                expressionListQuality.add(root.get("countryId"));
+                Predicate predicate = cb.equal(root.get("countryId"), countryId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("countryId"), countryId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else if (countryId !=null && townId != null){
+                expressionList.add(root.get("townId"));
+                expressionListQuality.add(root.get("townId"));
+                Predicate predicate = cb.equal(root.get("townId"), townId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("townId"), townId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else if (countryId !=null && townId != null && villageId !=null){
+                expressionList.add(root.get("villageId"));
+                expressionListQuality.add(root.get("villageId"));
+                Predicate predicate = cb.equal(root.get("villageId"), villageId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("villageId"), villageId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else {
+                expressionList.add(root.get("cityId"));
+                expressionListQuality.add(root.get("cityId"));
+                Predicate predicate = cb.equal(root.get("cityId"), userEntity.getCityId());
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("cityId"), userEntity.getCityId());
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            }
+        }
+        if (roles.contains("COUNTRY_ADMIN")){
+            if (townId != null){
+                expressionList.add(root.get("townId"));
+                expressionListQuality.add(root.get("townId"));
+                Predicate predicate = cb.equal(root.get("townId"), townId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("townId"), townId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else if (countryId !=null && townId != null && villageId !=null){
+                expressionList.add(root.get("villageId"));
+                expressionListQuality.add(root.get("villageId"));
+                Predicate predicate = cb.equal(root.get("villageId"), villageId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("villageId"), villageId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else {
+                expressionList.add(root.get("countryId"));
+                expressionListQuality.add(root.get("countryId"));
+                Predicate predicate = cb.equal(root.get("countryId"), userEntity.getCountryId());
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("countryId"), userEntity.getCountryId());
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            }
+        }
+        if(roles.contains("TOWN_ADMIN")){
+            if (villageId !=null){
+                expressionList.add(root.get("villageId"));
+                expressionListQuality.add(root.get("villageId"));
+                Predicate predicate = cb.equal(root.get("villageId"), villageId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("villageId"), villageId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else {
+                expressionList.add(root.get("townId"));
+                expressionListQuality.add(root.get("townId"));
+                Predicate predicate = cb.equal(root.get("townId"), userEntity.getTownId());
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("townId"),  userEntity.getTownId());
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            }
+        }
+        if (roles.contains("VILLAGE_ADMIN")){
+            expressionList.add(root.get("villlageId"));
+            expressionListQuality.add(root.get("villlageId"));
+            Predicate predicate = cb.equal(root.get("villageId"), userEntity.getVillageId());
+            Predicate predicateP = criteriaBuilder.equal(rootP.get("villageId"), userEntity.getVillageId());
+            predicates.add(predicate);
+            predicateList.add(predicateP);
+        }
+        if (fromType ==1){
+            expressionList.add(root.get("communityId"));
+            expressionListQuality.add(root.get("communityId"));
+            if (communityId != null){
+                Predicate predicate = cb.equal(root.get("communityId"), communityId);
+                Predicate predicateP = criteriaBuilder.equal(rootP.get("communityId"), communityId);
+                predicates.add(predicate);
+                predicateList.add(predicateP);
+            } else {
+                if (communityIds .size()> 0){
+                   Predicate predicate = root.get("communityId").in(communityIds);
+                   Predicate predicateP = rootP.get("communityId").in(communityIds);
+                   predicates.add(predicate);
+                   predicateList.add(predicateP);
+                }
+            }
+        }
+        cq.groupBy(expressionList);
+
+        if (!StringUtils.isEmpty(type) && !StringUtils.isEmpty(keyWord)){
+            List<Predicate> selectList = new ArrayList<>();
+            Subquery subquery = cq.subquery(GarbageUserEntity.class);
+            Root suRoot = subquery.from(GarbageUserEntity.class);
+            subquery.select(suRoot.get("id"));
+            Predicate equal =  cb.equal(root.get("userId"), suRoot.get("id"));
+            predicates.add(equal);
+            if ("name".equals(type)){
+                Predicate name = cb.like(suRoot.get("name"), "%" + keyWord + "%");
+                selectList.add(name);
+            }
+            if ("phone".equals(type)){
+                Predicate phone = cb.like(suRoot.get("phone"), "%" + keyWord + "%");
+                selectList.add(phone);
+            }
+            Predicate exists = cb.exists(subquery.where(selectList.toArray(new Predicate[selectList.size()])));
+            predicates.add(exists);
+        }
+        TypedQuery<UserCollectDataAnalysisDto> query = entityManager.createQuery(cq);
+        query.setFirstResult((pageNo-1)*pageSize);
+        query.setMaxResults(pageSize);
+        List<UserCollectDataAnalysisDto> dtos = query.getResultList();
+        PageImpl<UserCollectDataAnalysisDto> page = new PageImpl<>(dtos, pageable, Long.valueOf(dtos.size()));
+        List<GarbageUserEntity> userEntities = garbageUserDao.findAll();
+        Map<Integer,GarbageUserEntity> userEntityMap = userEntities.stream().collect(Collectors.toMap(GarbageUserEntity::getId, Function.identity()));
+
+
+        criteriaQuery.multiselect(rootP.get("userId"), rootP.get("garbageQuality"), criteriaBuilder.count(rootP.get("garbageQuality")), rootP.get("day"), rootP.get("month"), rootP.get("year"));
+        if (fromType == 1){
+            Predicate garbageFromType = criteriaBuilder.equal(rootP.get("garbageFromType"), Constants.garbageFromType.COMMUNITY.getType());
+            predicateList.add(garbageFromType);
+        } else {
+            Predicate garbageFromType = criteriaBuilder.equal(rootP.get("garbageFromType"), Constants.garbageFromType.TOWN.getType());
+            predicateList.add(garbageFromType);
+        }
+        if (!StringUtils.isEmpty(startTime) && !StringUtils.isEmpty(endTime)){
+            Predicate predicateStart = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), start);
+            Predicate predicateEnd = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), end);
+            predicateList.add(predicateStart);
+            predicateList.add(predicateEnd);
+        }
+
+        expressionListQuality.add(root.get("userId"));
+        expressionListQuality.add(root.get("day"));
+        expressionListQuality.add(root.get("monht"));
+        expressionListQuality.add(root.get("year"));
+        criteriaQuery.groupBy(expressionListQuality);
+
+        TypedQuery<UserCollectDataAnalysisDto> queryD = entityManager.createQuery(criteriaQuery);
+        List<UserCollectDataAnalysisDto> QualityDtos = query.getResultList();
+        Map<String, Long> qualityMap = new HashMap<>();
+        Map<Integer, Long> totalMap = new HashMap<>();
+        QualityDtos.forEach(dto->{
+            qualityMap.put(dto.getUserId() + "-" + dto.getQualityType(), dto.getCount());
+            if (totalMap.containsKey(dto.getUserId())){
+                totalMap.put(dto.getUserId(), dto.getCount() + totalMap.get(dto.getUserId()));
+            } else {
+                totalMap.put(dto.getUserId(), dto.getCount());
+            }
+        });
+        List<UserCollectDataAnalysisDto> dtoList = new ArrayList<>();
+        page.getContent().forEach(n->{
+            UserCollectDataAnalysisDto dto = new UserCollectDataAnalysisDto();
+            dto.setUserId(n.getUserId());
+            GarbageUserEntity garbageUserEntity = userEntityMap.get(n.getUserId());
+            String placeName = garbageUserEntity.getProvinceName() + garbageUserEntity.getCityName() + garbageUserEntity.getCountryName();
+            String address = garbageUserEntity.getTownName() == null ?"": garbageUserEntity.getTownName() +
+                    garbageUserEntity.getVillageName() == null ?"":garbageUserEntity.getVillageName() +
+                    garbageUserEntity.getCommunityName() == null ?"":garbageUserEntity.getCommunityName();
+            dto.setAddress(address);
+            dto.setPlaceName(placeName);
+            dto.setTotalWeight(n.getTotalWeight());
+            Long qualityCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.QUALIFIED.getType());
+            Long noQualityCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.NOTQUALIFIED.getType());
+            Long emptyCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.EMPTY.getType());
+            dto.setQualityCount(qualityCount);
+            dto.setNoQualityCount(qualityCount);
+            dto.setEmptyCount(emptyCount);
+            Long totalCount = totalMap.get(n.getUserId()) == null ?0L:totalMap.get(n.getUserId());
+            dto.setTotalCount(totalCount);
+            if (totalCount == 0){
+                dto.setQualityRate("0%");
+            } else {
+                BigDecimal bigDecimal = new BigDecimal(qualityCount.doubleValue()*100/totalCount);
+                Double d = bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                dto.setQualityRate(d + "%");
+            }
+            dtoList.add(dto);
+        });
+        ResponsePageData responsePageData = new ResponsePageData();
+        responsePageData.setPageNo(pageNo);
+        responsePageData.setPageSize(pageSize);
+        responsePageData.setCount(page.getTotalPages());
+        responsePageData.setLastPage(page.isLast());
+        responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setData(dtoList);
+        responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
+        responsePageData.setMsg("列表查询成功");
+        return responsePageData;
+    }
+
+    public Sort userCollectDataAnalysisSort(String[] orderBys){
+        Sort sort = null;
+        if (orderBys == null || orderBys.length == 0 ){
+            sort = Sort.by("id").descending();
+        }else {
+            sort =   Sort.by(Arrays.stream(orderBys).map((it) -> {
+                String[] items = it.split(";");
+                String property = "";
+                Sort.Direction direction = null;
+                return new Sort.Order(direction, property);
+            }).collect(Collectors.toList()));
+        }
+        return sort;
     }
 }

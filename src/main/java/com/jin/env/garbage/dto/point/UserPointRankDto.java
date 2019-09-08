@@ -4,6 +4,7 @@ public class UserPointRankDto {
     private Integer rank;
     private String userName;
     private String phone;
+    private String placeName;
     private String address;
     private Integer point;
 
@@ -45,5 +46,13 @@ public class UserPointRankDto {
 
     public void setPoint(Integer point) {
         this.point = point;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
     }
 }

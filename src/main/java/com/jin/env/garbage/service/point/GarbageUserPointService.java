@@ -175,8 +175,9 @@ public class GarbageUserPointService {
             dto.setUserName(pointEntity.getUserName());
             dto.setPhone(pointEntity.getPhone());
             dto.setPoint(pointEntity.getPoint());
-            String address = pointEntity.getProvinceName() + pointEntity.getCityName() + pointEntity.getCountryName() +
-                    pointEntity.getTownName() == null ?"": pointEntity.getTownName() +
+            String planceName = pointEntity.getProvinceName() + pointEntity.getCityName() + pointEntity.getCountryName();
+            dto.setPlaceName(planceName);
+            String address = pointEntity.getTownName() == null ?"": pointEntity.getTownName() +
                     pointEntity.getVillageName() == null ?"":pointEntity.getVillageName() +
                     pointEntity.getCommunityName() == null ?"":pointEntity.getCommunityName();
             dto.setAddress(address);
@@ -471,7 +472,7 @@ public class GarbageUserPointService {
         Map<Long, GarbageQualityPointEntity> map = page.getContent().stream().collect(Collectors.toMap(GarbageQualityPointEntity::getPlaceId, Function.identity()));
         if (garbageFromType.getType() == 1){
             //小区
-//            dtos = garbageCommunityDao.selectCommunity(placeIds);
+            dtos = garbageCommunityDao.selectCommunity(placeIds);
         } else {
             // 农村
             if (placeIds.size() > 0){

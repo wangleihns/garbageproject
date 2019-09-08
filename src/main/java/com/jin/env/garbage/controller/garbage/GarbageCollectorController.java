@@ -224,4 +224,13 @@ public class GarbageCollectorController {
         return  responseData;
     }
 
+    @RequestMapping(value = "userCollectDataAnalysis", method = RequestMethod.GET)
+    public  ResponseData userCollectDataAnalysis(Integer pageNo, Integer pageSize, String startTime, String endTime,String type, String keyWord,
+                                                 Long cityId, Long countryId, Long townId, Long villageId, Long communityId,
+                                                 String[] orderBys , HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.userCollectDataAnalysis(pageNo, pageSize, startTime, endTime, type, keyWord, jwt, orderBys,cityId,countryId,townId, villageId, communityId);
+        return  responseData;
+    }
+
 }

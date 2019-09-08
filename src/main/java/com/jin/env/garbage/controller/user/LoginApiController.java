@@ -99,11 +99,6 @@ public class LoginApiController {
 
     /**
      * 查看收集员或者评分员
-     * @param name
-     * @param phone
-     * @param idCard
-     * @param value
-     * @param provinceId
      * @param cityId
      * @param countryId
      * @param townId
@@ -113,13 +108,13 @@ public class LoginApiController {
      * @return
      */
     @RequestMapping(value = "collectorList", method = RequestMethod.GET)
-    public ResponsePageData collectorList(String name, String phone, String idCard, String value, Integer provinceId,
-                                          Integer cityId, Integer countryId, Integer townId, Integer villageId,
+    public ResponseData collectorList(String type, String keyWord,
+                                          Long cityId, Long countryId, Long townId, Long villageId, Integer communityId,
                                           String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
-        ResponsePageData responsePageData = garbageUserService.collectorList(name, phone, idCard, value,provinceId, cityId, countryId, townId, villageId, jwt, pageNo, pageSize, orderBys);
+        ResponseData responsePageData = garbageUserService.collectorList(type, keyWord, cityId, countryId, townId, villageId, communityId, jwt, pageNo, pageSize, orderBys);
         return responsePageData;
     }
 
@@ -131,26 +126,40 @@ public class LoginApiController {
     }
 
     @RequestMapping(value = "deleteUserById", method = RequestMethod.POST)
-    public ResponseData deleteUserById(HttpServletRequest request, Integer status){
+    public ResponseData deleteUserById(HttpServletRequest request, Integer userId,  Integer status){
         String jwt = request.getHeader("Authorization").split(" ")[1];
-        ResponseData responseData = garbageUserService.deleteUserById(jwt, status);
+        ResponseData responseData = garbageUserService.deleteUserById(userId, status);
         return responseData;
     }
 
     @RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
-    public ResponseData updateUserInfo(GarbageUserEntity userEntity, Integer fileId){
-        ResponseData responseData = garbageUserService.updateUserInfo(userEntity, fileId);
+    public ResponseData updateUserInfo(Integer userId, String name, Integer sex, String idCard, String phone,  Long provinceId,
+                                       String provinceName, Long cityId, String cityName, Long countryId, String countryName,
+                                       Long townId, String townName, Long villageId, String villageName, String address,  Integer fileId){
+        Assert.state(userId != null, "用戶id必传");
+        Assert.state(name != null, "用戶姓名必传");
+        Assert.state(sex != null, "用戶性别必传");
+        Assert.hasText(phone, "用户手机号必传");
+        Assert.hasText(address, "用户地址必传");
+//        Assert.hasText(idCard, "用用户身份证必传");
+//        Assert.state(provinceId != null, "用户所在省必传");
+//        Assert.state(cityId != null, "用户所在市必传");
+//        Assert.state(countryId != null, "用户所在区县必传");
+//        Assert.state(townId != null, "用户所在乡镇必传");
+//        Assert.state(villageId != null, "用户所在村必传");
+        ResponseData responseData = garbageUserService.updateUserInfo(userId, name, sex, idCard, phone, provinceId, provinceName, cityId,cityName, countryId, countryName,
+                townId,townName, villageId, villageName, address ,fileId);
         return responseData;
     }
 
     @RequestMapping(value = "residentList", method = RequestMethod.GET)
     public ResponseData residentList(String name, String phone, String idCard, String eNo, Integer provinceId,
-                                     Integer cityId, Integer countryId,  Integer townId, Integer villageId,
-                                     String checkType, String[] orderBys, HttpServletRequest request){
+                                     Integer cityId, Integer countryId,  Integer townId, Integer villageId, Integer communityId,
+                                     String checkType,  String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         Integer pageNo = Integer.valueOf(request.getParameter("pageNo"));
         Integer pageSize = Integer.valueOf(request.getParameter("pageSize"));
-        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, checkType, jwt, pageNo, pageSize, orderBys);
+        ResponseData responseData = garbageUserService.residentList(name, phone, idCard, eNo, provinceId, cityId, countryId, townId, villageId, communityId, checkType, jwt, pageNo, pageSize, orderBys);
         return responseData;
     }
 
