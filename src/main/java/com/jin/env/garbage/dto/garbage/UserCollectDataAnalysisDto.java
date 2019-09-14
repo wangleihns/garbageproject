@@ -4,6 +4,7 @@ public class UserCollectDataAnalysisDto {
     private Integer userId;
     private String name;
     private String placeName;
+    private String belongTown;
     private String address;
     private Long totalCount;
     private Double totalWeight;
@@ -22,22 +23,30 @@ public class UserCollectDataAnalysisDto {
     public UserCollectDataAnalysisDto() {
     }
 
-    public UserCollectDataAnalysisDto(Integer userId, Integer qualityType, Long totalCount, Double totalWeight, Integer day, Integer month, Integer year) {
+    public UserCollectDataAnalysisDto(Integer userId, Integer qualityType, Long count, Integer day, Integer month, Integer year) {
         this.userId = userId;
-        this.totalCount = totalCount;
         this.qualityType = qualityType;
-        this.totalWeight = totalWeight;
+        this.count = count;
         this.day = day;
         this.month = month;
         this.year = year;
     }
 
-    public UserCollectDataAnalysisDto(Integer userId,Long count, Integer day, Integer month, Integer year ) {
+    public UserCollectDataAnalysisDto(Integer userId, Long totalCount, Double totalWeight,  Integer day, Integer month, Integer year ) {
         this.userId = userId;
         this.day = day;
         this.month = month;
         this.year = year;
-        this.count = count;
+        this.totalCount = totalCount;
+        this.totalWeight = totalWeight;
+    }
+
+    public String getBelongTown() {
+        return belongTown;
+    }
+
+    public void setBelongTown(String belongTown) {
+        this.belongTown = belongTown;
     }
 
     public Integer getUserId() {

@@ -3,6 +3,7 @@ package com.jin.env.garbage.service.user;
 import com.jin.env.garbage.controller.user.LoginApiController;
 import com.jin.env.garbage.dao.garbage.GarbageCollectorDao;
 import com.jin.env.garbage.dao.image.GarbageImageDao;
+import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.position.*;
 import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
@@ -12,6 +13,7 @@ import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.dto.user.*;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
 import com.jin.env.garbage.entity.image.GarbageImageEntity;
+import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.position.*;
 import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
@@ -103,6 +105,9 @@ public class GarbageUserService {
 
     @Autowired
     private JPositionProvinceDao jPositionProvinceDao;
+
+    @Autowired
+    private GarbageUserPointDao garbageUserPointDao;
 
     public ResponseData findByPhoneOrLoginNameOrENoOrIdCard(String password, String username, String from) {
         ResponseData responseData = new ResponseData();
@@ -270,6 +275,7 @@ public class GarbageUserService {
         userEntity.setAccountNonExpired(true);
         userEntity.setAccountNonLocked(true);
         userEntity.setEnabled(true);
+        userEntity.setStatus(1);
         userEntity.setIdCard(idCard);
         userEntity.setSex(sex);
         userEntity.setCleaner(cleaner);
@@ -318,6 +324,7 @@ public class GarbageUserService {
             GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
             garbageENoEntity.setUserId(userId);
             garbageENoEntity.seteNo(e);
+            garbageENoEntity.setStatus(1);
             eNoEntityList.add(garbageENoEntity);
         });
         garbageENoDao.saveAll(eNoEntityList);
@@ -695,9 +702,9 @@ public class GarbageUserService {
         return responseData;
     }
 
-    public ResponsePageData residentList(String name, String phone, String idCard, String eNo,
-                                         Integer provinceId, Integer cityId, Integer countryId, Integer townId,
-                                         Integer villageId, Integer communityId, String roleCode, String jwt, Integer pageNo,
+    public ResponseData residentList(String type, String keyWord,Long provinceId,
+                                         Long cityId, Long countryId,  Long townId, Long villageId,
+                                         Integer communityId, String roleCode, String jwt, Integer pageNo,
                                          Integer pageSize, String[] orderBys) {
         Pageable pageable = PageRequest.of(pageNo -1, pageSize, getCollectorSort(orderBys));
         Integer sub = jwtUtil.getSubject(jwt);
@@ -787,23 +794,29 @@ public class GarbageUserService {
                         predicateList.add(predicate);
                     }
                 }
-                if (!StringUtils.isEmpty(name)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + name + "%");
+                if (!StringUtils.isEmpty(type) && !StringUtils.isEmpty(keyWord))
+                if ("name".equals(type)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("name"), "%" + keyWord + "%");
                     predicateList.add(predicateName);
                 }
-                if (!StringUtils.isEmpty(phone)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
+                if ("phone".equals(type)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("phone"), "%" + keyWord + "%");
                     predicateList.add(predicateName);
                 }
-                if (!StringUtils.isEmpty(idCard)) {
-                    Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + idCard + "%");
+                if ("idCard".equals(type)) {
+                    Predicate predicateName = criteriaBuilder.like(root.get("idCard"), "%" + keyWord + "%");
                     predicateList.add(predicateName);
                 }
-                if (!StringUtils.isEmpty(eNo)){
+                if ("address".equals(type)){
+                    Predicate predicateAddress = criteriaBuilder.like(root.get("address"), "%" + keyWord + "%");
+                    predicateList.add(predicateAddress);
+                }
+                if ("eNo".equals(type)){
                     Join< GarbageUserEntity, GarbageENoEntity> eNoJoin = root.join("eNos", JoinType.INNER);
-                    Predicate eNoPredicate = criteriaBuilder.equal(eNoJoin.get("eNo"), eNo);
+                    Predicate eNoPredicate = criteriaBuilder.like(eNoJoin.get("eNo"), "%"+keyWord+"%");
                     predicateList.add(eNoPredicate);
                 }
+
                 Join<GarbageUserEntity, GarbageRoleEntity> roleEntityJoin = root.join("roles", JoinType.INNER);
                 if (StringUtils.isEmpty(roleCode)){
                     //所有   村管理员-- VILLAGE_ADMIN      居民 -- RESIDENT
@@ -816,8 +829,8 @@ public class GarbageUserService {
                     Predicate rolePredicate = criteriaBuilder.equal(roleEntityJoin.get("roleCode"), roleCode);
                     predicateList.add(rolePredicate);
                 }
-                //查看小区居民
-                if (fromType == 1){
+
+                if (fromType == 1){     //查看小区居民
                     if (communityId != null ){
                         Predicate predicate = criteriaBuilder.equal(root.get("communityId"),communityId);
                         predicateList.add(predicate);
@@ -844,10 +857,53 @@ public class GarbageUserService {
         imageEntityList.forEach(garbageImageEntity -> {
             map.put(garbageImageEntity.getBusId() + "-" + garbageImageEntity.getType(), garbageImageEntity.getImagePath());
         });
+
+        List<Integer> userIds = page.getContent().stream().map(n-> n.getId()).collect(Collectors.toList());
+        List<GarbageUserPointEntity> userPointEntities = null;
+        if (userIds.size() > 0){
+            userPointEntities = garbageUserPointDao.findByUserIdIn(userIds);
+        } else {
+            userPointEntities = new ArrayList<>();
+        }
+        Map<Integer, Integer> userPointMap = userPointEntities.stream().collect(Collectors.toMap(GarbageUserPointEntity::getUserId, GarbageUserPointEntity::getPoint));
         List<GarbageUserDto> dtos = new ArrayList<>();
         page.getContent().forEach(user -> {
             GarbageUserDto dto = new GarbageUserDto();
-            dto.setGarbageUserEntity(user);
+            dto.setName(user.getName());
+            dto.setPhone(user.getPhone());
+            String placeName = user.getProvinceName() + user.getCityName() + user.getCountryName();
+            String belongTown = (user.getTownName() == null ? "": user.getTownName()) +
+                    (user.getVillageName() == null ?"":user.getVillageName()) +
+                    (user.getCommunityName() == null ?"":user.getCommunityName());
+            dto.setBelongTown(belongTown);
+            dto.setAddress(user.getAddress());
+            dto.setPlaceName(placeName);
+            dto.setCreateDate(DateFormatUtil.formatDate(new Date(user.getCreateTime()), "yyyy-MM-dd"));
+            List<GarbageRoleEntity> roleEntities = user.getRoles().stream().collect(Collectors.toList());
+            String roleName = "";
+            if (roleEntities.size() > 1){
+                roleName = roleEntities.get(roleEntities.size() -1).getRoleName();
+            } else {
+                roleName = roleEntities.get(0).getRoleName();
+            }
+            dto.setSex(user.getSex());
+            dto.setRoleName(roleName);
+            dto.setIdentityType(roleName);
+            dto.setUserId(user.getId());
+            dto.setProvinceId(user.getProvinceId());
+            dto.setProvinceName(user.getProvinceName());
+            dto.setCityId(user.getCityId());
+            dto.setCityName(user.getCityName());
+            dto.setCountryId(user.getCountryId());
+            dto.setCountryName(user.getCountryName());
+            dto.setTownId(user.getTownId());
+            dto.setTownName(user.getTownName());
+            dto.setVillageId(user.getVillageId());
+            dto.setVillageName(user.getVillageName());
+            dto.setTownName(user.getTownName());
+            dto.setCommunityId(user.getCommunityId());
+            dto.setCommunityName(user.getCommunityName());
+            dto.setPoint(userPointMap.get(user.getId()) == null?0:userPointMap.get(user.getId()));
             dto.setHeaderImage(map.get(user.getId() + "-" + Constants.image.HEADER.name()));
             dto.setqRCode(map.get(user.getId() + "-" + Constants.image.QRCODE.name()));
             dto.seteNos(user.geteNos().stream().map(noEntity-> noEntity.geteNo()).collect(Collectors.toList()));
@@ -861,6 +917,7 @@ public class GarbageUserService {
         pageData.setPageNo(pageNo);
         pageData.setPageSize(pageSize);
         pageData.setCount(page.getTotalPages());
+        pageData.setTotalElement(page.getTotalElements());
         pageData.setData(dtos);
         return pageData;
     }

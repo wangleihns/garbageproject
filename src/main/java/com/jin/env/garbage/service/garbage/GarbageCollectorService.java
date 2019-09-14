@@ -1873,6 +1873,7 @@ public class GarbageCollectorService {
         CriteriaQuery<UserCollectDataAnalysisDto> cq = cb.createQuery(UserCollectDataAnalysisDto.class);
         Root<GarbageCollectorEntity> root = cq.from(GarbageCollectorEntity.class);
         List<Predicate> predicates = new ArrayList<>();
+
         //垃圾质量统计dto
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<UserCollectDataAnalysisDto> criteriaQuery = criteriaBuilder.createQuery(UserCollectDataAnalysisDto.class);
@@ -1881,7 +1882,8 @@ public class GarbageCollectorService {
 
         List<Expression<?>> expressionList = new ArrayList<>();
         List<Expression<?>> expressionListQuality = new ArrayList<>();
-
+        Predicate predicateNotnull = cb.isNotNull(root.get("garbageQuality"));
+        predicates.add(predicateNotnull);
         if (fromType == 1){
             Predicate garbageFromType = cb.equal(root.get("garbageFromType"), Constants.garbageFromType.COMMUNITY.getType());
             predicates.add(garbageFromType);
@@ -1891,13 +1893,13 @@ public class GarbageCollectorService {
         }
         cq.multiselect(root.get("userId"), cb.count(root.get("userId")), cb.sum(root.get("garbageWeight")), root.get("day"), root.get("month"), root.get("year"));
         expressionList.add(root.get("userId"));
-        expressionList.add(root.get("day"));
-        expressionList.add(root.get("monht"));
-        expressionList.add(root.get("year"));
+//        expressionList.add(root.get("day"));
+//        expressionList.add(root.get("month"));
+//        expressionList.add(root.get("year"));
         Predicate checkPredicate = cb.isTrue(root.get("check"));
         if (!StringUtils.isEmpty(startTime) && !StringUtils.isEmpty(endTime)){
             Predicate predicateStart = cb.greaterThanOrEqualTo(root.get("collectDate"), start);
-            Predicate predicateEnd = cb.greaterThanOrEqualTo(root.get("collectDate"), end);
+            Predicate predicateEnd = cb.lessThanOrEqualTo(root.get("collectDate"), end);
             predicates.add(predicateStart);
             predicates.add(predicateEnd);
         }
@@ -2056,6 +2058,8 @@ public class GarbageCollectorService {
             Predicate exists = cb.exists(subquery.where(selectList.toArray(new Predicate[selectList.size()])));
             predicates.add(exists);
         }
+        //分页
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<UserCollectDataAnalysisDto> query = entityManager.createQuery(cq);
         query.setFirstResult((pageNo-1)*pageSize);
         query.setMaxResults(pageSize);
@@ -2064,7 +2068,7 @@ public class GarbageCollectorService {
         List<GarbageUserEntity> userEntities = garbageUserDao.findAll();
         Map<Integer,GarbageUserEntity> userEntityMap = userEntities.stream().collect(Collectors.toMap(GarbageUserEntity::getId, Function.identity()));
 
-
+        //分类统计
         criteriaQuery.multiselect(rootP.get("userId"), rootP.get("garbageQuality"), criteriaBuilder.count(rootP.get("garbageQuality")), rootP.get("day"), rootP.get("month"), rootP.get("year"));
         if (fromType == 1){
             Predicate garbageFromType = criteriaBuilder.equal(rootP.get("garbageFromType"), Constants.garbageFromType.COMMUNITY.getType());
@@ -2074,20 +2078,24 @@ public class GarbageCollectorService {
             predicateList.add(garbageFromType);
         }
         if (!StringUtils.isEmpty(startTime) && !StringUtils.isEmpty(endTime)){
-            Predicate predicateStart = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), start);
-            Predicate predicateEnd = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), end);
+            Predicate predicateStart = criteriaBuilder.greaterThanOrEqualTo(rootP.get("collectDate"), start);
+            Predicate predicateEnd = criteriaBuilder.lessThanOrEqualTo(rootP.get("collectDate"), end);
             predicateList.add(predicateStart);
             predicateList.add(predicateEnd);
         }
+        Predicate predicatePNotnull = criteriaBuilder.isNotNull(rootP.get("garbageQuality"));
+        predicateList.add(predicatePNotnull);
 
-        expressionListQuality.add(root.get("userId"));
-        expressionListQuality.add(root.get("day"));
-        expressionListQuality.add(root.get("monht"));
-        expressionListQuality.add(root.get("year"));
+        expressionListQuality.add(rootP.get("userId"));
+//        expressionListQuality.add(root.get("day"));
+//        expressionListQuality.add(root.get("month"));
+//        expressionListQuality.add(root.get("year"));
+        expressionListQuality.add(rootP.get("garbageQuality"));
+        criteriaQuery.where(predicateList.toArray(new Predicate[predicateList.size()]));
         criteriaQuery.groupBy(expressionListQuality);
 
         TypedQuery<UserCollectDataAnalysisDto> queryD = entityManager.createQuery(criteriaQuery);
-        List<UserCollectDataAnalysisDto> QualityDtos = query.getResultList();
+        List<UserCollectDataAnalysisDto> QualityDtos = queryD.getResultList();
         Map<String, Long> qualityMap = new HashMap<>();
         Map<Integer, Long> totalMap = new HashMap<>();
         QualityDtos.forEach(dto->{
@@ -2104,24 +2112,28 @@ public class GarbageCollectorService {
             dto.setUserId(n.getUserId());
             GarbageUserEntity garbageUserEntity = userEntityMap.get(n.getUserId());
             String placeName = garbageUserEntity.getProvinceName() + garbageUserEntity.getCityName() + garbageUserEntity.getCountryName();
-            String address = garbageUserEntity.getTownName() == null ?"": garbageUserEntity.getTownName() +
-                    garbageUserEntity.getVillageName() == null ?"":garbageUserEntity.getVillageName() +
-                    garbageUserEntity.getCommunityName() == null ?"":garbageUserEntity.getCommunityName();
-            dto.setAddress(address);
+            String belongTown = (garbageUserEntity.getTownName() == null ?"": garbageUserEntity.getTownName()) +
+                    (garbageUserEntity.getVillageName() == null ?"":garbageUserEntity.getVillageName()) +
+                    (garbageUserEntity.getCommunityName() == null ?"":garbageUserEntity.getCommunityName());
+            dto.setBelongTown(belongTown);
+            dto.setAddress(garbageUserEntity.getAddress());
             dto.setPlaceName(placeName);
-            dto.setTotalWeight(n.getTotalWeight());
+            dto.setName(garbageUserEntity.getName());
+            BigDecimal weightBigDecimal = new BigDecimal(n.getTotalWeight());
+            Double weight = weightBigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+            dto.setTotalWeight(weight);
             Long qualityCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.QUALIFIED.getType());
             Long noQualityCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.NOTQUALIFIED.getType());
             Long emptyCount = qualityMap.get(n.getUserId() + "-" + Constants.garbageQuality.EMPTY.getType());
-            dto.setQualityCount(qualityCount);
-            dto.setNoQualityCount(qualityCount);
-            dto.setEmptyCount(emptyCount);
+            dto.setQualityCount(qualityCount == null?0:qualityCount);
+            dto.setNoQualityCount(noQualityCount == null?0:noQualityCount);
+            dto.setEmptyCount(emptyCount == null?0:emptyCount);
             Long totalCount = totalMap.get(n.getUserId()) == null ?0L:totalMap.get(n.getUserId());
             dto.setTotalCount(totalCount);
             if (totalCount == 0){
                 dto.setQualityRate("0%");
             } else {
-                BigDecimal bigDecimal = new BigDecimal(qualityCount.doubleValue()*100/totalCount);
+                BigDecimal bigDecimal = new BigDecimal(dto.getQualityCount().doubleValue()*100/totalCount);
                 Double d = bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                 dto.setQualityRate(d + "%");
             }
@@ -2134,6 +2146,7 @@ public class GarbageCollectorService {
         responsePageData.setLastPage(page.isLast());
         responsePageData.setFirstPage(page.isFirst());
         responsePageData.setData(dtoList);
+        responsePageData.setTotalElement(page.getTotalElements());
         responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
         responsePageData.setMsg("列表查询成功");
         return responsePageData;
