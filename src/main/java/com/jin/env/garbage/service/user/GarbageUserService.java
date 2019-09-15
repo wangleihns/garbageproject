@@ -9,6 +9,8 @@ import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageResourceDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
+import com.jin.env.garbage.dto.resource.ResourceListChildrenDto;
+import com.jin.env.garbage.dto.resource.ResourceListDto;
 import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.dto.user.*;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
@@ -145,6 +147,47 @@ public class GarbageUserService {
                 dto.setUrl(resourceEntity.getUrl());
                 userResourceDtos.add(dto);
             });
+            List<ResourceListDto> resourceListDtos = new ArrayList<>();
+            List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findBySupIdNot(0);
+            Map<Integer, List<ResourceListChildrenDto>> subResourceMap = new HashMap<>();
+            garbageResourceEntityList.stream().forEach(res ->{
+                if (subResourceMap.containsKey(res.getSupId())){
+                    List<ResourceListChildrenDto> childrenDtos = subResourceMap.get(res.getSupId());
+                    ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
+                    resourceListChildrenDto.setId(res.getId());
+                    resourceListChildrenDto.setParentId(res.getSupId());
+                    resourceListChildrenDto.setName(res.getName());
+                    resourceListChildrenDto.setCode(res.getCode());
+                    resourceListChildrenDto.setIcon(res.getIcon());
+                    resourceListChildrenDto.setEnabled(true);
+                    resourceListChildrenDto.setNoDropdown(false);
+                    childrenDtos.add(resourceListChildrenDto);
+                    subResourceMap.put(res.getSupId(), childrenDtos);
+                } else {
+                    List<ResourceListChildrenDto> childrenDtos = new ArrayList<>();
+                    ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
+                    resourceListChildrenDto.setId(res.getId());
+                    resourceListChildrenDto.setParentId(res.getSupId());
+                    resourceListChildrenDto.setName(res.getName());
+                    resourceListChildrenDto.setCode(res.getCode());
+                    resourceListChildrenDto.setIcon(res.getIcon());
+                    resourceListChildrenDto.setEnabled(true);
+                    resourceListChildrenDto.setNoDropdown(false);
+                    childrenDtos.add(resourceListChildrenDto);
+                    subResourceMap.put(res.getSupId(), childrenDtos);
+                }
+            });
+            resourceEntityList.stream().forEach(garbageResourceEntity -> {
+                ResourceListDto dto = new ResourceListDto();
+                dto.setId(garbageResourceEntity.getId());
+                dto.setCode(garbageResourceEntity.getCode());
+                dto.setIcon(garbageResourceEntity.getIcon());
+                dto.setName(garbageResourceEntity.getName());
+                dto.setEnabled(true);
+                dto.setNoDropdown(true);
+                dto.setChildren(subResourceMap.get(garbageResourceEntity.getId()));
+                resourceListDtos.add(dto);
+            });
             List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
             List<Integer> roleIds = roleEntityList.stream().map(roleEntity->roleEntity.getId()).collect(Collectors.toList());
             List<GarbageCommunityEntity> communityEntities = new ArrayList<>();
@@ -178,7 +221,7 @@ public class GarbageUserService {
             redisTemplate.opsForValue().set("refreshToken:" +userEntity.getPhone(), refreshToken, 7*24*60*60*1000, TimeUnit.MILLISECONDS);
             token.put("accessToken", accessToken);
             token.put("refreshToken", refreshToken);
-            token.put("resources", userResourceDtos);
+            token.put("resources", resourceListDtos);
             logger.info(a);
             responseData.setMsg("登录成功");
             responseData.setStatus(Constants.loginStatus.LoginSuccess.getStatus());
@@ -1138,6 +1181,68 @@ public class GarbageUserService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("用户信息获取成功");
         responseData.setData(userDto);
+        return responseData;
+    }
+
+    public ResponseData userManagement(Integer pageNo, Integer pageSize, String name, String phone, String jwt, String[] orderBys) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntityList.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, userManagement(orderBys));
+        Page<GarbageUserEntity> page = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+                if (!StringUtils.isEmpty(name)){
+                    Predicate predicate = criteriaBuilder.like(root.get("name"), "%" + name + "%");
+                    predicates.add(predicate);
+                }
+                if (!StringUtils.isEmpty(phone)){
+                    Predicate predicate = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
+                    predicates.add(predicate);
+                }
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        }, pageable);
+        ResponsePageData responsePageData = new ResponsePageData();
+        responsePageData.setPageNo(pageNo);
+        responsePageData.setPageSize(pageSize);
+        responsePageData.setCount(page.getTotalPages());
+        responsePageData.setTotalElement(page.getTotalElements());
+        responsePageData.setLastPage(page.isLast());
+        responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setData(page.getContent());
+        responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
+        responsePageData.setMsg("用戶列表查询成功");
+        return responsePageData;
+    }
+
+    private Sort userManagement(String[] orderBys){
+        Sort sort = null;
+        if (orderBys == null || orderBys.length == 0 ){
+            sort = Sort.by("id").descending();
+        }else {
+            sort =   Sort.by(Arrays.stream(orderBys).map((it) -> {
+                String[] items = it.split(";");
+                String property = "";
+                Sort.Direction direction = null;
+                return new Sort.Order(direction, property);
+            }).collect(Collectors.toList()));
+        }
+        return sort;
+    }
+
+    public ResponseData addRoleToUser(Integer userId, Integer[] roleId) {
+        GarbageUserEntity userEntity = garbageUserDao.findById(userId).get();
+        List<Integer> roleIds = Arrays.stream(roleId).collect(Collectors.toList());
+        List<GarbageRoleEntity> roleEntities = garbageRoleDao.findByIdIn(roleIds);
+        userEntity.setRoles(new HashSet<>(roleEntities));
+        garbageUserDao.save(userEntity);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("角色授权成功");
+        responseData.setData(userEntity);
         return responseData;
     }
 }

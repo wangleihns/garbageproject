@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CommonUtil {
-    private Map<String,Object> base64Decode(String jwt){
+    public static Map<String,Object>  base64Decode(String jwt){
         String[] info = jwt.split("\\.");
         String message = new String(Base64Utils.decode(info[1].getBytes()));
         Map<String,Object> map = (Map<String,Object>) JSONUtils.parse(message);
@@ -22,9 +22,9 @@ public class CommonUtil {
     /**
      * 检查token 是否过期
      */
-    private boolean checkTokenExp(HttpServletRequest request){
+    public static boolean checkTokenExp(HttpServletRequest request){
         String header = request.getHeader("Authorization");
-        String accessToken = header.split(": ")[1];
+        String accessToken = header.split(" ")[1];
         Map<String,Object> map = base64Decode(accessToken);
         Long currentTime = new Date().getTime()/1000;
         Object v = map.get("exp");
@@ -41,7 +41,7 @@ public class CommonUtil {
      * @param request
      * @return
      */
-    private boolean checkSignVail(HttpServletRequest request){
+    public static boolean checkSignVail(HttpServletRequest request){
         Map<String, String[]> parameterMap = request.getParameterMap();
         String sign = request.getHeader("sign");
         String secret = Constants.signSecret.Secret.getContent();

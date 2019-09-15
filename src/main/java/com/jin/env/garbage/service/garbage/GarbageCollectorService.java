@@ -802,6 +802,7 @@ public class GarbageCollectorService {
         responseData.setFirstPage(page.isFirst());
         responseData.setLastPage(page.isLast());
         responseData.setCount(page.getTotalPages());
+        responseData.setTotalElement(page.getTotalElements());
         responseData.setPageSize(pageSize);
         responseData.setPageNo(pageNo);
         responseData.setMsg("数据统计信息查询成功");
@@ -1414,6 +1415,7 @@ public class GarbageCollectorService {
         responsePageData.setCount(page.getTotalPages());
         responsePageData.setLastPage(page.isLast());
         responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setTotalElement(page.getTotalElements());
         responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
         responsePageData.setMsg("查询成功");
         responsePageData.setData(page.getContent());
@@ -1623,6 +1625,7 @@ public class GarbageCollectorService {
         responsePageData.setCount(garbageUserEntityPage.getTotalPages());
         responsePageData.setLastPage(garbageUserEntityPage.isLast());
         responsePageData.setFirstPage(garbageUserEntityPage.isFirst());
+        responsePageData.setTotalElement(garbageUserEntityPage.getTotalElements());
         responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
         responsePageData.setMsg("查询成功");
         responsePageData.setData(garbageUserEntityPage.getContent());
@@ -1841,6 +1844,7 @@ public class GarbageCollectorService {
         responsePageData.setCount(page.getTotalPages());
         responsePageData.setLastPage(page.isLast());
         responsePageData.setFirstPage(page.isFirst());
+        responsePageData.setTotalElement(page.getTotalElements());
         responsePageData.setData(dtos);
         responsePageData.setStatus(Constants.responseStatus.Success.getStatus());
         responsePageData.setMsg("列表查询成功");

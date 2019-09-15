@@ -15,4 +15,6 @@ public interface GarbageRoleDao extends JpaRepository<GarbageRoleEntity, Integer
             "INNER JOIN  garbage_user_role urole ON role.id = urole.role_id  " +
             "AND  urole.user_id= ?1 AND role.status = 1")
     List<GarbageRoleEntity> findByUserId(Integer userId);
+
+    List<GarbageRoleEntity> findByIdIn(List<Integer> roleIds);
 }

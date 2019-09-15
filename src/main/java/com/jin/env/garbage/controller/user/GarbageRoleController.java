@@ -15,6 +15,14 @@ public class GarbageRoleController {
     @Autowired
     private GarbageRoleService garbageRoleService;
 
+    /**
+     * 角色管理
+     * @param pageSize
+     * @param pageNo
+     * @param search
+     * @param orderBys
+     * @return
+     */
     @RequestMapping(value = "roleList", method = RequestMethod.GET)
     public ResponseData roleList(Integer pageSize, Integer pageNo,String search, String  ...orderBys){
         Assert.state(pageNo != null, "pageNo 不能为空");
@@ -46,5 +54,11 @@ public class GarbageRoleController {
     public ResponseData addRoleForCommunity(String roleName,String roleDesc,  Boolean isAdmin){
         ResponseData responseData =garbageRoleService.addRoleForCommunity(roleName,roleDesc, isAdmin);
         return responseData;
+    }
+
+    @RequestMapping(value = "roleListForUserManage", method = RequestMethod.GET)
+    public ResponseData roleListForUserManage(){
+        ResponseData responsePageData =garbageRoleService.roleListForUserManage();
+        return responsePageData;
     }
 }

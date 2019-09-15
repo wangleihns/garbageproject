@@ -208,4 +208,25 @@ public class LoginApiController {
         return responseData;
     }
 
+    @RequestMapping(value = "userManagement", method = RequestMethod.GET)
+    public ResponseData userManagement(Integer pageNo, Integer pageSize, String name, String phone, String[] orderBys, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.userManagement(pageNo, pageSize, name, phone, jwt, orderBys);
+        return responseData;
+    }
+
+    /**
+     *  用户授予角色
+     * @param userId
+     * @param roleId
+     * @return
+     */
+    @RequestMapping(value = "addRoleToUser", method = RequestMethod.POST)
+    public ResponseData addRoleToUser(Integer userId, Integer[] roleId){
+        Assert.state(userId !=null, "用户id必传");
+        Assert.state(roleId.length > 0 , "角色id必传");
+        ResponseData responseData = garbageUserService.addRoleToUser(userId, roleId);
+        return responseData;
+    }
+
 }

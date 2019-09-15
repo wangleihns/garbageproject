@@ -438,4 +438,18 @@ public class GarbageRoleService {
     public ResponseData getCheckResourceAndCommunity(Integer type) {
         return  null;
     }
+
+    public ResponseData roleListForUserManage() {
+        List<GarbageRoleEntity> roleEntities = garbageRoleDao.findAll(new Specification<GarbageRoleEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageRoleEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("status"), 1);
+            }
+        });
+        ResponseData response = new ResponseData();
+        response.setMsg("资源列表查询成功");
+        response.setData(roleEntities);
+        response.setStatus(Constants.responseStatus.Success.getStatus());
+        return response;
+    }
 }

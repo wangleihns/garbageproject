@@ -1,6 +1,7 @@
 package com.jin.env.garbage.controller.point;
 
 
+import com.jin.env.garbage.service.garbage.GarbageQualityPointService;
 import com.jin.env.garbage.service.point.GarbageUserPointService;
 import com.jin.env.garbage.utils.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import javax.servlet.http.HttpServletRequest;
 public class GarbageUserPointController {
     @Autowired
     private GarbageUserPointService garbageUserPointService;
+
+    @Autowired
+    private GarbageQualityPointService garbageQualityPointService;
 
     /**
      * 积分排行榜
@@ -64,6 +68,35 @@ public class GarbageUserPointController {
     public ResponseData findPlacePointByPlaceId(Integer pageNo, Integer pageSize, Integer type, HttpServletRequest request, String search, Long cityId, Long countyId, Long townId, Long placeId){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData =garbageUserPointService.findPlacePointByPlaceId(pageNo, pageSize,type, jwt, search, cityId, countyId, townId, placeId);
+        return responseData;
+    }
+
+
+    /**
+     *  查询该地区的垃圾分类积分设置
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "findGarbageQualityPoint", method = RequestMethod.GET)
+    public ResponseData findGarbageQualityPoint(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData =garbageQualityPointService.findGarbageQualityPoint(jwt);
+        return responseData;
+    }
+
+
+    /**
+     * 设置每种类型的垃圾积分
+     * @param quality
+     * @param noQuality
+     * @param empty
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "setGarbageQualityPoint", method = RequestMethod.POST)
+    public ResponseData setGarbageQualityPoint(Integer id , Integer quality, Integer noQuality, Integer empty, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData =garbageQualityPointService.setGarbageQualityPoint(id, quality, noQuality, empty, jwt);
         return responseData;
     }
 }

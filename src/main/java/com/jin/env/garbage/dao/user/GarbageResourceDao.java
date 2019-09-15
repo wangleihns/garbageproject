@@ -1,5 +1,6 @@
 package com.jin.env.garbage.dao.user;
 
+import com.jin.env.garbage.dto.resource.ResourceListDto;
 import com.jin.env.garbage.dto.resource.UserResourceDto;
 import com.jin.env.garbage.entity.user.GarbageResourceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,4 +34,6 @@ public interface GarbageResourceDao extends JpaRepository<GarbageResourceEntity,
     List<UserResourceDto> getUserSubResourceInfoList();
 
     List<GarbageResourceEntity> findByIdIn(Set<Integer> ids);
+
+    List<GarbageResourceEntity> findBySupIdNot(Integer supId);
 }

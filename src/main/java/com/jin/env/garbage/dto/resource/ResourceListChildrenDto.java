@@ -4,7 +4,7 @@ package com.jin.env.garbage.dto.resource;
 
 import java.util.List;
 
-public class ResourceListDto {
+public class ResourceListChildrenDto {
     private Integer id;
     private String name;
     private String code;
@@ -12,7 +12,7 @@ public class ResourceListDto {
     private String path;
     private Boolean noDropdown;
     private Boolean isEnabled;
-    private List<ResourceListChildrenDto> children;
+    private Integer parentId;
 
     public Integer getId() {
         return id;
@@ -70,11 +70,11 @@ public class ResourceListDto {
         isEnabled = enabled;
     }
 
-    public List<ResourceListChildrenDto> getChildren() {
-        return children;
+    public Integer getParentId() {
+        return parentId;
     }
 
-    public void setChildren(List<ResourceListChildrenDto> children) {
-        this.children = children;
+    public void setParentId(Integer parentId) {
+        this.parentId = parentId;
     }
 }

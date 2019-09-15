@@ -62,7 +62,7 @@ public class Constants {
         TokenExp(2000),
         TokenChange(3000),
         TOKEN_NOT_EXIST(5000),
-        SignNotRight(40000);
+        SignNotRight(4000);
         private Integer status;
         tokenStatus(int status) {
             this.status = status;
