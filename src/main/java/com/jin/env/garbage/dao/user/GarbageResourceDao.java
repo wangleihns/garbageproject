@@ -35,5 +35,11 @@ public interface GarbageResourceDao extends JpaRepository<GarbageResourceEntity,
 
     List<GarbageResourceEntity> findByIdIn(Set<Integer> ids);
 
-    List<GarbageResourceEntity> findBySupIdNot(Integer supId);
+    @Query(nativeQuery = true , value = "SELECT gr.* FROM garbage_resource gr " +
+            " LEFT JOIN garbage_role_resource grr on gr.id = grr.resource_id" +
+            " LEFT JOIN garbage_role  r on r.id = grr.role_id " +
+            " LEFT JOIN garbage_user_role ur on  r.id = ur.role_id" +
+            " LEFT JOIN garbage_user u on ur.user_id = u.id " +
+            " WHERE u.id = ?1 AND  r.status = 1 AND gr.sup_id <> ?2")
+    List<GarbageResourceEntity> findBySupIdNot(Integer userId, Integer supId);
 }

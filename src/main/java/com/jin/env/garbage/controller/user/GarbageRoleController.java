@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping(value = "api/v1/role/")
 public class GarbageRoleController {
@@ -56,9 +58,16 @@ public class GarbageRoleController {
         return responseData;
     }
 
+    /**
+     *  获取用户拥有的角色
+     *  未完善 ======
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "roleListForUserManage", method = RequestMethod.GET)
-    public ResponseData roleListForUserManage(){
-        ResponseData responsePageData =garbageRoleService.roleListForUserManage();
+    public ResponseData roleListForUserManage(HttpServletRequest request, Integer userId){
+        Assert.state(userId != null, "用户id不能为空");
+        ResponseData responsePageData =garbageRoleService.roleListForUserManage(userId);
         return responsePageData;
     }
 }

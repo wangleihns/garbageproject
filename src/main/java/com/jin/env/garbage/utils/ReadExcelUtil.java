@@ -1,6 +1,7 @@
 package com.jin.env.garbage.utils;
 
 
+import com.jin.env.garbage.dto.user.UserExcelDto;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -20,7 +21,7 @@ public class ReadExcelUtil {
     // 去读Excel的方法readExcel，该方法的入口参数为一个File对象
     public static List readExcel(InputStream inputStream, String suffix){
         //1.读取Excel文档对象
-        List<NameValuePair> list = new ArrayList<>();
+        List<UserExcelDto> list = new ArrayList<>();
         Workbook workbook = null;
         try {
             if ("xls".equals(suffix)) {
@@ -38,15 +39,32 @@ public class ReadExcelUtil {
         Sheet sheet = workbook.getSheetAt(0);
         //获得最后一行的行号
         int lastRowNum = sheet.getLastRowNum();
-        Row titleRow = sheet.getRow(0);
         for (int i = 1; i <= lastRowNum; i++) {//遍历每一行
             Row row = sheet.getRow(i);
             //单元格的数量
             final int physicalNumberOfCells = row.getPhysicalNumberOfCells();
-            for (int j = 0; j <= physicalNumberOfCells; j++) {
-                NameValuePair nameValuePair = new BasicNameValuePair(getCellFormatValue(titleRow.getCell(j)).toString(), getCellFormatValue(row.getCell(j)).toString());
-                list.add(nameValuePair);
-            }
+            UserExcelDto excelDto = new UserExcelDto();
+            String name = getCellFormatValue(row.getCell(0)).toString();
+            String phone = getCellFormatValue(row.getCell(1)).toString();
+            String password = getCellFormatValue(row.getCell(2)).toString();
+            String email = getCellFormatValue(row.getCell(3)).toString();
+            String idCard = getCellFormatValue(row.getCell(4)).toString();
+            String sex = getCellFormatValue(row.getCell(5)).toString();
+            String cleaner = getCellFormatValue(row.getCell(6)).toString();
+            String company = getCellFormatValue(row.getCell(7)).toString();
+            String eNo = getCellFormatValue(row.getCell(8)).toString();
+            String address = getCellFormatValue(row.getCell(9)).toString();
+            excelDto.setName(name);
+            excelDto.setPhone(phone);
+            excelDto.setEmail(email);
+            excelDto.setIdCard(idCard);
+            excelDto.setCleaner(cleaner);
+            excelDto.setSex(sex);
+            excelDto.setCompany(company);
+            excelDto.seteNo(eNo);
+            excelDto.setAddress(address);
+            excelDto.setPassword(password);
+            list.add(excelDto);
         }
         return list;
     }

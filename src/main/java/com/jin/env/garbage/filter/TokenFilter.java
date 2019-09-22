@@ -48,7 +48,7 @@ public class TokenFilter implements Filter {
         response.setCharacterEncoding("utf-8");
         String url = request.getRequestURI();
         ResponseData responseData = new ResponseData();
-        if (url.endsWith("/api/v1/login")) {
+        if (url.endsWith("/api/v1/user/login")) {
             filterChain.doFilter(request, response);
         } else {
             String header = request.getHeader("Authorization");

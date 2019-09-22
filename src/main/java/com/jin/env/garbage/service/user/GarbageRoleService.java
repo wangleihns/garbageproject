@@ -1,16 +1,11 @@
 package com.jin.env.garbage.service.user;
 
 import com.jin.env.garbage.dao.position.GarbageCommunityDao;
-import com.jin.env.garbage.dao.user.GarbageResourceDao;
-import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
-import com.jin.env.garbage.dao.user.GarbageRoleDao;
-import com.jin.env.garbage.dao.user.GarbageRoleResourceDao;
+import com.jin.env.garbage.dao.user.*;
 import com.jin.env.garbage.dto.resource.*;
 import com.jin.env.garbage.entity.position.GarbageCommunityEntity;
-import com.jin.env.garbage.entity.user.GarbageResourceEntity;
-import com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity;
-import com.jin.env.garbage.entity.user.GarbageRoleEntity;
-import com.jin.env.garbage.entity.user.GarbageRoleResourceEntity;
+import com.jin.env.garbage.entity.user.*;
+import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.PinYinUtil;
 import com.jin.env.garbage.utils.ResponseData;
@@ -47,6 +42,12 @@ public class GarbageRoleService {
 
     @Autowired
     private GarbageCommunityDao garbageCommunityDao;
+
+    @Autowired
+    private GarbageUserDao garbageUserDao;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public ResponsePageData roleList(int pageNo, int pageSize, String search, String[] orderBys) {
         Sort sort = getSort(orderBys);
@@ -197,7 +198,13 @@ public class GarbageRoleService {
 
 
     @Transactional
-    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds) {
+    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds, String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity authorUser = garbageUserDao.findById(sub).get();
+        List<String> roleCodes = authorUser.getRoles().stream().map(u ->u.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("SYSTEM_ADMIN")){
+            throw new RuntimeException("没有权限进行此授权操作");
+        }
         ResponseData responseData = new ResponseData();
         garbageRoleResourceDao.deleteAllByRoleId(roleId);
         List<GarbageRoleResourceEntity> roleResourceEntityList = new ArrayList<>();
@@ -439,17 +446,73 @@ public class GarbageRoleService {
         return  null;
     }
 
-    public ResponseData roleListForUserManage() {
+    public ResponseData roleListForUserManage(Integer userId) {
         List<GarbageRoleEntity> roleEntities = garbageRoleDao.findAll(new Specification<GarbageRoleEntity>() {
             @Override
             public Predicate toPredicate(Root<GarbageRoleEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 return criteriaBuilder.equal(root.get("status"), 1);
             }
         });
+
         ResponseData response = new ResponseData();
         response.setMsg("资源列表查询成功");
         response.setData(roleEntities);
         response.setStatus(Constants.responseStatus.Success.getStatus());
         return response;
+    }
+
+    public ResponseData getTabBarList(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(sub);
+        List<ResourceListDto> resourceListDtos = new ArrayList<>();
+        List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findBySupIdNot(sub,0);
+        Map<Integer, List<ResourceListChildrenDto>> subResourceMap = new HashMap<>();
+        garbageResourceEntityList.stream().forEach(res ->{
+            if (subResourceMap.containsKey(res.getSupId())){
+                List<ResourceListChildrenDto> childrenDtos = subResourceMap.get(res.getSupId());
+                ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
+                resourceListChildrenDto.setId(res.getId().toString());
+                resourceListChildrenDto.setParentId(res.getSupId().toString());
+                resourceListChildrenDto.setName(res.getName());
+                resourceListChildrenDto.setCode(res.getCode());
+                resourceListChildrenDto.setIcon(res.getIcon());
+                resourceListChildrenDto.setPath(res.getPath());
+                resourceListChildrenDto.setEnabled(true);
+                resourceListChildrenDto.setNoDropdown(false);
+                childrenDtos.add(resourceListChildrenDto);
+                subResourceMap.put(res.getSupId(), childrenDtos);
+            } else {
+                List<ResourceListChildrenDto> childrenDtos = new ArrayList<>();
+                ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
+                resourceListChildrenDto.setId(res.getId().toString());
+                resourceListChildrenDto.setParentId(res.getSupId().toString());
+                resourceListChildrenDto.setName(res.getName());
+                resourceListChildrenDto.setCode(res.getCode());
+                resourceListChildrenDto.setIcon(res.getIcon());
+                resourceListChildrenDto.setPath(res.getPath());
+                resourceListChildrenDto.setEnabled(true);
+                resourceListChildrenDto.setNoDropdown(false);
+                childrenDtos.add(resourceListChildrenDto);
+                subResourceMap.put(res.getSupId(), childrenDtos);
+            }
+        });
+        resourceEntityList.stream().forEach(garbageResourceEntity -> {
+            ResourceListDto dto = new ResourceListDto();
+            dto.setId(garbageResourceEntity.getId().toString());
+            dto.setCode(garbageResourceEntity.getCode());
+            dto.setIcon(garbageResourceEntity.getIcon());
+            dto.setName(garbageResourceEntity.getName());
+            dto.setPath(garbageResourceEntity.getPath());
+            dto.setEnabled(true);
+            dto.setNoDropdown(true);
+            List<ResourceListChildrenDto> children = subResourceMap.get(garbageResourceEntity.getId()) == null? new ArrayList<>():subResourceMap.get(garbageResourceEntity.getId());
+            dto.setChildren(children);
+            resourceListDtos.add(dto);
+        });
+        ResponseData responseData = new ResponseData();
+        responseData.setData(resourceListDtos);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("tarBar 获取成功");
+        return responseData;
     }
 }

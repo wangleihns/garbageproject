@@ -136,29 +136,30 @@ public class GarbageUserService {
             //组资源
             List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(userEntity.getId());
             //子资源
-            List<UserResourceDto> subResourceList = garbageResourceDao.getUserSubResourceInfoList();
-            Map<Integer, List<UserResourceDto>> collectMap = subResourceList.stream().collect(Collectors.groupingBy(UserResourceDto::getSuqId));
-            List<UserResourceDto> userResourceDtos = new ArrayList<>();
-            resourceEntityList.stream().forEach(resourceEntity -> {
-                UserResourceDto dto = new UserResourceDto();
-                dto.setDtos(collectMap.get(resourceEntity.getId()));
-                dto.setIcon(resourceEntity.getIcon());
-                dto.setName(resourceEntity.getName());
-                dto.setUrl(resourceEntity.getUrl());
-                userResourceDtos.add(dto);
-            });
+//            List<UserResourceDto> subResourceList = garbageResourceDao.getUserSubResourceInfoList();
+//            Map<Integer, List<UserResourceDto>> collectMap = subResourceList.stream().collect(Collectors.groupingBy(UserResourceDto::getSuqId));
+//            List<UserResourceDto> userResourceDtos = new ArrayList<>();
+//            resourceEntityList.stream().forEach(resourceEntity -> {
+//                UserResourceDto dto = new UserResourceDto();
+//                dto.setDtos(collectMap.get(resourceEntity.getId()));
+//                dto.setIcon(resourceEntity.getIcon());
+//                dto.setName(resourceEntity.getName());
+//                dto.setUrl(resourceEntity.getUrl());
+//                userResourceDtos.add(dto);
+//            });
             List<ResourceListDto> resourceListDtos = new ArrayList<>();
-            List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findBySupIdNot(0);
+            List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findBySupIdNot(userEntity.getId(),0);
             Map<Integer, List<ResourceListChildrenDto>> subResourceMap = new HashMap<>();
             garbageResourceEntityList.stream().forEach(res ->{
                 if (subResourceMap.containsKey(res.getSupId())){
                     List<ResourceListChildrenDto> childrenDtos = subResourceMap.get(res.getSupId());
                     ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
-                    resourceListChildrenDto.setId(res.getId());
-                    resourceListChildrenDto.setParentId(res.getSupId());
+                    resourceListChildrenDto.setId(res.getId().toString());
+                    resourceListChildrenDto.setParentId(res.getSupId().toString());
                     resourceListChildrenDto.setName(res.getName());
                     resourceListChildrenDto.setCode(res.getCode());
                     resourceListChildrenDto.setIcon(res.getIcon());
+                    resourceListChildrenDto.setPath(res.getPath());
                     resourceListChildrenDto.setEnabled(true);
                     resourceListChildrenDto.setNoDropdown(false);
                     childrenDtos.add(resourceListChildrenDto);
@@ -166,11 +167,12 @@ public class GarbageUserService {
                 } else {
                     List<ResourceListChildrenDto> childrenDtos = new ArrayList<>();
                     ResourceListChildrenDto resourceListChildrenDto = new ResourceListChildrenDto();
-                    resourceListChildrenDto.setId(res.getId());
-                    resourceListChildrenDto.setParentId(res.getSupId());
+                    resourceListChildrenDto.setId(res.getId().toString());
+                    resourceListChildrenDto.setParentId(res.getSupId().toString());
                     resourceListChildrenDto.setName(res.getName());
                     resourceListChildrenDto.setCode(res.getCode());
                     resourceListChildrenDto.setIcon(res.getIcon());
+                    resourceListChildrenDto.setPath(res.getPath());
                     resourceListChildrenDto.setEnabled(true);
                     resourceListChildrenDto.setNoDropdown(false);
                     childrenDtos.add(resourceListChildrenDto);
@@ -179,13 +181,15 @@ public class GarbageUserService {
             });
             resourceEntityList.stream().forEach(garbageResourceEntity -> {
                 ResourceListDto dto = new ResourceListDto();
-                dto.setId(garbageResourceEntity.getId());
+                dto.setId(garbageResourceEntity.getId().toString());
                 dto.setCode(garbageResourceEntity.getCode());
                 dto.setIcon(garbageResourceEntity.getIcon());
                 dto.setName(garbageResourceEntity.getName());
+                dto.setPath(garbageResourceEntity.getPath());
                 dto.setEnabled(true);
                 dto.setNoDropdown(true);
-                dto.setChildren(subResourceMap.get(garbageResourceEntity.getId()));
+                List<ResourceListChildrenDto> children = subResourceMap.get(garbageResourceEntity.getId()) == null? new ArrayList<>():subResourceMap.get(garbageResourceEntity.getId());
+                dto.setChildren(children);
                 resourceListDtos.add(dto);
             });
             List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
@@ -213,7 +217,7 @@ public class GarbageUserService {
                 //其他客户端使用默认有效时长
                 accessToken = jwtUtil.generateJwtToken(userEntity.getId().toString(),"garbage", null);
                 token.put("userEntity", userEntity);
-                token.put("resources", userResourceDtos);
+//                token.put("resources", resourceListDtos);
             }
             String refreshToken = jwtUtil.getRefresh(accessToken);
             redisTemplate.opsForValue().set("accessToken:"+userEntity.getPhone(), accessToken, 2*60*60*1000, TimeUnit.MILLISECONDS); //两小时有效期
@@ -319,7 +323,10 @@ public class GarbageUserService {
         userEntity.setAccountNonLocked(true);
         userEntity.setEnabled(true);
         userEntity.setStatus(1);
-        userEntity.setIdCard(idCard);
+        userEntity.setUserType("1"); //手动注册
+        if (!StringUtils.isEmpty(idCard)){
+            userEntity.setIdCard(idCard);
+        }
         userEntity.setSex(sex);
         userEntity.setCleaner(cleaner);
         userEntity.setProvinceId(provinceId);
@@ -1121,6 +1128,7 @@ public class GarbageUserService {
         return  responseData;
     }
 
+    @Deprecated
     public ResponseData insertUserInfoBatch(MultipartFile multipartFile) {
         InputStream inputStream = null;
 
@@ -1233,7 +1241,13 @@ public class GarbageUserService {
         return sort;
     }
 
-    public ResponseData addRoleToUser(Integer userId, Integer[] roleId) {
+    public ResponseData addRoleToUser(Integer userId, Integer[] roleId, String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity authorUser = garbageUserDao.findById(sub).get();
+        List<String> roleCodes = authorUser.getRoles().stream().map(u ->u.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("SYSTEM_ADMIN")){
+           throw new RuntimeException("没有权限进行此授权操作");
+        }
         GarbageUserEntity userEntity = garbageUserDao.findById(userId).get();
         List<Integer> roleIds = Arrays.stream(roleId).collect(Collectors.toList());
         List<GarbageRoleEntity> roleEntities = garbageRoleDao.findByIdIn(roleIds);
@@ -1243,6 +1257,79 @@ public class GarbageUserService {
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("角色授权成功");
         responseData.setData(userEntity);
+        return responseData;
+    }
+
+    @Transactional
+    public ResponseData addUserBatch(MultipartFile file, String jwt) {
+        ResponseData responseData = new ResponseData();
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        if (roleCodes.contains("VILLAGE_ADMIN") || roleCodes.stream().filter(n-> n.endsWith("COMMUNITY_ADMIN")).collect(Collectors.toList()).size() > 0){
+            String root_fileName = file.getOriginalFilename();
+            String suffix  = FilenameUtils.getExtension(root_fileName);
+            InputStream is = null;
+            try {
+                is = file.getInputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<GarbageUserEntity> garbageUserEntityList = new ArrayList<>();
+            List<UserExcelDto> list = ReadExcelUtil.readExcel(is, suffix);
+            Calendar calendar  = Calendar.getInstance();
+            list.forEach(u ->{
+                GarbageUserEntity garbageUserEntity = new GarbageUserEntity();
+                garbageUserEntity.setName(u.getName());
+                garbageUserEntity.setLoginName(u.getPhone());
+                garbageUserEntity.setPhone(u.getPhone());
+                garbageUserEntity.setPassword(CommonUtil.md5(u.getPassword()));
+                garbageUserEntity.setStatus(Constants.dataType.ENABLE.getType());
+                garbageUserEntity.setCredentialsNonExpired(true);
+                garbageUserEntity.setAccountNonExpired(true);
+                garbageUserEntity.setAccountNonLocked(true);
+                garbageUserEntity.setEnabled(true);
+                garbageUserEntity.setUserType("2");
+                garbageUserEntity.setCompany(u.getCompany());
+                garbageUserEntity.setSex("男".equals(u.getSex())? 1:0);
+                garbageUserEntity.setCleaner("是".equals(u.getCleaner())?true:false);
+                garbageUserEntity.setProvinceId(userEntity.getProvinceId());
+                garbageUserEntity.setProvinceName(userEntity.getProvinceName());
+                garbageUserEntity.setCityName(userEntity.getCityName());
+                garbageUserEntity.setCityId(userEntity.getCityId());
+                garbageUserEntity.setCountryId(userEntity.getCountryId());
+                garbageUserEntity.setCountryName(userEntity.getCountryName());
+                garbageUserEntity.setTownName(userEntity.getTownName());
+                garbageUserEntity.setTownId(userEntity.getTownId());
+                garbageUserEntity.setVillageName(userEntity.getVillageName());
+                garbageUserEntity.setVillageId(userEntity.getVillageId());
+                garbageUserEntity.setCommunityName(userEntity.getCommunityName());
+                garbageUserEntity.setCommunityId(userEntity.getCommunityId());
+                garbageUserEntity.setFromType(userEntity.getFromType());
+                userEntity.setDay(calendar.get(Calendar.DAY_OF_MONTH));
+                userEntity.setMonth(calendar.get(Calendar.MONTH));
+                userEntity.setYear(calendar.get(Calendar.YEAR));
+                GarbageRoleEntity roleEntity  = garbageRoleDao.findByRoleCode("RESIDENT");;
+                garbageUserEntity.getRoles().add(roleEntity);
+                String[] eNoElements = u.geteNo().split(",");
+                List<GarbageENoEntity> eNoEntityList = new ArrayList<>();
+                Arrays.stream(eNoElements).forEach(e->{
+                    GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
+                    garbageENoEntity.seteNo(e);
+                    garbageENoEntity.setStatus(1);
+                    eNoEntityList.add(garbageENoEntity);
+                });
+                garbageUserEntity.seteNos(eNoEntityList);
+
+                garbageUserEntityList.add(garbageUserEntity);
+            });
+            garbageUserDao.saveAll(garbageUserEntityList);
+            responseData.setMsg("数据批量导入成功");
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        } else {
+            throw new RuntimeException("该用户没有权限批量导入数据");
+        }
         return responseData;
     }
 }

@@ -2,23 +2,26 @@ package com.jin.env.garbage.dto.resource;
 
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceListChildrenDto {
-    private Integer id;
+    private String id;
     private String name;
     private String code;
     private String icon;
     private String path;
     private Boolean noDropdown;
     private Boolean isEnabled;
-    private Integer parentId;
+    private String parentId;
 
-    public Integer getId() {
+    private List<String> children = new ArrayList<>();
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -70,11 +73,19 @@ public class ResourceListChildrenDto {
         isEnabled = enabled;
     }
 
-    public Integer getParentId() {
+    public String getParentId() {
         return parentId;
     }
 
-    public void setParentId(Integer parentId) {
+    public void setParentId(String parentId) {
         this.parentId = parentId;
+    }
+
+    public List<String> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<String> children) {
+        this.children = children;
     }
 }

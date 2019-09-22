@@ -4,10 +4,8 @@ import com.aliyuncs.exceptions.ClientException;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.service.user.GarbageUserService;
-import com.jin.env.garbage.utils.Constants;
-import com.jin.env.garbage.utils.ResponseData;
-import com.jin.env.garbage.utils.ResponsePageData;
-import com.jin.env.garbage.utils.SmsUtil;
+import com.jin.env.garbage.utils.*;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +30,6 @@ import java.util.concurrent.TimeUnit;
 public class LoginApiController {
     private Logger logger = LoggerFactory.getLogger(LoginApiController.class);
 
-    @Autowired
-    private JwtUtil jwtUtil;
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -86,6 +85,14 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 修改密码
+     * @param oldPassword
+     * @param newPassword
+     * @param repeatPassword
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "updatePassword", method = RequestMethod.POST)
     public ResponseData updatePassword(String oldPassword, String newPassword, String repeatPassword, HttpServletRequest request){
         Assert.hasText(oldPassword, "原始密码不能为空");
@@ -118,6 +125,11 @@ public class LoginApiController {
         return responsePageData;
     }
 
+    /**
+     * 获取用户信息
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "getUserInfoById", method = RequestMethod.GET)
     public ResponseData getUserInfoById(HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
@@ -125,6 +137,13 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 删除用户信息
+     * @param request
+     * @param userId
+     * @param status
+     * @return
+     */
     @RequestMapping(value = "deleteUserById", method = RequestMethod.POST)
     public ResponseData deleteUserById(HttpServletRequest request, Integer userId,  Integer status){
         String jwt = request.getHeader("Authorization").split(" ")[1];
@@ -132,6 +151,27 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     *  更新用户信息
+     * @param userId
+     * @param name
+     * @param sex
+     * @param idCard
+     * @param phone
+     * @param provinceId
+     * @param provinceName
+     * @param cityId
+     * @param cityName
+     * @param countryId
+     * @param countryName
+     * @param townId
+     * @param townName
+     * @param villageId
+     * @param villageName
+     * @param address
+     * @param fileId
+     * @return
+     */
     @RequestMapping(value = "updateUserInfo", method = RequestMethod.POST)
     public ResponseData updateUserInfo(Integer userId, String name, Integer sex, String idCard, String phone,  Long provinceId,
                                        String provinceName, Long cityId, String cityName, Long countryId, String countryName,
@@ -152,6 +192,21 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     *  居民信息列表
+     * @param type
+     * @param keyWord
+     * @param provinceId
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param communityId
+     * @param checkType
+     * @param orderBys
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "residentList", method = RequestMethod.GET)
     public ResponseData residentList(String type, String keyWord, Long provinceId,
                                      Long cityId, Long countryId,  Long townId, Long villageId, Integer communityId,
@@ -196,11 +251,18 @@ public class LoginApiController {
         return responseData;
     }
 
+    @Deprecated
     @RequestMapping(value = "insertUserInfoBatch", method = RequestMethod.POST)
     public ResponseData insertUserInfoBatch(@RequestParam("file") MultipartFile multipartFile, HttpServletRequest request){
         ResponseData responseData = garbageUserService.insertUserInfoBatch(multipartFile);
         return responseData;
     }
+
+    /**
+     *  通过电子卡id获取用户信息
+     * @param eNo
+     * @return
+     */
     @RequestMapping(value = "getUserInfoByEno", method = RequestMethod.GET)
     public ResponseData getUserInfoByEno(String eNo){
         Assert.hasText(eNo, "请输入电子卡eNo");
@@ -208,6 +270,16 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 用户管理
+     * @param pageNo
+     * @param pageSize
+     * @param name
+     * @param phone
+     * @param orderBys
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "userManagement", method = RequestMethod.GET)
     public ResponseData userManagement(Integer pageNo, Integer pageSize, String name, String phone, String[] orderBys, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
@@ -222,11 +294,26 @@ public class LoginApiController {
      * @return
      */
     @RequestMapping(value = "addRoleToUser", method = RequestMethod.POST)
-    public ResponseData addRoleToUser(Integer userId, Integer[] roleId){
+    public ResponseData addRoleToUser(Integer userId, Integer[] roleId, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.state(userId !=null, "用户id必传");
         Assert.state(roleId.length > 0 , "角色id必传");
-        ResponseData responseData = garbageUserService.addRoleToUser(userId, roleId);
+        ResponseData responseData = garbageUserService.addRoleToUser(userId, roleId, jwt);
         return responseData;
     }
 
+    /**
+     * 批量上传用户
+     * @param file
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "addUserBatch", method = RequestMethod.POST)
+    public ResponseData addUserBatch(MultipartFile file, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        long fileSize = file.getSize();
+        io.jsonwebtoken.lang.Assert.state(fileSize <= 8388608, "上传文件过大，文件大小应在8M以内");
+        ResponseData responseData = garbageUserService.addUserBatch(file, jwt);
+        return responseData;
+    }
 }

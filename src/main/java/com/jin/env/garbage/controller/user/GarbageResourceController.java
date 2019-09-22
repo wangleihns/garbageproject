@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.criteria.Predicate;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 import java.util.Set;
 
 @RestController
-@RequestMapping(value = "/api/v1/resource")
+@RequestMapping(value = "/api/v1/resource/")
 public class GarbageResourceController {
     @Autowired
     private GarbageRoleService garbageRoleService;
@@ -28,10 +29,11 @@ public class GarbageResourceController {
      * @return
      */
     @RequestMapping(value = "addResourceToRole", method = RequestMethod.POST)
-    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds){
+    public ResponseData addResourceToRole(Integer roleId, Integer[] resourceIds, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.state(roleId !=null, "请选择角色");
         Assert.state(resourceIds.length > 0, "请选择资源");
-        ResponseData responseData = garbageRoleService.addResourceToRole(roleId, resourceIds);
+        ResponseData responseData = garbageRoleService.addResourceToRole(roleId, resourceIds, jwt);
         return responseData;
     }
 
@@ -106,7 +108,12 @@ public class GarbageResourceController {
         return responseData;
     }
 
-
+    /**
+     * 获取资源列表
+     * @param type
+     * @param roleId
+     * @return
+     */
     @RequestMapping(value = "findResourceAndCommunity", method = RequestMethod.GET)
     public ResponseData findResourceAndCommunity(Integer type, Integer roleId){
         ResponseData responseData = garbageRoleService.findResourceAndCommunity(type, roleId);
@@ -116,6 +123,18 @@ public class GarbageResourceController {
     @RequestMapping(value = "getCheckResourceAndCommunity", method = RequestMethod.GET)
     public ResponseData getCheckResourceAndCommunity(Integer type){
         ResponseData responseData = garbageRoleService.getCheckResourceAndCommunity(type);
+        return responseData;
+    }
+
+    /**
+     *  左侧tarbarList 列表
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "getTabBarList", method = RequestMethod.GET)
+    public ResponseData getTabBarList(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageRoleService.getTabBarList(jwt);
         return responseData;
     }
 

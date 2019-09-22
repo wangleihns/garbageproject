@@ -28,7 +28,7 @@ public class GarbageUserEntity extends BaseEntity{
     private Boolean credentialsNonExpired;
     private Boolean accountNonLocked;
     private Boolean enabled;
-    private String userType;
+    private String userType;     //手动注册，  2批量注册
     private String company;
     private String eNo;
     private String idCard;
@@ -344,8 +344,8 @@ public class GarbageUserEntity extends BaseEntity{
         this.roles = roles;
     }
 
-    @OneToMany
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OneToMany(cascade=CascadeType.ALL)
+    @JoinColumn(name = "user_id", referencedColumnName = "id" )
     public List<GarbageENoEntity> geteNos() {
         return eNos;
     }
