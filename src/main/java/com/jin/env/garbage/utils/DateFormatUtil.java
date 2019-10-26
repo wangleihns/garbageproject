@@ -129,7 +129,7 @@ public class DateFormatUtil {
     }
 
     public static Date getLastTimeOfDay(String dateString){
-        Date date = parse(dateString + " 23:59:59", "yyyy-MM-dd HH:mm:ss");
+        Date date = parse(dateString + " 23:59:59:999", "yyyy-MM-dd HH:mm:ss:SSS");
         return date;
     }
 

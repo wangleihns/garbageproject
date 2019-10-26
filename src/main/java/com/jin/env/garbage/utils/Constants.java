@@ -153,7 +153,15 @@ public class Constants {
         /**
          * 其他垃圾
          */
-        OTHER_GARBAGE(2);
+        OTHER_GARBAGE(2),
+        /**
+         * 可回收垃圾
+         */
+        RECYCLEABLE(3),
+        /**
+         * 有害垃圾
+         */
+        DANGER_GARBAGE(4);
         private Integer type;
 
         garbageType(Integer type) {

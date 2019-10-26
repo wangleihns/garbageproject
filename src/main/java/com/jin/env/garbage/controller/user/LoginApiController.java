@@ -316,4 +316,11 @@ public class LoginApiController {
         ResponseData responseData = garbageUserService.addUserBatch(file, jwt);
         return responseData;
     }
+
+    @RequestMapping(value = "totalCountUserInfoAndGarbageWeight", method = RequestMethod.GET)
+    public ResponseData totalCountUserInfoAndGarbageWeight(Long id , HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.totalCountUserInfoAndGarbageWeight(id, jwt);
+        return responseData;
+    }
 }

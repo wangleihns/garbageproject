@@ -97,6 +97,7 @@ public class GarbageUserPointService {
                 if (fromType == 1){
                     if (communityId != null){
                         Predicate predicate = criteriaBuilder.equal(root.get("communityId"), communityId);
+                        predicates.add(predicate);
                     } else {
                         if (communityIds.size()> 0){
                             Predicate predicate = root.get("communityId").in(communityIds);

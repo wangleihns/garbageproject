@@ -11,8 +11,8 @@ import com.jin.env.garbage.dao.user.GarbageENoDao;
 import com.jin.env.garbage.dao.user.GarbageRoleCommunityDao;
 import com.jin.env.garbage.dao.user.GarbageRoleDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
+import com.jin.env.garbage.dao.village.GarbageVillageInfoDao;
 import com.jin.env.garbage.dto.garbage.*;
-import com.jin.env.garbage.dto.user.UserCountInMonth;
 import com.jin.env.garbage.dto.user.UserDto;
 import com.jin.env.garbage.dto.user.UserVillageDto;
 import com.jin.env.garbage.entity.garbage.GarbageCollectorEntity;
@@ -25,6 +25,7 @@ import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
+import com.jin.env.garbage.entity.village.GarbageVillageInfoEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.DateFormatUtil;
@@ -113,6 +114,9 @@ public class GarbageCollectorService {
 
     @Autowired
     private JPositionVillageDao jPositionVillageDao;
+
+    @Autowired
+    private GarbageVillageInfoDao garbageVillageInfoDao;
 
     @Transactional
     public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, String jwt) {
@@ -236,7 +240,7 @@ public class GarbageCollectorService {
     }
 
     @Transactional
-    public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, String jwt) {
+    public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, String jwt, Integer garbageType) {
         Integer sub = jwtUtil.getSubject(jwt);
         //垃圾收集员
         GarbageUserEntity collector = garbageUserDao.findById(sub).get();
@@ -276,6 +280,17 @@ public class GarbageCollectorService {
         weight = bigDecimal.setScale(3,BigDecimal.ROUND_HALF_UP).doubleValue();
         collectorEntity.setGarbageWeight(weight);
         collectorEntity.setCheck(false);
+        Constants.garbageType  gType = null;
+        if (garbageType == 1){
+            gType = Constants.garbageType.KITCHEN_GARBAGE;
+        } else if (garbageType == 2){
+            gType = Constants.garbageType.OTHER_GARBAGE;
+        } else if (garbageType == 3){
+            gType = Constants.garbageType.RECYCLEABLE;
+        } else {
+            gType = Constants.garbageType.DANGER_GARBAGE;
+        }
+        collectorEntity.setGarbageType(gType.getType());
         garbageCollectorDao.save(collectorEntity);
         GarbageImageEntity imageEntity = null;
         try {
@@ -1655,19 +1670,26 @@ public class GarbageCollectorService {
     public  List<Integer>  getCommunityResource(List<GarbageRoleEntity> roleEntityList){
         List<GarbageRoleEntity> collect = roleEntityList.stream().filter(role -> role.getRoleCode().endsWith("COMMUNITY_ADMIN") || role.getRoleCode().endsWith("COMMUNITY_REMARK")).collect(Collectors.toList());
         List<Integer> roleIds = collect.stream().map(role -> role.getId()).collect(Collectors.toList());
-        List<GarbageRoleCommunityEntity> roleCommunityEntityList = garbageRoleCommunityDao.findAll(new Specification<GarbageRoleCommunityEntity>() {
-            @Nullable
-            @Override
-            public Predicate toPredicate(Root<GarbageRoleCommunityEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-               Predicate predicate = null;
-                if (roleIds.size()> 0){
-                    predicate =  root.get("roleId").in(roleIds)  ;
-               }
-                return predicate;
-            }
-        });
-        List<Integer> communityIds = roleCommunityEntityList.stream().map(garbageRoleCommunityEntity -> garbageRoleCommunityEntity.getCommunityId()).collect(Collectors.toList());
-        return communityIds;
+        List<GarbageRoleCommunityEntity> roleCommunityEntityList = null;
+        if (roleIds.size() > 0){
+            roleCommunityEntityList = garbageRoleCommunityDao.findAll(new Specification<GarbageRoleCommunityEntity>() {
+                @Nullable
+                @Override
+                public Predicate toPredicate(Root<GarbageRoleCommunityEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                    Predicate predicate = null;
+                    if (roleIds.size()> 0){
+                        predicate =  root.get("roleId").in(roleIds)  ;
+                    }
+                    return predicate;
+                }
+            });
+        }else {
+            roleCommunityEntityList = new ArrayList<>();
+        }
+
+        Set<Integer> communityIds = roleCommunityEntityList.stream().map(garbageRoleCommunityEntity -> garbageRoleCommunityEntity.getCommunityId()).collect(Collectors.toSet());
+        List<Integer> ids = communityIds.stream().collect(Collectors.toList());
+        return ids;
     }
 
     public ResponsePageData villageGarbageList(Integer pageNo, Integer pageSize, Boolean isCheck, Double weight, Integer point, Integer quality, String type,
@@ -2170,4 +2192,190 @@ public class GarbageCollectorService {
         }
         return sort;
     }
+
+    public ResponseData garbageCollectInWeek(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<String> roleCodes = userEntity.getRoles().stream().map(r->r.getRoleCode()).collect(Collectors.toList());
+        List<WeekCollectDto> dtoList = new ArrayList<>();
+        Long endTime = DateFormatUtil.getLastTimeOfDay(DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd")).getTime();
+        Long startTime = endTime - 7*24*3600*1000;
+        if (roleCodes.contains("VILLAGE_ADMIN")  || roleCodes.contains("COLLECTOR")){
+            Long villageId = userEntity.getVillageId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByVillage(villageId, fromType, startTime, endTime);
+        } else if (roleCodes.contains("TOWN_ADMIN")){
+            Long townId = userEntity.getTownId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByTown(townId, fromType, startTime, endTime);
+        } else if (roleCodes.contains("COUNTRY_ADMIN")){
+            Long countyId = userEntity.getCountryId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByCounty(countyId, fromType, startTime, endTime);
+        } else if (roleCodes.contains("CITY_ADMIN")){
+            Long cityId = userEntity.getCityId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByCity(cityId, fromType, startTime, endTime);
+        }else if (roleCodes.contains("PROVINCE_ADMIN")){
+            Long provinceId = userEntity.getProvinceId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByProvince(provinceId, fromType, startTime, endTime);
+        } else if (roleCodes.stream().filter(r -> r.endsWith("COMMUNITY_ADMIN")).count() > 0){
+            Long communityId = userEntity.getCommunityId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByCommunity(communityId, fromType, startTime, endTime);
+        } else if (roleCodes.stream().filter(r -> r.endsWith("COMMUNITY_REMARK")).count() > 0){
+            Long communityId = userEntity.getCommunityId();
+            dtoList = garbageCollectorDao.sumGarbageWeightByCommunity(communityId, fromType, startTime, endTime);
+        }
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("近七天内的垃圾统计分析");
+        responseData.setData(dtoList);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return responseData;
+    }
+
+    public ResponseData getRollingGarbageInfo(String jwt , Integer garbageType) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<String> roleCodes = userEntity.getRoles().stream().map(n->n.getRoleCode()).collect(Collectors.toList());
+        Integer fromType = userEntity.getFromType();
+        List<GarbageRollingDto> rollingDtos = new ArrayList<>();
+        if (fromType == 1){
+            List<Integer> communityIds = getCommunityResource(userEntity.getRoles().stream().collect(Collectors.toList()));
+            if (communityIds.size() > 0){
+                rollingDtos = garbageCollectorDao.getTopRollingCommunityGarbageInfo(GarbageCollectorEntity.class.getName(), communityIds, garbageType);
+            }
+        } else {
+            if (roleCodes.contains("RESIDENT") ||roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
+                rollingDtos = garbageCollectorDao.getTopRollingVillageGarbageInfoByVillageId(GarbageCollectorEntity.class.getName(),userEntity.getVillageId(), garbageType);
+            } else if (roleCodes.contains("TOWN_ADMIN")) {
+                rollingDtos = garbageCollectorDao.getTopRollingVillageGarbageInfoByTownId(GarbageCollectorEntity.class.getName(),userEntity.getTownId(), garbageType);
+            } else if (roleCodes.contains("COUNTRY_ADMIN")){
+                rollingDtos = garbageCollectorDao.getTopRollingVillageGarbageInfoByCountyId(GarbageCollectorEntity.class.getName(),userEntity.getCountryId(), garbageType);
+            } else if (roleCodes.contains("CITY_ADMIN")){
+                rollingDtos = garbageCollectorDao.getTopRollingVillageGarbageInfoByCityId(GarbageCollectorEntity.class.getName(),userEntity.getCityId(), garbageType);
+            } else {
+                rollingDtos = garbageCollectorDao.getTopRollingVillageGarbageInfoByProvinceId(GarbageCollectorEntity.class.getName(),userEntity.getProvinceId(), garbageType);
+            }
+        }
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("当前易腐垃圾滚动信息");
+        responseData.setData(rollingDtos);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return responseData;
+    }
+
+    public ResponseData getRollingTotalPersonPartIn(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<String> roleCodes = userEntity.getRoles().stream().map(n->n.getRoleCode()).collect(Collectors.toList());
+        Long count = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+
+                if (roleCodes.contains("RESIDENT") ||roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
+                    if (fromType == 1){
+                        predicates.add(criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId()));
+                    }else {
+                        predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+                    }
+                } else if (roleCodes.contains("TOWN_ADMIN")){
+                    predicates.add(criteriaBuilder.equal(root.get("townId"), userEntity.getTownId()));
+                }else if (roleCodes.contains("COUNTRY_ADMIN")){
+                    predicates.add(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
+                }else if (roleCodes.contains("CITY_ADMIN")){
+                    predicates.add(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
+                } else {
+                    predicates.add(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
+                }
+                criteriaQuery.groupBy(root.get("userId"));
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        });
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("当前易腐垃圾滚动信息 累计参与人数");
+        responseData.setData(count);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return responseData;
+    }
+
+    public ResponseData bigDataMapPointInfo(String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<CollectMapDataDto> dtos = new ArrayList<>();
+        List<String> roleCodes = userEntity.getRoles().stream().map(n->n.getRoleCode()).collect(Collectors.toList());
+        if (fromType == 0){
+            List<GarbageVillageInfoEntity> villageInfoEntityList = garbageVillageInfoDao.findAll(new Specification<GarbageVillageInfoEntity>() {
+                @Override
+                public Predicate toPredicate(Root<GarbageVillageInfoEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                    List<Predicate> predicates = new ArrayList<>();
+                    if (roleCodes.contains("RESIDENT") ||roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
+                        predicates.add(criteriaBuilder.equal(root.get("village_id"), userEntity.getVillageId()));
+                    } else if (roleCodes.contains("TOWN_ADMIN")){
+                        predicates.add(criteriaBuilder.equal(root.get("town_id"), userEntity.getTownId()));
+                    }else if (roleCodes.contains("COUNTRY_ADMIN")){
+                        predicates.add(criteriaBuilder.equal(root.get("country_id"), userEntity.getCountryId()));
+                    }else if (roleCodes.contains("CITY_ADMIN")){
+                        predicates.add(criteriaBuilder.equal(root.get("city_id"), userEntity.getCityId()));
+                    } else {
+                        predicates.add(criteriaBuilder.equal(root.get("province_id"), userEntity.getProvinceId()));
+                    }
+                    return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+                }
+            });
+            villageInfoEntityList.forEach(n->{
+                CollectMapDataDto dto = new CollectMapDataDto();
+                dto.setFromType(fromType);
+                dto.setId(n.getVillageId());
+                dto.setLat(n.getLongitude());
+                dto.setLon(n.getLongitude());
+                dto.setName(n.getVillageName());
+                dtos.add(dto);
+            });
+
+        } else {
+            List<Integer> communityIds = getCommunityResource(userEntity.getRoles().stream().collect(Collectors.toList()));
+            List<GarbageCommunityEntity> communityEntityList = garbageCommunityDao.findAll(new Specification<GarbageCommunityEntity>() {
+                @Override
+                public Predicate toPredicate(Root<GarbageCommunityEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                    List<Predicate> predicates = new ArrayList<>();
+                    if (fromType == 1){
+                        if (roleCodes.stream().filter(n-> n.endsWith("COMMUNITY_ADMIN")).count() > 0){
+                            if (communityIds.size()> 0){
+                                Predicate predicate = root.get("community_id").in(communityIds);
+                                predicates.add(predicate);
+                            }
+                        }
+                        if ( roleCodes.stream().filter(n-> n.endsWith("COMMUNITY_REMARK")).count() > 0){
+                            predicates.add(criteriaBuilder.equal(root.get("community_id"), userEntity.getCommunityId()));
+                        }
+                    } else {
+                        if (roleCodes.contains("COUNTRY_ADMIN")){
+                            predicates.add(criteriaBuilder.equal(root.get("country_id"), userEntity.getCountryId()));
+                        }else if (roleCodes.contains("CITY_ADMIN")){
+                            predicates.add(criteriaBuilder.equal(root.get("city_id"), userEntity.getCityId()));
+                        } else {
+                            predicates.add(criteriaBuilder.equal(root.get("province_id"), userEntity.getProvinceId()));
+                        }
+                    }
+                    return criteriaBuilder.and(new Predicate[predicates.size()]);
+                }
+            });
+            communityEntityList.forEach(n ->{
+                CollectMapDataDto dto = new CollectMapDataDto();
+                dto.setFromType(fromType);
+                dto.setId(n.getId().longValue());
+                dto.setLat(n.getLat());
+                dto.setLon(n.getLon());
+                dto.setName(n.getCommunityName());
+                dtos.add(dto);
+            });
+        }
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("地图中的坐标点数");
+        responseData.setData(dtos);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return responseData;
+    }
 }
+
+

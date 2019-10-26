@@ -42,4 +42,7 @@ public interface GarbageResourceDao extends JpaRepository<GarbageResourceEntity,
             " LEFT JOIN garbage_user u on ur.user_id = u.id " +
             " WHERE u.id = ?1 AND  r.status = 1 AND gr.sup_id <> ?2")
     List<GarbageResourceEntity> findBySupIdNot(Integer userId, Integer supId);
+
+
+    List<GarbageResourceEntity> findByIdIn(List<Integer> ids);
 }

@@ -52,13 +52,14 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "addGarbageByAuto", method = RequestMethod.POST)
-    public ResponseData addGarbageByAuto(String eNo, Double weight, Integer imageId, HttpServletRequest request){
+    public ResponseData addGarbageByAuto(String eNo, Double weight, Integer garbageType, Integer imageId, HttpServletRequest request){
         String jwtArr[] = request.getHeader("Authorization").split(" ");
         String jwt = jwtArr[1];
         Assert.hasText(eNo, "请传入电子卡Id");
         Assert.state(weight != null, "上传垃圾重量");
         Assert.state(imageId != null, "上传图片id");
-        ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt);
+        Assert.state(garbageType != null, "垃圾类型必传");
+        ResponseData responseData = garbageCollectorService.addGarbageByAuto(eNo, weight, imageId, jwt, garbageType);
         return  responseData;
     }
 
@@ -233,4 +234,51 @@ public class GarbageCollectorController {
         return  responseData;
     }
 
+    /**
+     * 大数据中心 近七天的数据展示图表
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "garbageCollectInWeek", method = RequestMethod.GET)
+    public ResponseData garbageCollectInWeek(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.garbageCollectInWeek(jwt);
+        return  responseData;
+    }
+
+    /**
+     *  大数据中心 滚动列表
+     *  garbageType 垃圾类型
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "getRollingGarbageInfo", method = RequestMethod.GET)
+    public ResponseData getRollingGarbageInfo(HttpServletRequest request, Integer garbageType){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        Assert.state(garbageType != null, "垃圾类型不能为空");
+        ResponseData responseData = garbageCollectorService.getRollingGarbageInfo(jwt, garbageType);
+        return  responseData;
+    }
+
+    /**
+     *  大数据中心 滚动列表 参与人次
+     * @param
+     *
+     * @return
+     */
+    @RequestMapping(value = "getRollingTotalPersonPartIn", method = RequestMethod.GET)
+    public ResponseData getRollingTotalPersonPartIn(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+
+        ResponseData responseData = garbageCollectorService.getRollingTotalPersonPartIn(jwt);
+        return  responseData;
+    }
+
+
+    @RequestMapping(value = "bigDataMapPointInfo", method = RequestMethod.GET)
+    public ResponseData bigDataMapPointInfo(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.bigDataMapPointInfo(jwt);
+        return  responseData;
+    }
 }

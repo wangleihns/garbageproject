@@ -50,7 +50,7 @@ public class GarbageQualityPointService {
         List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
         Long placeId = null;
         String placeName = "";
-        if (roleCodes.contains("VILLAGE_ADMIN") || roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_ADMIN")).collect(Collectors.toList()).size()>0 || roleCodes.contains("TOWN_ADMIN")){
+        if (roleCodes.contains("VILLAGE_ADMIN") || roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_ADMIN")).collect(Collectors.toList()).size()>0){
             if (fromType == 1){
                 placeId = userEntity.getCommunityId();
                 placeName = userEntity.getCommunityName();

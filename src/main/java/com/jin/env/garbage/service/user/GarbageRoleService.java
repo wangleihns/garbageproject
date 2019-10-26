@@ -463,9 +463,11 @@ public class GarbageRoleService {
 
     public ResponseData getTabBarList(String jwt) {
         Integer sub = jwtUtil.getSubject(jwt);
-        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByResourceByUserId(sub);
+        List<Integer> supList = garbageRoleResourceDao.findResourceSupByUserId(sub);
+        List<GarbageResourceEntity> resourceEntityList = garbageResourceDao.findByIdIn(supList);
         List<ResourceListDto> resourceListDtos = new ArrayList<>();
-        List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findBySupIdNot(sub,0);
+        List<Integer> subList = garbageRoleResourceDao.findResourceSubByUserId(sub);
+        List<GarbageResourceEntity> garbageResourceEntityList = garbageResourceDao.findByIdIn(subList);;
         Map<Integer, List<ResourceListChildrenDto>> subResourceMap = new HashMap<>();
         garbageResourceEntityList.stream().forEach(res ->{
             if (subResourceMap.containsKey(res.getSupId())){
