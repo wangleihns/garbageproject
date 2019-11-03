@@ -4,15 +4,14 @@
 # description: Starts and stops the App.
 # author:wanglei
 
-SRVER_NAME=demo-0.0.1-SNAPSHOT.jar
-LOG_PATH=smartHome.log
+SERVER_NAME=garbageproject-0.0.1-SNAPSHOT.jar
+LOG_PATH=garbage.log
 USER=root
 pid=0
 start(){
-  checkpid
+  checkPid
   if [ ! -n "$pid" ]; then
-    JAVA_CMD="nohup java -jar $SRVER_NAME --Dspring.config.location=application.yml  > $LOG_PATH 2>&1 &"
-    su - root -c "$JAVA_CMD"
+    nohup java -jar $SERVER_NAME --Dspring.config.location=/usr/local/garbage/config/application.yml,application.properties  > $LOG_PATH 2>&1 &
     echo "--------------------------------------------------------------------------------------------------------------------------------------------"
 	echo ""
     echo "                                                  启动完成，按CTRL+C退出日志界面即可                                                        "
@@ -21,32 +20,32 @@ start(){
     sleep 2s
     tail -f $LOG_PATH
   else
-      echo "$SRVER_NAME is runing PID: $pid"   
+      echo "$SERVER_NAME is running PID: $pid"
   fi
 }
 
 
 status(){
-   checkpid
+   checkPid
    if [ ! -n "$pid" ]; then
-     echo "$SRVER_NAME is not runing"
+     echo "$SERVER_NAME is not running"
    else
-     echo "$SRVER_NAME is runing, PID: $pid"
+     echo "$SERVER_NAME is running, PID: $pid"
    fi 
 }
 
-checkpid(){
+checkPid(){
     pid=`ps -ef |grep $JAR_FILE |grep -v grep |awk '{print $2}'`
 }
 
 stop(){
-    checkpid
+    checkPid
     if [ ! -n "$pid" ]; then
-     echo "$SRVER_NAME is not runing"
+     echo "$SERVER_NAME is not running"
     else
-      echo "$SRVER_NAME stop..."
+      echo "$SERVER_NAME stop..."
       kill -9 $pid
-	  echo "$SRVER_NAME stop success"
+	  echo "$SERVER_NAME stop success"
     fi 
 }
 

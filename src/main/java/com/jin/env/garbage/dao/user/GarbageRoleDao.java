@@ -17,4 +17,6 @@ public interface GarbageRoleDao extends JpaRepository<GarbageRoleEntity, Integer
     List<GarbageRoleEntity> findByUserId(Integer userId);
 
     List<GarbageRoleEntity> findByIdIn(List<Integer> roleIds);
+
+    List<GarbageRoleEntity> findByRoleCodeIn(List<String> roleCodes);
 }

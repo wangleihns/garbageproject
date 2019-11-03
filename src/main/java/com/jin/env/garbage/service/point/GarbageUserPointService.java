@@ -227,30 +227,47 @@ public class GarbageUserPointService {
             @Override
             public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicateList = new ArrayList<>();
-                if (communityIds.size() > 0){
-                    Predicate predicate = root.get("communityId").in(communityIds);
-                    predicateList.add(predicate);
+                if (fromType == 1) {
+                    if (roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_ADMIN")).count() > 0) {
+                        if (communityIds.size() > 0) {
+                            Predicate predicate = root.get("communityId").in(communityIds);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    if (roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_REMARK")).count() > 0) {
+                        predicateList.add(criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId()));
+                    }
+                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0))){
+                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                        predicateList.add(predicate);
+                    }
+                } else {
+                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("VILLAGE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("TOWN_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("COUNTRY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("CITY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("PROVINCE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                        predicateList.add(predicate);
+                    }
                 }
-                if (roleCodes.contains("VILLAGE_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("TOWN_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("COUNTRY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("CITY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("PROVINCE_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
-                    predicateList.add(predicate);
-                }
+
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
         }, pageableFirst);
@@ -259,29 +276,45 @@ public class GarbageUserPointService {
             @Override
             public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicateList = new ArrayList<>();
-                if (communityIds.size() > 0){
-                    Predicate predicate = root.get("communityId").in(communityIds);
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("VILLAGE_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("TOWN_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("COUNTRY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("CITY_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
-                    predicateList.add(predicate);
-                }
-                if (roleCodes.contains("PROVINCE_ADMIN")){
-                    Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
-                    predicateList.add(predicate);
+                if (fromType == 1) {
+                    if (roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_ADMIN")).count() > 0) {
+                        if (communityIds.size() > 0) {
+                            Predicate predicate = root.get("communityId").in(communityIds);
+                            predicateList.add(predicate);
+                        }
+                    }
+                    if (roleCodes.stream().filter(n -> n.endsWith("COMMUNITY_REMARK")).count() > 0) {
+                        predicateList.add(criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId()));
+                    }
+                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0))){
+                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                        predicateList.add(predicate);
+                    }
+                } else {
+                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("VILLAGE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("TOWN_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("COUNTRY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("CITY_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+                        predicateList.add(predicate);
+                    }
+                    if (roleCodes.contains("PROVINCE_ADMIN")){
+                        Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+                        predicateList.add(predicate);
+                    }
                 }
                 return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             }
@@ -293,6 +326,9 @@ public class GarbageUserPointService {
             if (fromType == 1){
                 dto.setPlaceName(garbageUserPointEntity.getCommunityName());
             } else {
+                if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+                    dto.setPlaceName(garbageUserPointEntity.getVillageName());
+                }
                 if (roleCodes.contains("VILLAGE_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getVillageName());
                 }
@@ -305,13 +341,13 @@ public class GarbageUserPointService {
                 if (roleCodes.contains("CITY_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getCityName());
                 }
-                if (roleCodes.contains("PROVINCE_ADMIN")){
+                if (roleCodes.contains("PROVINCE_ADMIN")|| roleCodes.contains("SYSTEM_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getProvinceName());
                 }
-                dto.setPoint(garbageUserPointEntity.getPoint());
-                dto.setUserName(garbageUserPointEntity.getUserName());
-                redRankDtos.add(dto);
             }
+            dto.setPoint(garbageUserPointEntity.getPoint());
+            dto.setUserName(garbageUserPointEntity.getUserName());
+            redRankDtos.add(dto);
         });
 
         List<RedAndBlackRankDto> blackRankDtos = new ArrayList<>();
@@ -320,6 +356,9 @@ public class GarbageUserPointService {
             if (fromType == 1){
                 dto.setPlaceName(garbageUserPointEntity.getCommunityName());
             } else {
+                if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+                    dto.setPlaceName(garbageUserPointEntity.getVillageName());
+                }
                 if (roleCodes.contains("VILLAGE_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getVillageName());
                 }
@@ -332,14 +371,13 @@ public class GarbageUserPointService {
                 if (roleCodes.contains("CITY_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getCityName());
                 }
-                if (roleCodes.contains("PROVINCE_ADMIN")){
+                if (roleCodes.contains("PROVINCE_ADMIN") || roleCodes.contains("SYSTEM_ADMIN")){
                     dto.setPlaceName(garbageUserPointEntity.getProvinceName());
                 }
-                dto.setPoint(garbageUserPointEntity.getPoint());
-                dto.setUserName(garbageUserPointEntity.getUserName());
-                blackRankDtos.add(dto);
             }
-
+            dto.setPoint(garbageUserPointEntity.getPoint());
+            dto.setUserName(garbageUserPointEntity.getUserName());
+            blackRankDtos.add(dto);
         });
         Map<String, List<RedAndBlackRankDto>> redAndBlackRankMap = new HashMap<>();
         redAndBlackRankMap.put("redRank", redRankDtos);

@@ -6,5 +6,4 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface GarbageVillageInfoDao extends JpaRepository<GarbageVillageInfoEntity, Integer>, JpaSpecificationExecutor<GarbageVillageInfoEntity> {
     GarbageVillageInfoEntity findByVillageId(Long villageId);
-
 }

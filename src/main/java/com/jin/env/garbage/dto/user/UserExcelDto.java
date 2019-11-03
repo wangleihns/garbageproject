@@ -12,6 +12,15 @@ public class UserExcelDto {
     private String eNo;
     private String address;
 
+    private String dangYuan;
+    private String cunMinDaiBiao;
+    private String streetCommentDaiBiao;
+    private String liangDaiBiaoYiWeiYuan;
+    private String cunLeader;
+    private String  cunZuLeader;
+    private String womenExeLeader;
+
+
     public String getName() {
         return name;
     }
@@ -53,7 +62,7 @@ public class UserExcelDto {
     }
 
     public String getCleaner() {
-        return cleaner.trim();
+        return cleaner;
     }
 
     public void setCleaner(String cleaner) {
@@ -90,5 +99,61 @@ public class UserExcelDto {
 
     public void setPassword(String password) {
         this.password = password.trim();
+    }
+
+    public String getDangYuan() {
+        return dangYuan;
+    }
+
+    public void setDangYuan(String dangYuan) {
+        this.dangYuan = dangYuan;
+    }
+
+    public String getCunMinDaiBiao() {
+        return cunMinDaiBiao;
+    }
+
+    public void setCunMinDaiBiao(String cunMinDaiBiao) {
+        this.cunMinDaiBiao = cunMinDaiBiao;
+    }
+
+    public String getStreetCommentDaiBiao() {
+        return streetCommentDaiBiao;
+    }
+
+    public void setStreetCommentDaiBiao(String streetCommentDaiBiao) {
+        this.streetCommentDaiBiao = streetCommentDaiBiao;
+    }
+
+    public String getLiangDaiBiaoYiWeiYuan() {
+        return liangDaiBiaoYiWeiYuan;
+    }
+
+    public void setLiangDaiBiaoYiWeiYuan(String liangDaiBiaoYiWeiYuan) {
+        this.liangDaiBiaoYiWeiYuan = liangDaiBiaoYiWeiYuan;
+    }
+
+    public String getCunLeader() {
+        return cunLeader;
+    }
+
+    public void setCunLeader(String cunLeader) {
+        this.cunLeader = cunLeader;
+    }
+
+    public String getCunZuLeader() {
+        return cunZuLeader;
+    }
+
+    public void setCunZuLeader(String cunZuLeader) {
+        this.cunZuLeader = cunZuLeader;
+    }
+
+    public String getWomenExeLeader() {
+        return womenExeLeader;
+    }
+
+    public void setWomenExeLeader(String womenExeLeader) {
+        this.womenExeLeader = womenExeLeader;
     }
 }

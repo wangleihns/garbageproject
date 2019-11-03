@@ -33,13 +33,13 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "addGarbageByCollector", method = RequestMethod.POST)
-    public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, HttpServletRequest request){
+    public ResponseData addGarbageByCollector(String eNo, String quality, Double weight, Integer imageId, Integer garbageType, HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.hasText(eNo, "请传入电子卡Id");
         Assert.state(weight != null, "上传垃圾重量");
         Assert.state(imageId != null, "上传图片id");
         Assert.hasText(quality, "请评价垃圾是否合格");
-        ResponseData responseData = garbageCollectorService.addGarbageByCollector(eNo, quality, weight, imageId, jwt);
+        ResponseData responseData = garbageCollectorService.addGarbageByCollector(eNo, quality, weight, imageId, garbageType, jwt);
         return  responseData;
     }
 
@@ -220,8 +220,9 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "getGarbageWeightCurrentYear", method = RequestMethod.GET)
-    public ResponseData getGarbageWeightCurrentYear(){
-        ResponseData responseData = garbageCollectorService.getGarbageWeightCurrentYear();
+    public ResponseData getGarbageWeightCurrentYear(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.getGarbageWeightCurrentYear(jwt);
         return  responseData;
     }
 
@@ -267,10 +268,16 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "getRollingTotalPersonPartIn", method = RequestMethod.GET)
-    public ResponseData getRollingTotalPersonPartIn(HttpServletRequest request){
+    public ResponseData getRollingTotalPersonPartIn(HttpServletRequest request, Integer garbageType){
         String jwt = request.getHeader("Authorization").split(" ")[1];
 
-        ResponseData responseData = garbageCollectorService.getRollingTotalPersonPartIn(jwt);
+        ResponseData responseData = garbageCollectorService.getRollingTotalPersonPartIn(jwt, garbageType);
+        return  responseData;
+    }
+    @RequestMapping(value = "getRollingTotalWeight", method = RequestMethod.GET)
+    public ResponseData getRollingTotalWeight(Integer garbageType, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.getRollingTotalWeight(jwt, garbageType);
         return  responseData;
     }
 
@@ -279,6 +286,13 @@ public class GarbageCollectorController {
     public ResponseData bigDataMapPointInfo(HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageCollectorService.bigDataMapPointInfo(jwt);
+        return  responseData;
+    }
+
+    @RequestMapping(value = "getBigDataShowTitleInfo", method = RequestMethod.GET)
+    public ResponseData getBigDataShowTitleInfo(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.getBigDataShowTitleInfo(jwt);
         return  responseData;
     }
 }

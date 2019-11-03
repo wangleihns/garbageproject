@@ -31,14 +31,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                 "     WHEN 3 THEN '可回收垃圾' " +
                 "     ELSE '有害垃圾' " +
                 " END as garbageType, " +
-                " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                 " FROM " +
                 " garbage_collector " +
                 " WHERE village_id = ?1 " +
                 " AND garbage_from_type = ?2 " +
                 " AND collect_date BETWEEN ?3 AND ?4 " +
                 " GROUP BY " +
-                " garbage_type, `day` "
+                " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByVillage(Long villageId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -50,14 +50,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     "     WHEN 3 THEN '可回收垃圾' " +
                     "     ELSE '有害垃圾' " +
                     " END as garbageType, " +
-                    " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                     " FROM " +
                     " garbage_collector " +
                     " WHERE town_id = ?1 " +
                     " AND garbage_from_type = ?2 " +
                     " AND collect_date BETWEEN ?3 AND ?4 " +
                     " GROUP BY " +
-                    " garbage_type, `day` "
+                    " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByTown(Long townId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -69,14 +69,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     "     WHEN 3 THEN '可回收垃圾' " +
                     "     ELSE '有害垃圾' " +
                     " END as garbageType, " +
-                    " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                     " FROM " +
                     " garbage_collector " +
                     " WHERE country_id = ?1 " +
                     " AND garbage_from_type = ?2 " +
                     " AND collect_date BETWEEN ?3 AND ?4 " +
                     " GROUP BY " +
-                    " garbage_type, `day` "
+                    " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByCounty(Long countryId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -89,14 +89,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     "     WHEN 3 THEN '可回收垃圾' " +
                     "     ELSE '有害垃圾' " +
                     " END as garbageType, " +
-                    " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                     " FROM " +
                     " garbage_collector " +
                     " WHERE city_id = ?1 " +
                     " AND garbage_from_type = ?2 " +
                     " AND collect_date BETWEEN ?3 AND ?4 " +
                     " GROUP BY " +
-                    " garbage_type, `day` "
+                    " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByCity(Long cityId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -108,14 +108,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     "     WHEN 3 THEN '可回收垃圾' " +
                     "     ELSE '有害垃圾' " +
                     " END as garbageType, " +
-                    " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                     " FROM " +
                     " garbage_collector " +
                     " WHERE province_id = ?1 " +
                     " AND garbage_from_type = ?2 " +
                     " AND collect_date BETWEEN ?3 AND ?4 " +
                     " GROUP BY " +
-                    " garbage_type, `day` "
+                    " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByProvince(Long provinceId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -127,14 +127,14 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     "     WHEN 3 THEN '可回收垃圾' " +
                     "     ELSE '有害垃圾' " +
                     " END as garbageType, " +
-                    " FROM_UNIXTIME(collect_date / 1000,'%Y-%m-%d') as collectDate  " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate  " +
                     " FROM " +
                     " garbage_collector " +
                     " WHERE community_id = ?1 " +
                     " AND garbage_from_type = ?2 " +
                     " AND collect_date BETWEEN ?3 AND ?4 " +
                     " GROUP BY " +
-                    " garbage_type, `day` "
+                    " garbage_type, FROM_UNIXTIME(collect_date / 1000, '%m-%d') "
     )
     List<WeekCollectDto> sumGarbageWeightByCommunity(Long communityId, Integer garbageFromType, Long startTime, Long endTime);
 
@@ -204,7 +204,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.town_id = ?2 " +
-                    " AND g.garbage_type = ?3ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByTownId(String sourceName, Long townId, Integer garbageType);

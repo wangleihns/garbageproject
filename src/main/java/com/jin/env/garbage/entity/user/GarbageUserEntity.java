@@ -59,6 +59,14 @@ public class GarbageUserEntity extends BaseEntity{
     private Integer month;
     private Integer year;
 
+    private Boolean dangYuan;
+    private Boolean cunMinDaiBiao;
+    private Boolean streetCommentDaiBiao;
+    private Boolean liangDaiBiaoYiWeiYuan;
+    private Boolean cunLeader;
+    private Boolean  cunZuLeader;
+    private Boolean womenExeLeader;
+
     @Basic
     @Column(name = "email")
     public String getEmail() {
@@ -412,6 +420,76 @@ public class GarbageUserEntity extends BaseEntity{
 
     public void setCommunityName(String communityName) {
         this.communityName = communityName;
+    }
+
+    @Basic
+    @Column(name = "dang_yuan")
+    public Boolean getDangYuan() {
+        return dangYuan;
+    }
+
+    public void setDangYuan(Boolean dangYuan) {
+        this.dangYuan = dangYuan;
+    }
+
+    @Basic
+    @Column(name = "cun_min_dai_biao")
+    public Boolean getCunMinDaiBiao() {
+        return cunMinDaiBiao;
+    }
+
+    public void setCunMinDaiBiao(Boolean cunMinDaiBiao) {
+        this.cunMinDaiBiao = cunMinDaiBiao;
+    }
+
+    @Basic
+    @Column(name = "street_comment_dai_biao")
+    public Boolean getStreetCommentDaiBiao() {
+        return streetCommentDaiBiao;
+    }
+
+    public void setStreetCommentDaiBiao(Boolean streetCommentDaiBiao) {
+        this.streetCommentDaiBiao = streetCommentDaiBiao;
+    }
+
+    @Basic
+    @Column(name = "liang_dai_biao_yi_wei_yuan")
+    public Boolean getLiangDaiBiaoYiWeiYuan() {
+        return liangDaiBiaoYiWeiYuan;
+    }
+
+    public void setLiangDaiBiaoYiWeiYuan(Boolean liangDaiBiaoYiWeiYuan) {
+        this.liangDaiBiaoYiWeiYuan = liangDaiBiaoYiWeiYuan;
+    }
+
+    @Basic
+    @Column(name = "cun_leader")
+    public Boolean getCunLeader() {
+        return cunLeader;
+    }
+
+    public void setCunLeader(Boolean cunLeader) {
+        this.cunLeader = cunLeader;
+    }
+
+    @Basic
+    @Column(name = "cun_zu_leader")
+    public Boolean getCunZuLeader() {
+        return cunZuLeader;
+    }
+
+    public void setCunZuLeader(Boolean cunZuLeader) {
+        this.cunZuLeader = cunZuLeader;
+    }
+
+    @Basic
+    @Column(name = "women_exe_leader")
+    public Boolean getWomenExeLeader() {
+        return womenExeLeader;
+    }
+
+    public void setWomenExeLeader(Boolean womenExeLeader) {
+        this.womenExeLeader = womenExeLeader;
     }
 
     @Override

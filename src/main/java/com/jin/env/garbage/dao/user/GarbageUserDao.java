@@ -22,9 +22,13 @@ public interface GarbageUserDao extends JpaRepository<GarbageUserEntity, Integer
     @Query(value =  "select new com.jin.env.garbage.dto.user.UserCountInMonth(u.month, count(u.id)) from GarbageUserEntity u where u.year = ?1 and u.month >=?2 and u.month<=?3  group by u.month")
     List<UserCountInMonth> countUserInMonthBetween(Integer year, Integer startMonth, Integer endMonth);
 
-    @Query(value = "SELECT new com.jin.env.garbage.dto.user.UserDto(u.id, u.name) from  GarbageUserEntity u where u.id in(?1)")
+    @Query(value = "SELECT new com.jin.env.garbage.dto.user.UserDto(u.id, u.name, u.phone, u.address ) from  GarbageUserEntity u where u.id in(?1)")
     List<UserDto> selectUserInfoByIdIn(List<Integer> ids);
 
     @Query(value = "select new com.jin.env.garbage.dto.user.UserDto(u.id, u.name, u.phone, CONCAT(u.provinceName, u.cityName, u.countryName, u.townName)) from GarbageUserEntity u where u.id = ?1")
     UserDto selectUserInfoByUserId(Integer id);
+
+    List<GarbageUserEntity> findByPhoneIn(List<String> phones);
+
+    GarbageUserEntity findByPhone(String phone);
 }

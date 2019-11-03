@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GarbageCommunityDao extends JpaRepository<GarbageCommunityEntity, Integer>, JpaSpecificationExecutor<GarbageCommunityEntity> {
-    List<GarbageCommunityEntity> findByCountryId(Long countyId);
+    @Query(value = "select u from GarbageCommunityEntity u where u.countryId = ?1 and u.status = 1")
+    List<GarbageCommunityEntity> findByCountyId(Long countyId);
 
     @Query(value = "select new com.jin.env.garbage.dto.position.UserPositionDto(com.id, p.provinceName, city.cityName, cou.countyName, com.communityName) " +
             " from GarbageCommunityEntity com, JPositionCountyEntity cou, JPositionCityEntity city, JPositionProvinceEntity p" +

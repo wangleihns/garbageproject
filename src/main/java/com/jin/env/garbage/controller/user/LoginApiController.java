@@ -235,8 +235,9 @@ public class LoginApiController {
      * @return
      */
     @RequestMapping(value = "getRegisterUserCountInMonth", method = RequestMethod.GET)
-    public ResponseData getRegisterUserCountInMonth(){
-        ResponseData responseData = garbageUserService.getRegisterUserCountInMonth();
+    public ResponseData getRegisterUserCountInMonth(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.getRegisterUserCountInMonth(jwt);
         return responseData;
     }
 
@@ -251,6 +252,12 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 废弃
+     * @param multipartFile
+     * @param request
+     * @return
+     */
     @Deprecated
     @RequestMapping(value = "insertUserInfoBatch", method = RequestMethod.POST)
     public ResponseData insertUserInfoBatch(@RequestParam("file") MultipartFile multipartFile, HttpServletRequest request){

@@ -2,10 +2,10 @@ jsRoot : http://localhost:${server.port}${server.context-path}
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://47.96.12.166:3306/demo?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    url: jdbc:mysql://47.110.255.89:3306/garbage_db?useUnicode=true&characterEncoding=utf-8
     username: root
-    password: Zkzht*888
-    driverClassName: com.mysql.jdbc.Driver
+    password: huineng@2019
+    driverClassName: com.mysql.cj.jdbc.Driver
     initialSize: 5
     minIdle: 5
     maxActive: 20
@@ -20,8 +20,9 @@ spring:
     maxPoolPreparedStatementPerConnectionSize: 20
     connectionProperties: druid.stat.mergeSql:true;druid.stat.slowSqlMillis:5000
 server:
-  port: 8082
-  context-path: /system
+  port: 8088
+  servlet:
+    context-path: /
 
 #freemarker 配置
 ---
@@ -50,16 +51,16 @@ spring:
         whitespace_stripping: true
       template-loader-path: classpath:/templates/
     redis:
-      host: 127.0.0.1
-      database: 0
-      password:
-      pool:
-        max-active: 8
-        max-wait: -1
-        max-idle: 8
-        min-idle: 0
-      timeout: 1000
-      port: 6379
+        host: 47.110.255.89
+        port: 6379
+        password: huineng@2019
+        lettuce:
+          pool:
+            max-active: 200 #连接池最大连接数（使用负值表示没有限制）
+            max-idle: 20 # 连接池中的最大空闲连接
+            min-idle: 5
+            max-wait: -1
+        database: 0
 #      session存储redis配置
 #    session:
 #      store-type: redis
@@ -67,34 +68,26 @@ spring:
 #        flush-mode: on_save
 #        namespace: /
 ---
-security:
-  user:
-    name: wanglei
-    password: 123456
-  basic:
-    enabled: true
-    path: /**
----
 #资源国际化
 spring:
   messages:
     basename: i18n/messages
     encoding: utf-8
   jpa:
-    show-sql: true
+    show-sql: false
+    properties:
+      fomart_sql: false
   jwt:
     header:
       typ: JWT
       zip: HS256
     claim:
-      aud: Demo
+      aud: Garbage
       exp: 7200000            #2h
-      secret: demo
+      secret: Garbage
       refreshDate: 604800000   #7天
   aop:
     auto: true
-  pa: uf
-  jpush:
-    appKey: 4708c096fc3a881f3c2cb723
-    secret: aaccb75d19e53abab57c8161
----
+
+logging:
+  config: classpath:logback-spring.xml

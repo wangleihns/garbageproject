@@ -103,4 +103,13 @@ public class GarbageCommunityService {
         responseData.setMsg("修改成功");
         return responseData;
     }
+
+    public ResponseData getCommunityListByCountyId(Long countyId) {
+        List<GarbageCommunityEntity> communityEntities = garbageCommunityDao.findByCountyId(countyId);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setData(communityEntities);
+        responseData.setMsg("修改成功");
+        return responseData;
+    }
 }

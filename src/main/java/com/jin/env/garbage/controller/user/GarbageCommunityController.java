@@ -55,4 +55,10 @@ public class GarbageCommunityController {
         ResponseData responseData = garbageCommunityService.updateCommunity(communityId, communityName, address, desc, status);
         return responseData;
     }
+    @RequestMapping(value = "getCommunityListByCountyId", method = RequestMethod.GET)
+    public ResponseData getCommunityListByCountyId(Long countyId){
+        Assert.state(countyId != null, "小区id 不能为空");
+        ResponseData responseData = garbageCommunityService.getCommunityListByCountyId(countyId);
+        return responseData;
+    }
 }

@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
   <session-factory>
-    <property name="connection.url">jdbc:mysql://10.121.2.77:3306/garbage_db</property>
+    <property name="connection.url">jdbc:mysql://47.110.255.89:3306/garbage_db</property>
     <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
       <mapping class="com.jin.env.garbage.entity.position.JPositionCityEntity"/>
       <mapping class="com.jin.env.garbage.entity.position.JPositionCountyEntity"/>
@@ -21,6 +21,7 @@
       <mapping class="com.jin.env.garbage.entity.user.GarbageRoleCommunityEntity"/>
       <mapping class="com.jin.env.garbage.entity.point.GarbagePointRecordEntity"/>
       <mapping class="com.jin.env.garbage.entity.point.GarbageUserPointEntity"/>
+      <mapping class="com.jin.env.garbage.entity.village.GarbageVillageInfoEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

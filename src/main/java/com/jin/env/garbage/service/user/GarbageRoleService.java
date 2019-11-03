@@ -277,25 +277,39 @@ public class GarbageRoleService {
 
     @Transactional
     public ResponseData addRoleForCommunity(String roleName, String roleDesc, Boolean isAdmin) {
-        GarbageRoleEntity roleEntity = new GarbageRoleEntity();
+        //小区管理员
+        GarbageRoleEntity roleEntityManager = new GarbageRoleEntity();
+        GarbageRoleEntity roleEntityRemark = new GarbageRoleEntity();
+        String roleCodeManager = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_ADMIN";
+        String roleNameManager = roleName + "小区管理员";
+        String roleNameRemark = roleName + "小区评分员";
+        String roleCodeRemark = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK";
         ResponseData responseData = new ResponseData();
-        roleEntity.setRoleName(roleName);
-        String roleCode = "";
-        if (isAdmin) {
-            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_ADMIN";
-            roleEntity.setRoleCode(roleCode);
-        } else {
-            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK";
-            roleEntity.setRoleCode(PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK");
-        }
-        GarbageRoleEntity role = garbageRoleDao.findByRoleCode(roleCode);
-        if (role !=null){
+//        String roleCode = "";
+//        if (isAdmin) {
+//            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_ADMIN";
+//            roleEntity.setRoleCode(roleCode);
+//        } else {
+//            roleCode = PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK";
+//            roleEntity.setRoleCode(PinYinUtil.converterToSpell(roleName) +"_COMMUNITY_REMARK");
+//        }
+        List<GarbageRoleEntity> roleEntityList = garbageRoleDao.findByRoleCodeIn(new ArrayList<String>(){{add(roleCodeManager); add(roleCodeRemark);}});
+        if (roleEntityList.size() > 0){
             throw  new RuntimeException("角色名称重复， 角色编码重复");
         }
-        roleEntity.setRoleDesc(roleDesc);
-        roleEntity.setStatus(Constants.dataType.ENABLE.getType());
-        roleEntity.setType(Constants.garbageFromType.COMMUNITY.getType());
-        garbageRoleDao.save(roleEntity);
+        roleEntityManager.setRoleCode(roleCodeManager);
+        roleEntityManager.setRoleDesc(roleDesc);
+        roleEntityManager.setStatus(Constants.dataType.ENABLE.getType());
+        roleEntityManager.setType(Constants.garbageFromType.COMMUNITY.getType());
+
+        roleEntityRemark.setRoleCode(roleCodeManager);
+        roleEntityRemark.setRoleDesc(roleDesc);
+        roleEntityRemark.setStatus(Constants.dataType.ENABLE.getType());
+        roleEntityRemark.setType(Constants.garbageFromType.COMMUNITY.getType());
+        List<GarbageRoleEntity> roles = new ArrayList<>();
+        roles.add(roleEntityManager);
+        roles.add(roleEntityRemark);
+        garbageRoleDao.saveAll(roles);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
         responseData.setMsg("添加小区角色名称成功");
         return responseData;
@@ -420,7 +434,7 @@ public class GarbageRoleService {
             CommunityResourceDto dto = new CommunityResourceDto();
             dto.setCommunityName(garbageCommunityEntity.getCommunityName());
             dto.setId(garbageCommunityEntity.getId());
-            if (resourceIds.contains(garbageCommunityEntity.getId())){
+            if (communityIds.contains(garbageCommunityEntity.getId())){
                 dto.setCheck(true);
             } else {
                 dto.setCheck(false);

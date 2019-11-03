@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.util.StringUtils;
+
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -42,9 +44,11 @@ public class TokenFilter implements Filter {
         logger.info(request.getRequestURI());
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
         response.setHeader("Access-Control-Max-Age", "3600");
-        response.addHeader("Access-Control-Allow-Headers","*");
+        response.setHeader("Access-Control-Allow-Headers","Authorization");
+        response.setHeader("Access-Control-Expose-Headers", "*");
         response.setCharacterEncoding("utf-8");
         String url = request.getRequestURI();
         ResponseData responseData = new ResponseData();
@@ -52,6 +56,8 @@ public class TokenFilter implements Filter {
             filterChain.doFilter(request, response);
         } else {
             String header = request.getHeader("Authorization");
+//            header = request.getParameter("Authorization");
+
             if (header == null || !header.startsWith("Bearer")) {
                 responseData.setStatus(Constants.tokenStatus.TOKEN_NOT_EXIST.getStatus());
                 responseData.setMsg("请在请求头中添加token ,或者token不是以Bearer开头");
@@ -79,6 +85,11 @@ public class TokenFilter implements Filter {
 //                response.getWriter().write(JSONUtil.obj2json(responseData));
 //                return;
 //            }
+            if (StringUtils.isEmpty(accessToken)){
+                responseData.setStatus(Constants.tokenStatus.TokenExp.getStatus());
+                responseData.setMsg("token had already expired");
+                response.getWriter().write(JSONUtil.obj2json(responseData));
+            }
 
             if (accessToken!=null && !accessToken.equals(jwt)){
                 responseData.setStatus(Constants.tokenStatus.TokenChange.getStatus());
