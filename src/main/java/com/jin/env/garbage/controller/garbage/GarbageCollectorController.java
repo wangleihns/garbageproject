@@ -26,10 +26,12 @@ public class GarbageCollectorController {
 
     /**
      * 人工上传垃圾信息
-     * @param eNo
-     * @param quality
-     * @param weight
-     * @param imageId
+     * @param eNo  电子卡
+     * @param quality 垃圾分类的质量
+     * @param weight  重量
+     * @param imageId 图片
+     * @param garbageType 垃圾类型
+     * @param request
      * @return
      */
     @RequestMapping(value = "addGarbageByCollector", method = RequestMethod.POST)
@@ -293,6 +295,18 @@ public class GarbageCollectorController {
     public ResponseData getBigDataShowTitleInfo(HttpServletRequest request){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponseData responseData = garbageCollectorService.getBigDataShowTitleInfo(jwt);
+        return  responseData;
+    }
+
+    /**
+     * 接口地址： /api/v1/collector/checkUserCollectToday
+     * 检查当前电子卡用户当天上传次数
+     * @param eno 电子卡id
+     * @return
+     */
+    @RequestMapping(value = "checkUserCollectToday", method = RequestMethod.GET)
+    public ResponseData checkUserCollectToday(String eno){
+        ResponseData responseData = garbageCollectorService.checkUserCollectToday(eno);
         return  responseData;
     }
 }

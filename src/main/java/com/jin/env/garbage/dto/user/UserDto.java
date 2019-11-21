@@ -8,6 +8,8 @@ public class UserDto {
     private String address;
     private String eNo;
 
+    private boolean isCollect;
+
     public UserDto() {
     }
 
@@ -61,5 +63,13 @@ public class UserDto {
 
     public void seteNo(String eNo) {
         this.eNo = eNo;
+    }
+
+    public boolean isCollect() {
+        return isCollect;
+    }
+
+    public void setCollect(boolean collect) {
+        isCollect = collect;
     }
 }

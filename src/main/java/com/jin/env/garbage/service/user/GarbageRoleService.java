@@ -301,11 +301,13 @@ public class GarbageRoleService {
         roleEntityManager.setRoleDesc(roleDesc);
         roleEntityManager.setStatus(Constants.dataType.ENABLE.getType());
         roleEntityManager.setType(Constants.garbageFromType.COMMUNITY.getType());
+        roleEntityManager.setRoleName(roleNameManager);
 
-        roleEntityRemark.setRoleCode(roleCodeManager);
+        roleEntityRemark.setRoleCode(roleCodeRemark);
         roleEntityRemark.setRoleDesc(roleDesc);
         roleEntityRemark.setStatus(Constants.dataType.ENABLE.getType());
         roleEntityRemark.setType(Constants.garbageFromType.COMMUNITY.getType());
+        roleEntityRemark.setRoleName(roleNameRemark);
         List<GarbageRoleEntity> roles = new ArrayList<>();
         roles.add(roleEntityManager);
         roles.add(roleEntityRemark);

@@ -24,7 +24,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     Double countGarbageWeight(Long start, Long end);
 
     @Query(nativeQuery = true,
-        value = " SELECT SUM(garbage_weight) as weigth, " +
+        value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                 " CASE garbage_type " +
                 "     WHEN 1 THEN '易腐垃圾' " +
                 "     WHEN 2 THEN '其他垃圾' " +
@@ -43,7 +43,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     List<WeekCollectDto> sumGarbageWeightByVillage(Long villageId, Integer garbageFromType, Long startTime, Long endTime);
 
     @Query(nativeQuery = true,
-            value = " SELECT SUM(garbage_weight) as weigth, " +
+            value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                     " CASE garbage_type " +
                     "     WHEN 1 THEN '易腐垃圾' " +
                     "     WHEN 2 THEN '其他垃圾' " +
@@ -62,7 +62,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     List<WeekCollectDto> sumGarbageWeightByTown(Long townId, Integer garbageFromType, Long startTime, Long endTime);
 
     @Query(nativeQuery = true,
-            value = " SELECT SUM(garbage_weight) as weigth, " +
+            value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                     " CASE garbage_type " +
                     "     WHEN 1 THEN '易腐垃圾' " +
                     "     WHEN 2 THEN '其他垃圾' " +
@@ -82,7 +82,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
 
 
     @Query(nativeQuery = true,
-            value = " SELECT SUM(garbage_weight) as weigth, " +
+            value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                     " CASE garbage_type " +
                     "     WHEN 1 THEN '易腐垃圾' " +
                     "     WHEN 2 THEN '其他垃圾' " +
@@ -101,7 +101,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     List<WeekCollectDto> sumGarbageWeightByCity(Long cityId, Integer garbageFromType, Long startTime, Long endTime);
 
     @Query(nativeQuery = true,
-            value = " SELECT SUM(garbage_weight) as weigth, " +
+            value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                     " CASE garbage_type " +
                     "     WHEN 1 THEN '易腐垃圾' " +
                     "     WHEN 2 THEN '其他垃圾' " +
@@ -120,7 +120,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
     List<WeekCollectDto> sumGarbageWeightByProvince(Long provinceId, Integer garbageFromType, Long startTime, Long endTime);
 
     @Query(nativeQuery = true,
-            value = " SELECT SUM(garbage_weight) as weigth, " +
+            value = " SELECT ROUND(SUM(garbage_weight),3) as weigth, " +
                     " CASE garbage_type " +
                     "     WHEN 1 THEN '易腐垃圾' " +
                     "     WHEN 2 THEN '其他垃圾' " +
@@ -180,7 +180,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                 " INNER JOIN garbage_user u on u.id = g.user_id " +
                 " AND im.source_name = ?1 " +
                 " AND g.garbage_quality = 1  and g.village_id = ?2" +
-                " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                 " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByVillageId(String sourceName, Long villageId, Integer garbageType);
@@ -204,7 +204,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.town_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByTownId(String sourceName, Long townId, Integer garbageType);
@@ -228,7 +228,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.country_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCountyId(String sourceName, Long countyId, Integer garbageType);
@@ -252,7 +252,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.city_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCityId(String sourceName, Long cityId, Integer garbageType);
@@ -276,7 +276,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.province_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByProvinceId(String sourceName, Long provinceId, Integer garbageType);
@@ -301,7 +301,7 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1 AND g.community_id IN (?2) " +
-                    " AND g.garbage_type = ?3 ORDER BY g.id desc " +
+                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
     List<GarbageRollingDto>  getTopRollingCommunityGarbageInfo(String sourceName, List<Integer> communityIds, Integer garbageType);

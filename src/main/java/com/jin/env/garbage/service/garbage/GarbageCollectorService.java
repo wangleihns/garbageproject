@@ -244,7 +244,7 @@ public class GarbageCollectorService {
             userPointEntity.setTownId(collectorEntity.getTownId());
             userPointEntity.setVillageId(collectorEntity.getVillageId());
             userPointEntity.setCommunityId(collectorEntity.getCommunityId());
-            userPointEntity.setUserName(collectorEntity.getCollectorName());
+            userPointEntity.setUserName(userEntity.getName());
         }
         //计算总积分
         garbageUserPointDao.save(userPointEntity);
@@ -284,7 +284,7 @@ public class GarbageCollectorService {
             throw new RuntimeException("该卡没有绑定用户信息");
         }
         GarbageUserEntity u = garbageUserDao.findById(eNoEntity.getUserId()).get();
-        if (!u.getCommunityId().equals(communityId)){
+        if (u != null && !u.getCommunityId().equals(communityId)){
             throw new RuntimeException("非同一小区不能上传");
         }
         GarbageCollectorEntity collectorEntity = new GarbageCollectorEntity();
@@ -843,8 +843,15 @@ public class GarbageCollectorService {
         Map<Integer, String> map = villageDtos.stream().collect(Collectors.toMap(UserVillageDto::getId, UserVillageDto::getVillageName));
         for (CollectorDto dto:page.getContent()) {
             dto.setAddress(map.get(dto.getCollectorId()));
+            if (dto.getGarbageWeight() != null ){
+                BigDecimal bg = new BigDecimal(dto.getGarbageWeight());
+                double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                dto.setGarbageWeight(f1);
+            } else {
+                dto.setGarbageWeight(0D);
+            }
             if ("day".equals(type)){
-                dto.setCollectDate(dto.getYear() + "-" + dto.getMonth() + "-" + dto.getDay());
+                dto.setCollectDate(dto.getYear() + "-" + (dto.getMonth() + 1) + "-" + dto.getDay());
             }else if ("month".equals(type)){
                 dto.setCollectDate(dto.getYear() + "-" + dto.getMonth());
             } else {
@@ -1441,7 +1448,7 @@ public class GarbageCollectorService {
             dto.setNotQualityCount(notQualityCount);
             dto.setUserCount(userCount.intValue());
             if ("day".equals(type)){
-                dto.setCollectDate(dto.getYear() + "-" + dto.getMonth() + "-" + dto.getDay());
+                dto.setCollectDate(dto.getYear() + "-" + (dto.getMonth() + 1) + "-" + dto.getDay());
             }else if ("month".equals(type)){
                 dto.setCollectDate(dto.getYear() + "-" + dto.getMonth());
             } else {
@@ -2571,10 +2578,10 @@ public class GarbageCollectorService {
         GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
         Integer fromType = userEntity.getFromType();
         List<String> roleCodes = userEntity.getRoles().stream().map(n -> n.getRoleCode()).collect(Collectors.toList());
-        String showTitle = "垃圾分类大数据展示平台";
+        String showTitle = "垃圾分类大数据平台";
         if (fromType == 1) {
             GarbageCommunityEntity communityEntity = garbageCommunityDao.findById(userEntity.getCommunityId().intValue()).get();
-            showTitle = communityEntity.getCommunityName() + "垃圾分类大数据展示平台";
+            showTitle = communityEntity.getCommunityName() + "垃圾分类大数据平台";
         } else {
 
             if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")) {
@@ -2586,22 +2593,50 @@ public class GarbageCollectorService {
                 showTitle = entity.getShowTitle();
             } else if (roleCodes.contains("TOWN_ADMIN")) {
                 JPositionTownEntity townEntity = jPositionTownDao.findByTownId(userEntity.getTownId());
-                showTitle = townEntity.getTownName() + "垃圾分类大数据展示平台";
+                showTitle = townEntity.getTownName() + "垃圾分类大数据平台";
             } else if (roleCodes.contains("COUNTRY_ADMIN")) {
                 JPositionCountyEntity countyEntity = jPositionCountyDao.findByCountyId(userEntity.getCountryId());
-                showTitle = countyEntity.getCountyName() + "垃圾分类大数据展示平台";
+                showTitle = countyEntity.getCountyName() + "垃圾分类大数据平台";
             } else if (roleCodes.contains("CITY_ADMIN")) {
                 JPositionCityEntity cityEntity = jPositionCityDao.findByCityId(userEntity.getCityId());
-                showTitle = cityEntity.getCityName() + "垃圾分类大数据展示平台";
+                showTitle = cityEntity.getCityName() + "垃圾分类大数据平台";
             } else {
                 JPositionProvinceEntity provinceEntity = jPositionProvinceDao.findByProvinceId(userEntity.getProvinceId().intValue());
-                showTitle = provinceEntity.getProvinceName() + "垃圾分类大数据展示平台";
+                showTitle = provinceEntity.getProvinceName() + "垃圾分类大数据平台";
             }
         }
         ResponseData responseData = new ResponseData();
         responseData.setMsg("大数据展示的标题");
         responseData.setData(showTitle);
         responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return responseData;
+    }
+
+    public ResponseData checkUserCollectToday(String eno) {
+        Long startTime = DateFormatUtil.getFirstTimeOfDay(DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd")).getTime();
+        Long endTime = DateFormatUtil.getLastTimeOfDay(DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd")).getTime();
+        List<GarbageCollectorEntity> list = garbageCollectorDao.findAll(new Specification<GarbageCollectorEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+                if (!StringUtils.isEmpty(eno)){
+                    Predicate predicate =criteriaBuilder.equal(root.get("eNo"), eno);
+                    predicates.add(predicate);
+                }
+                Predicate startPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), startTime);
+                Predicate predicateEnd = criteriaBuilder.lessThanOrEqualTo(root.get("collectDate"), startTime);
+                predicates.add(startPredicate);
+                predicates.add(predicateEnd);
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        });
+        ResponseData responseData = new ResponseData();
+        if (list.size() > 0){
+            throw new RuntimeException("今天已经上传过了，不能再上传了");
+        }
+        responseData.setData(true);
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("今天还没有上传过，可以上传");
         return responseData;
     }
 }

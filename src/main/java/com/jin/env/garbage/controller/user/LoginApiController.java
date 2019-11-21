@@ -330,4 +330,19 @@ public class LoginApiController {
         ResponseData responseData = garbageUserService.totalCountUserInfoAndGarbageWeight(id, jwt);
         return responseData;
     }
+
+    /**
+     * 批量上传用户
+     * @param file
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "updateUserBatch", method = RequestMethod.POST)
+    public ResponseData updateUserBatch(MultipartFile file, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        long fileSize = file.getSize();
+        io.jsonwebtoken.lang.Assert.state(fileSize <= 8388608, "上传文件过大，文件大小应在8M以内");
+        ResponseData responseData = garbageUserService.UpdateUserBatch(file, jwt);
+        return responseData;
+    }
 }

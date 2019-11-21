@@ -107,8 +107,8 @@ public class TokenFilter implements Filter {
             logger.info("接口签名与token 均符合系统要求，允许访问接口  ");
             filterChain.doFilter(request,response);
         }
-        String token = request.getHeader("Authorization");
-        logger.info(token);
+//        String token = request.getHeader("Authorization");
+//        logger.info(token);
     }
 
     @Override
