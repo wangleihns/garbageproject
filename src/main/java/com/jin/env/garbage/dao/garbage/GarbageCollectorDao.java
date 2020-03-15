@@ -170,7 +170,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                 " u.address as address," +
                 " g.garbage_weight as weight," +
                 " im.image_path as imagePath," +
-                " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                " u.name as username ," +
+                " u.phone as phone ," +
+                " g.collector_name as collectorName , " +
+                " g.collector_phone as collectorPhone ," +
+                " g.garbage_point as garbagePoint ," +
+                " g.garbage_quality as garbageQuality " +
                 " FROM " +
                 " garbage_collector g " +
                 " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -180,10 +186,10 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                 " INNER JOIN garbage_user u on u.id = g.user_id " +
                 " AND im.source_name = ?1 " +
                 " AND g.garbage_quality = 1  and g.village_id = ?2" +
-                " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                 " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByVillageId(String sourceName, Long villageId, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByVillageId(String sourceName, Long villageId, List<Integer> garbageTypes);
 
 
     @Query(nativeQuery = true,
@@ -194,7 +200,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " u.address as address," +
                     " g.garbage_weight as weight," +
                     " im.image_path as imagePath," +
-                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
                     " FROM " +
                     " garbage_collector g " +
                     " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -204,10 +216,10 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.town_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                    " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByTownId(String sourceName, Long townId, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByTownId(String sourceName, Long townId, List<Integer> garbageTypes);
 
 
     @Query(nativeQuery = true,
@@ -218,7 +230,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " u.address as address," +
                     " g.garbage_weight as weight," +
                     " im.image_path as imagePath," +
-                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
                     " FROM " +
                     " garbage_collector g " +
                     " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -228,10 +246,10 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.country_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                    " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCountyId(String sourceName, Long countyId, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCountyId(String sourceName, Long countyId, List<Integer> garbageTypes);
 
 
     @Query(nativeQuery = true,
@@ -242,7 +260,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " u.address as address," +
                     " g.garbage_weight as weight," +
                     " im.image_path as imagePath," +
-                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
                     " FROM " +
                     " garbage_collector g " +
                     " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -252,10 +276,10 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.city_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                    " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCityId(String sourceName, Long cityId, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByCityId(String sourceName, Long cityId, List<Integer> garbageTypes);
 
 
     @Query(nativeQuery = true,
@@ -266,7 +290,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " u.address as address," +
                     " g.garbage_weight as weight," +
                     " im.image_path as imagePath," +
-                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
                     " FROM " +
                     " garbage_collector g " +
                     " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -276,10 +306,10 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1  and g.province_id = ?2 " +
-                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                    " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByProvinceId(String sourceName, Long provinceId, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingVillageGarbageInfoByProvinceId(String sourceName, Long provinceId, List<Integer> garbageTypes);
 
 
 
@@ -291,7 +321,13 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " u.address as address," +
                     " g.garbage_weight as weight," +
                     " im.image_path as imagePath," +
-                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate " +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
                     " FROM " +
                     " garbage_collector g " +
                     " INNER JOIN garbage_image im ON g.id = im.bus_id " +
@@ -301,10 +337,147 @@ public interface GarbageCollectorDao extends JpaRepository<GarbageCollectorEntit
                     " INNER JOIN garbage_user u on u.id = g.user_id " +
                     " AND im.source_name = ?1 " +
                     " AND g.garbage_quality = 1 AND g.community_id IN (?2) " +
-                    " AND g.garbage_type = ?3 ORDER BY g.collect_date desc " +
+                    " AND g.garbage_type IN (?3) ORDER BY g.collect_date desc " +
                     " LIMIT 50;"
     )
-    List<GarbageRollingDto>  getTopRollingCommunityGarbageInfo(String sourceName, List<Integer> communityIds, Integer garbageType);
+    List<GarbageRollingDto>  getTopRollingCommunityGarbageInfo(String sourceName, List<Integer> communityIds, List<Integer> garbageTypes);
+
+
+    @Query(nativeQuery = true,
+            value = "SELECT " +
+                    " county.county_name countyName," +
+                    " town.town_name as townName," +
+                    " v.village_name as villageName, " +
+                    " u.address as address," +
+                    " g.garbage_weight as weight," +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
+                    " FROM " +
+                    " garbage_collector g " +
+                    " INNER JOIN j_position_county county on g.country_id = county.county_id " +
+                    " INNER JOIN j_position_town town on g.town_id = town.town_id " +
+                    " INNER JOIN j_position_village v on v.village_id = g.village_id " +
+                    " INNER JOIN garbage_user u on u.id = g.user_id " +
+                    " AND g.garbage_quality = 1  and g.village_id = ?1" +
+                    " AND g.garbage_type IN (?2) ORDER BY g.collect_date desc " +
+                    " LIMIT 50;"
+    )
+    List<GarbageRollingDto>  getTopRollingVillageRecycleGarbageInfoByVillageId(Long villageId, List<Integer> garbageTypes);
+
+    @Query(nativeQuery = true,
+            value = "SELECT " +
+                    " county.county_name countyName," +
+                    " town.town_name as townName," +
+                    " v.village_name as villageName, " +
+                    " u.address as address," +
+                    " g.garbage_weight as weight," +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
+                    " FROM " +
+                    " garbage_collector g " +
+                    " INNER JOIN j_position_county county on g.country_id = county.county_id " +
+                    " INNER JOIN j_position_town town on g.town_id = town.town_id " +
+                    " INNER JOIN j_position_village v on v.village_id = g.village_id " +
+                    " INNER JOIN garbage_user u on u.id = g.user_id " +
+                    " AND g.garbage_quality = 1  and g.town_id = ?1 " +
+                    " AND g.garbage_type IN (?2) ORDER BY g.collect_date desc " +
+                    " LIMIT 50"
+    )
+    List<GarbageRollingDto>  getTopRollingVillageRecycleGarbageInfoByTownId(Long townId, List<Integer> garbageTypes);
+
+
+    @Query(nativeQuery = true,
+            value = "SELECT " +
+                    " county.county_name countyName," +
+                    " town.town_name as townName," +
+                    " v.village_name as villageName, " +
+                    " u.address as address," +
+                    " g.garbage_weight as weight," +
+                    " im.image_path as imagePath," +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
+                    " FROM " +
+                    " garbage_collector g " +
+                    " INNER JOIN j_position_county county on g.country_id = county.county_id " +
+                    " INNER JOIN j_position_town town on g.town_id = town.town_id " +
+                    " INNER JOIN j_position_village v on v.village_id = g.village_id " +
+                    " INNER JOIN garbage_user u on u.id = g.user_id " +
+                    " AND g.garbage_quality = 1  and g.country_id = ?1 " +
+                    " AND g.garbage_type IN (?2) ORDER BY g.collect_date desc " +
+                    " LIMIT 50;"
+    )
+    List<GarbageRollingDto>  getTopRollingVillageRecycleGarbageInfoByCountyId(Long countyId, List<Integer> garbageTypes);
+
+
+    @Query(nativeQuery = true,
+            value = "SELECT " +
+                    " county.county_name countyName," +
+                    " town.town_name as townName," +
+                    " v.village_name as villageName, " +
+                    " u.address as address," +
+                    " g.garbage_weight as weight," +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
+                    " FROM " +
+                    " garbage_collector g " +
+                    " INNER JOIN garbage_image im ON g.id = im.bus_id " +
+                    " INNER JOIN j_position_county county on g.country_id = county.county_id " +
+                    " INNER JOIN j_position_town town on g.town_id = town.town_id " +
+                    " INNER JOIN j_position_village v on v.village_id = g.village_id " +
+                    " INNER JOIN garbage_user u on u.id = g.user_id " +
+                    " AND g.garbage_quality = 1  and g.city_id = ?1 " +
+                    " AND g.garbage_type IN (?2) ORDER BY g.collect_date desc " +
+                    " LIMIT 50;"
+    )
+    List<GarbageRollingDto>  getTopRollingVillageRecycleGarbageInfoByCityId(Long cityId, List<Integer> garbageTypes);
+
+
+    @Query(nativeQuery = true,
+            value = "SELECT " +
+                    " county.county_name countyName," +
+                    " town.town_name as townName," +
+                    " v.village_name as villageName, " +
+                    " u.address as address," +
+                    " g.garbage_weight as weight," +
+                    " FROM_UNIXTIME(collect_date / 1000,'%m-%d') as collectDate ," +
+                    " u.name as username ," +
+                    " u.phone as phone ," +
+                    " g.collector_name as collectorName , " +
+                    " g.collector_phone as collectorPhone ," +
+                    " g.garbage_point as garbagePoint ," +
+                    " g.garbage_quality as garbageQuality " +
+                    " FROM " +
+                    " garbage_collector g " +
+                    " INNER JOIN garbage_image im ON g.id = im.bus_id " +
+                    " INNER JOIN j_position_county county on g.country_id = county.county_id " +
+                    " INNER JOIN j_position_town town on g.town_id = town.town_id " +
+                    " INNER JOIN j_position_village v on v.village_id = g.village_id " +
+                    " INNER JOIN garbage_user u on u.id = g.user_id " +
+                    " AND g.garbage_quality = 1  and g.province_id = ?1 " +
+                    " AND g.garbage_type IN (?2) ORDER BY g.collect_date desc " +
+                    " LIMIT 50;"
+    )
+    List<GarbageRollingDto>  getTopRollingVillageRecycleGarbageInfoByProvinceId(Long provinceId, List<Integer> garbageTypes);
 
 
 

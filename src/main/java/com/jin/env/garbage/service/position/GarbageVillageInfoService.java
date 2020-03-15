@@ -177,7 +177,7 @@ public class GarbageVillageInfoService {
                         Predicate predicate1 = criteriaBuilder.equal(root.get("villageId"), villageId);
                         predicates.add(predicate1);
                     }
-               } else {
+               } else if (roleCodes.contains("PROVINCE_ADMIN")){
                     Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
                     predicates.add(predicate);
                     if (cityId !=null){

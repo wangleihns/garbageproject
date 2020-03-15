@@ -17,6 +17,12 @@ public class CommunityGarbageCollectDto {
 
     private String check;
 
+    private String countyName;
+    private String townName;
+    private String villageName;
+    private String userPhone;
+    private String collectPhone;
+
 
     public Integer getId() {
         return id;
@@ -128,5 +134,45 @@ public class CommunityGarbageCollectDto {
 
     public void setCheck(String check) {
         this.check = check;
+    }
+
+    public String getCountyName() {
+        return countyName;
+    }
+
+    public void setCountyName(String countyName) {
+        this.countyName = countyName;
+    }
+
+    public String getTownName() {
+        return townName;
+    }
+
+    public void setTownName(String townName) {
+        this.townName = townName;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
+    }
+
+    public String getUserPhone() {
+        return userPhone;
+    }
+
+    public void setUserPhone(String userPhone) {
+        this.userPhone = userPhone;
+    }
+
+    public String getCollectPhone() {
+        return collectPhone;
+    }
+
+    public void setCollectPhone(String collectPhone) {
+        this.collectPhone = collectPhone;
     }
 }

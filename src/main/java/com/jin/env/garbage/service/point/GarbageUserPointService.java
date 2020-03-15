@@ -1,6 +1,8 @@
 package com.jin.env.garbage.service.point;
 
+import com.aliyuncs.exceptions.ClientException;
 import com.jin.env.garbage.dao.garbage.GarbageQualityPointDao;
+import com.jin.env.garbage.dao.point.GarbagePointRecordDao;
 import com.jin.env.garbage.dao.point.GarbageUserPointDao;
 import com.jin.env.garbage.dao.position.GarbageCommunityDao;
 import com.jin.env.garbage.dao.position.JPositionVillageDao;
@@ -8,7 +10,9 @@ import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.dto.point.RedAndBlackRankDto;
 import com.jin.env.garbage.dto.point.UserPointRankDto;
 import com.jin.env.garbage.dto.position.UserPositionDto;
+import com.jin.env.garbage.entity.card.GarbagePointCardEntity;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
+import com.jin.env.garbage.entity.point.GarbagePointRecordEntity;
 import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
 import com.jin.env.garbage.entity.position.GarbageCommunityEntity;
 import com.jin.env.garbage.entity.position.JPositionVillageEntity;
@@ -17,9 +21,7 @@ import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.service.garbage.GarbageCollectorService;
-import com.jin.env.garbage.utils.Constants;
-import com.jin.env.garbage.utils.ResponseData;
-import com.jin.env.garbage.utils.ResponsePageData;
+import com.jin.env.garbage.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,8 +30,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.*;
 import java.util.*;
 import java.util.function.Function;
@@ -58,6 +62,12 @@ public class GarbageUserPointService {
 
     @Autowired
     private JPositionVillageDao jPositionVillageDao;
+
+    @Autowired
+    private GarbagePointRecordDao garbagePointRecordDao;
+
+    @Autowired
+    private EntityManager entityManager;
 
     public ResponseData getPointRankList(Integer pageNo, Integer pageSize, String type, String keyWord, String jwt, Long cityId, Long countryId, Long townId, Long villageId, Integer communityId, String[] orderBys) {
         Integer sub  = jwtUtil.getSubject(jwt);
@@ -536,5 +546,212 @@ public class GarbageUserPointService {
         responsePageData.setMsg("查询成功");
         responsePageData.setData(dtos);
         return responsePageData;
+    }
+
+    public List<Object[]> exportPointList(String type, String keyWord, Long cityId, Long countryId, Long townId, Long villageId, Integer communityId, String jwt) {
+        Integer sub  = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType(); // 0农村  1小区
+        List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntityList.stream().filter(garbageRoleEntity-> !garbageRoleEntity.getRoleCode().contains("COMMUNITY")).map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        List<Integer> communityIds = collectorService.getCommunityResource(roleEntityList);
+
+        StringBuilder builder = new StringBuilder(" SELECT p.user_name, p.phone, " +
+                " concat_ws( p.province_name, p.city_name, p.country_name, p.town_name, p.village_name, p.community_name)," +
+                " p.address, p.point " +
+                " FROM garbage_user_point p INNER JOIN garbage_user u ON p.user_id = u.id WHERE 1=1 and u.from_type= " + fromType);
+        if ( "name".equals(type)){
+            builder.append(" and u.name like '%" + keyWord +"%'");
+        }
+        if ("phone".equals(type)){
+            builder.append(" and u.phone like '%" + keyWord +"%'");
+        }
+        if("eNo".equals(type)){
+            builder.append(" AND EXISTS ( "+
+                    " SELECT  e.user_id FROM garbage_e_no e WHERE u.id = e.user_id AND e.e_no LIKE '%"+keyWord+"%' )");
+        }
+        if (roleCodes.contains("VILLAGE_ADMIN")){
+           builder.append(" and u.village_id = " + userEntity.getVillageId());
+        }
+        if (roleCodes.contains("TOWN_ADMIN")){
+            if (villageId != null){
+                builder.append(" and u.village_id = " + villageId);
+            }
+            builder.append(" and  u.town_id = " + userEntity.getTownId());
+        }
+        if (roleCodes.contains("COUNTRY_ADMIN")){
+            if (villageId != null){
+                builder.append(" and  u.village_id = " + villageId);
+            }
+            if (townId != null){
+                builder.append(" and  u.town_id = " + townId);
+            }
+            builder.append(" and  u.country_id = " + userEntity.getCountryId());
+        }
+        if (roleCodes.contains("CITY_ADMIN")){
+            if (villageId != null){
+                builder.append(" and  u.village_id = " + villageId);
+            }
+            if (townId != null){
+                builder.append(" and  u.town_id = " + townId);
+            }
+            if (countryId != null){
+                builder.append(" and  u.country_id = " + countryId);
+            }
+            builder.append(" u.city_id = " + userEntity.getCityId());
+        }
+        if (roleCodes.contains("PROVINCE_ADMIN")){
+            if (villageId != null){
+                builder.append(" u.village_id = " + villageId);
+            }
+            if (townId != null){
+                builder.append(" and  u.town_id = " + townId);
+            }
+            if (countryId != null){
+                builder.append(" and  u.country_id = " + countryId);
+            }
+            if (cityId != null){
+                builder.append(" and  u.city_id = " + cityId);
+            }
+            builder.append(" and  u.province_id = " + userEntity.getProvinceId());
+        }
+        if (fromType == 1){
+            if (communityId != null){
+                builder.append( " and u.community_id = " + communityId);
+            } else {
+                if (communityIds.size()> 0){
+                    builder.append( " and u.community_id in ( ");
+                    for (int i = 0; i <communityIds.size() ; i++) {
+                        Integer dd = communityIds.get(i);
+                        if (i == communityIds.size() -1){
+                            builder.append(  dd + " )");
+                        } else {
+                            builder.append(  dd + ", ");
+                        }
+                    }
+                }
+            }
+        }
+        builder.append(" order by p.point desc");
+        List<Object[]> data = entityManager.createNativeQuery(builder.toString()).getResultList();
+        return data;
+    }
+
+
+    public ResponseData getPointUserInfo(String name, String eNo, String jwt) {
+        List<GarbageUserPointEntity> userEntities = garbageUserPointDao.findAll(new Specification<GarbageUserPointEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserPointEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+                if (!StringUtils.isEmpty(name)){
+                    Predicate predicate = criteriaBuilder.like(root.get("userName"), "%" + name + "%");
+                    predicates.add(predicate);
+                }
+                if (!StringUtils.isEmpty(eNo)){
+                    List<Predicate> predicateList = new ArrayList<>();
+                    Subquery subquery = criteriaQuery.subquery(GarbagePointCardEntity.class);
+                    Root subRoot = subquery.from(GarbagePointCardEntity.class);
+                    subquery.select(subRoot.get("userId"));
+                    Predicate predicate = criteriaBuilder.equal(root.get("userId"), subRoot.get("userId"));
+                    predicateList.add(predicate);
+                    Predicate eNoPredicate  = criteriaBuilder.equal(subRoot.get("pointCard"), eNo);
+                    predicateList.add(eNoPredicate);
+                    Predicate exists = criteriaBuilder.exists(subquery.where(predicateList.toArray(new Predicate[predicateList.size()])));
+                    predicates.add(exists);
+                }
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        });
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("用户信息查询查询成功");
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setData(userEntities);
+        return  responseData;
+    }
+
+    @Transactional
+    public ResponseData buyGoodsByPoint(Integer pointFrom, Integer point, String desc, String eNo, String jwt) {
+        Integer sub  = jwtUtil.getSubject(jwt);
+        //店主
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType(); // 0农村  1小区
+        List<GarbageRoleEntity> roleEntityList = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roles = roleEntityList.stream().filter(garbageRoleEntity-> !garbageRoleEntity.getRoleCode().contains("COMMUNITY")).map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        List<Integer> communityIds = collectorService.getCommunityResource(roleEntityList);
+        if (!roles.contains("SHOP")){
+            throw new RuntimeException("没有权限调用商品购买接口");
+        }
+        //购买者
+        GarbageUserEntity buyer = garbageUserDao.findByPhoneOrEno(eNo);
+        if (buyer == null){
+            throw new RuntimeException("查无此人，请核对手机号或者电子卡号");
+        }
+        synchronized (this){
+            GarbageUserPointEntity buyerPoint = garbageUserPointDao.findByUserId(buyer.getId());
+            if (buyerPoint == null){
+                throw new RuntimeException("该用户的积分为0，不能完成此次购买");
+            }
+            if (buyerPoint.getPoint() == 0){
+                throw new RuntimeException("该用户的积分为0，不能完成此次购买");
+            }
+            if (buyerPoint.getPoint() - point < 0){
+                throw new RuntimeException("该用户的积分不够，不能完成此次购买");
+            }
+            buyerPoint.setPoint(buyerPoint.getPoint() - point);
+            garbageUserPointDao.save(buyerPoint);
+            //生成积分记录
+            GarbagePointRecordEntity buyerRecord = new GarbagePointRecordEntity();
+            buyerRecord.setUserId(buyer.getId());
+            buyerRecord.setPoint(-point);
+            buyerRecord.setDesc("兑换商品扣减积分：" + point + "; " + desc);
+            buyerRecord.setSourceName(GarbageUserPointEntity.class.getName());
+            buyerRecord.setBusId(userEntity.getId());
+            garbagePointRecordDao.save(buyerRecord);
+            // 发送短信
+            try {
+                SmsUtil.getSmsUtil().sendGarbageExchangeGoodsPoint(buyer.getPhone(), buyer.getTownName(), DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd"), point, buyerPoint.getPoint());
+            } catch (ClientException e) {
+                e.printStackTrace();
+            }
+
+            //店主
+            GarbageUserPointEntity userPointEntity = garbageUserPointDao.findByUserId(userEntity.getId());
+            if (userPointEntity != null){
+                userPointEntity.setPoint(userPointEntity.getPoint() + point);
+                garbageUserPointDao.save(buyerPoint);
+            } else {
+                userPointEntity = new GarbageUserPointEntity();
+                userPointEntity.setUserId(userEntity.getId());
+                userPointEntity.setUserName(userEntity.getName());
+                userPointEntity.setPoint(point);
+                userPointEntity.setProvinceName(userEntity.getProvinceName());
+                userPointEntity.setCityName(userEntity.getCityName());
+                userPointEntity.setCountryName(userEntity.getCountryName());
+                userPointEntity.setTownName(userEntity.getTownName());
+                userPointEntity.setVillageName(userEntity.getVillageName());
+                userPointEntity.setAddress(userEntity.getAddress());
+                userPointEntity.setPhone(userEntity.getPhone());
+                userPointEntity.setProvinceId(userEntity.getProvinceId());
+                userPointEntity.setCityId(userEntity.getCityId());
+                userPointEntity.setCountryId(userEntity.getCountryId());
+                userPointEntity.setTownId(userEntity.getTownId());
+                userPointEntity.setVillageId(userEntity.getVillageId());
+                userPointEntity.setCommunityId(userEntity.getCommunityId());
+                userPointEntity.setCommunityName(userEntity.getCommunityName());
+            }
+            garbageUserPointDao.save(userPointEntity);
+            //生成积分记录
+            GarbagePointRecordEntity shopRecord = new GarbagePointRecordEntity();
+            shopRecord.setUserId(userEntity.getId());
+            shopRecord.setPoint(point);
+            shopRecord.setDesc("兑换商品增加积分：" + point + "; " + desc);
+            shopRecord.setSourceName(GarbageUserPointEntity.class.getName());
+            shopRecord.setBusId(buyer.getId());
+            garbagePointRecordDao.save(shopRecord);
+        }
+        ResponseData responseData = new ResponseData();
+        responseData.setMsg("积分兑换成功");
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        return  responseData;
     }
 }

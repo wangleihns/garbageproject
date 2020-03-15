@@ -12,4 +12,6 @@ public interface GarbageENoDao extends JpaRepository<GarbageENoEntity, Integer>,
     GarbageENoEntity findByENo(String eno);
 
     List<GarbageENoEntity> findByENoIn(String[] eNos);
+
+    List<GarbageENoEntity> findByENoIn(List<String> eNos);
 }

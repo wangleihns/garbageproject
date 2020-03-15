@@ -11,6 +11,8 @@ public class GarbageENoEntity extends BaseEntity{
     private String eNo;
     private Integer status;
 
+    private Integer eNoType;
+
 
     @Basic
     @Column(name = "user_id")
@@ -40,6 +42,16 @@ public class GarbageENoEntity extends BaseEntity{
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    @Basic
+    @Column(name = "e_no_type")
+    public Integer geteNoType() {
+        return eNoType;
+    }
+
+    public void seteNoType(Integer eNoType) {
+        this.eNoType = eNoType;
     }
 
     @Override

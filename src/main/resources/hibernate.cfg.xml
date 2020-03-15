@@ -22,6 +22,10 @@
       <mapping class="com.jin.env.garbage.entity.point.GarbagePointRecordEntity"/>
       <mapping class="com.jin.env.garbage.entity.point.GarbageUserPointEntity"/>
       <mapping class="com.jin.env.garbage.entity.village.GarbageVillageInfoEntity"/>
+      <mapping class="com.jin.env.garbage.entity.message.GarbageMessageEntity"/>
+      <mapping class="com.jin.env.garbage.entity.remark.GarbageRemarkAgainRecordEntity"/>
+      <mapping class="com.jin.env.garbage.entity.card.GarbagePointCardEntity"/>
+      <mapping class="com.jin.env.garbage.entity.fold.GarbageFoldEntity"/>
       <!-- <property name="connection.username"/> -->
     <!-- <property name="connection.password"/> -->
 

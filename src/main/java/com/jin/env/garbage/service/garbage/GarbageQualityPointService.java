@@ -3,14 +3,20 @@ package com.jin.env.garbage.service.garbage;
 import com.jin.env.garbage.dao.garbage.GarbageQualityPointDao;
 import com.jin.env.garbage.dao.user.GarbageUserDao;
 import com.jin.env.garbage.entity.garbage.GarbageQualityPointEntity;
+import com.jin.env.garbage.entity.point.GarbageUserPointEntity;
+import com.jin.env.garbage.entity.user.GarbageENoEntity;
 import com.jin.env.garbage.entity.user.GarbageRoleEntity;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.utils.Constants;
 import com.jin.env.garbage.utils.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import javax.persistence.criteria.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

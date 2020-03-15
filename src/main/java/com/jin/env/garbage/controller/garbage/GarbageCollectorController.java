@@ -52,7 +52,7 @@ public class GarbageCollectorController {
      * @param imageId
      * @param request
      * @return
-     */
+             */
     @RequestMapping(value = "addGarbageByAuto", method = RequestMethod.POST)
     public ResponseData addGarbageByAuto(String eNo, Double weight, Integer garbageType, Integer imageId, HttpServletRequest request){
         String jwtArr[] = request.getHeader("Authorization").split(" ");
@@ -107,10 +107,12 @@ public class GarbageCollectorController {
     @RequestMapping(value = "villageGarbageList", method = RequestMethod.GET)
     public ResponseData villageGarbageList(Integer pageNo, Integer pageSize, Boolean isCheck, Double weight, Integer point,
                                              Integer quality, String type, String keyWord, Integer garbageType, String[] orderBys, HttpServletRequest request,
-                                            String startTime, String endTime, Long cityId, Long countryId, Long townId, Long villageId){
+                                            String startTime, String endTime, String name, Long cityId, Long countryId, Long townId, Long villageId, Integer sType){
+        Long start = System.currentTimeMillis();
         String jwt = request.getHeader("Authorization").split(" ")[1];
         ResponsePageData responseData = garbageCollectorService.villageGarbageList(pageNo,pageSize, isCheck, weight, point, quality,
-                type, keyWord, garbageType, jwt, orderBys, startTime, endTime, cityId,countryId, townId, villageId);
+                type, keyWord, garbageType, jwt, orderBys, startTime, endTime, name, cityId,countryId, townId, villageId, sType);
+        System.out.println(System.currentTimeMillis() - start);
         return  responseData;
     }
 
@@ -256,10 +258,10 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "getRollingGarbageInfo", method = RequestMethod.GET)
-    public ResponseData getRollingGarbageInfo(HttpServletRequest request, Integer garbageType){
+    public ResponseData getRollingGarbageInfo(HttpServletRequest request, Integer garbageType, Long villageId){
         String jwt = request.getHeader("Authorization").split(" ")[1];
         Assert.state(garbageType != null, "垃圾类型不能为空");
-        ResponseData responseData = garbageCollectorService.getRollingGarbageInfo(jwt, garbageType);
+        ResponseData responseData = garbageCollectorService.getRollingGarbageInfo(jwt, garbageType, villageId);
         return  responseData;
     }
 
@@ -270,10 +272,10 @@ public class GarbageCollectorController {
      * @return
      */
     @RequestMapping(value = "getRollingTotalPersonPartIn", method = RequestMethod.GET)
-    public ResponseData getRollingTotalPersonPartIn(HttpServletRequest request, Integer garbageType){
+    public ResponseData getRollingTotalPersonPartIn(HttpServletRequest request, Integer garbageType, Long villageId){
         String jwt = request.getHeader("Authorization").split(" ")[1];
 
-        ResponseData responseData = garbageCollectorService.getRollingTotalPersonPartIn(jwt, garbageType);
+        ResponseData responseData = garbageCollectorService.getRollingTotalPersonPartIn(jwt, garbageType, villageId);
         return  responseData;
     }
     @RequestMapping(value = "getRollingTotalWeight", method = RequestMethod.GET)
@@ -307,6 +309,56 @@ public class GarbageCollectorController {
     @RequestMapping(value = "checkUserCollectToday", method = RequestMethod.GET)
     public ResponseData checkUserCollectToday(String eno){
         ResponseData responseData = garbageCollectorService.checkUserCollectToday(eno);
+        return  responseData;
+    }
+
+    @RequestMapping(value = "addRecycleGarbage", method = RequestMethod.POST)
+    public ResponseData addRecycleGarbage( Double weight, Integer garbageType, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageCollectorService.addRecycleGarbage(weight, garbageType, jwt);
+        return  responseData;
+    }
+
+    /**
+     * 重新评分
+     * @param id
+     * @param quality
+     * @return
+     */
+    @RequestMapping(value = "remarkAgain", method = RequestMethod.POST)
+    public ResponseData remarkAgain(Integer id, Integer quality, String remark, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        Assert.state(id != null, "id 必传");
+        Assert.state(quality != null, "重新评定结果必传");
+//        Assert.hasText(remark, "更改原因必传");
+        ResponseData responseData = garbageCollectorService.remarkAgain(id, quality,  remark ,jwt);
+        return  responseData;
+    }
+
+    /**
+     *
+     * @param pageNo
+     * @param pageSize
+     * @param startTime
+     * @param endTime
+     * @param cityId
+     * @param countryId
+     * @param townId
+     * @param villageId
+     * @param communityId
+     * @param orderBys
+     * @param request
+     * @return
+     */
+
+    @RequestMapping(value = "dataComparisonAndAnalysis", method = RequestMethod.GET)
+    public ResponseData dataComparisonAndAnalysis(Integer pageNo, Integer pageSize, String startTime, String endTime,
+           Long cityId, Long countryId, Long townId, Long villageId, Long communityId,
+           String[] orderBys , HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+
+        ResponseData responseData = garbageCollectorService.dataComparisonAndAnalysis(pageNo, pageSize,  startTime ,endTime ,cityId,
+                countryId, townId, villageId,communityId, jwt , orderBys);
         return  responseData;
     }
 }

@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -14,9 +15,7 @@ public class ExportExcelUtils {
 
     }
 
-    private static void createCell(Workbook wb, Row row, int column, Font font, String value) {
-        Cell cell = row.createCell(column);
-        cell.setCellValue(value);
+    public static CellStyle createCellStyle(Workbook wb, Font font){
         CellStyle cellStyle = wb.createCellStyle();
         cellStyle.setFont(font);
         cellStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -30,31 +29,37 @@ public class ExportExcelUtils {
         cellStyle.setBorderTop(BorderStyle.THIN);
         cellStyle.setTopBorderColor(IndexedColors.BLACK.getIndex());
         cellStyle.setWrapText(true);
+        return cellStyle;
+    }
+
+    private static void createCell(Row row, int column, String value, CellStyle cellStyle) {
+        Cell cell = row.createCell(column);
+        cell.setCellValue(value);
         cell.setCellStyle(cellStyle);
     }
 
-    public static void  createTitle(Workbook wb, Sheet sheet, Font font, String value, int firstRow, int lastRow, int firstCol, int lastCol){
+    public static void  createTitle(Sheet sheet, String value, int firstRow, int lastRow, int firstCol, int lastCol, CellStyle cellStyle){
         Row titleRow = sheet.createRow(0);
         titleRow.setHeightInPoints(30);
         sheet.addMergedRegion(new CellRangeAddress(firstRow, lastRow, firstCol, lastCol));
-        createCell(wb, titleRow, 0, font, value);
+        createCell(titleRow, 0, value, cellStyle);
     }
-    public static void  createHeader(Workbook wb, Sheet sheet, Font font, List<String> exportHeaders){
+    public static void  createHeader(Sheet sheet,  List<String> exportHeaders, CellStyle cellStyle){
         Row headerRow = sheet.createRow(1);
         headerRow.setHeightInPoints(30);
         for (int i = 0; i < exportHeaders.size(); i++) {
-            createCell(wb, headerRow, i, font, exportHeaders.get(i));
+            createCell(headerRow, i, exportHeaders.get(i), cellStyle);
         }
     }
 
-    public static void createContent(Workbook wb,Sheet sheet, Font font, List<Object[]> data){
+    public static void createContent(Sheet sheet, List<Object[]> data, CellStyle cellStyle){
         for (int i = 0; i < data.size(); i++) {
             Row row = sheet.createRow(i +2 );
             row.setHeightInPoints(30);
             Object[] o = data.get(i);
             for (int j = 0; j < o.length; j++) {
                  Object oo = o[j] == null? "":o[j];
-                createCell(wb, row, j, font, oo.toString());
+                createCell(row, j, oo.toString(), cellStyle);
             }
         }
     }
@@ -70,10 +75,13 @@ public class ExportExcelUtils {
             Font font = wb.createFont();
             font.setFontName("黑体");
             int firstRow = cellStart[0],  lastRow = cellStart[1], firstCol = cellStart[2], lastCol = cellStart[3];
-            createTitle(wb, sheet, font, showTitle, firstRow, lastRow, firstCol, lastCol);
-            createHeader(wb,sheet,font, headers);
-            createContent(wb, sheet, font, data);
-            wb.write(response.getOutputStream());
+            CellStyle cellStyle = createCellStyle(wb, font);
+            createTitle(sheet, showTitle, firstRow, lastRow, firstCol, lastCol, cellStyle);
+            createHeader(sheet, headers, cellStyle);
+            createContent(sheet, data, cellStyle);
+            ServletOutputStream outputStream = response.getOutputStream();
+            wb.write(outputStream);
+            outputStream.close();
             wb.close();
         } catch (IOException e) {
             e.printStackTrace();

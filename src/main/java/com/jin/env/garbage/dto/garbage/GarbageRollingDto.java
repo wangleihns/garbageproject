@@ -8,4 +8,11 @@ public interface GarbageRollingDto {
     Double getWeight();
     String getImagePath();
     String getCollectDate();
+    String getUsername();
+    String getPhone();
+    String getCollectorName();
+    String getCollectorPhone();
+    Integer getGarbagePoint();
+    Integer getGarbageQuality();
+
 }

@@ -12,4 +12,9 @@ public interface GarbageImageDao extends JpaRepository<GarbageImageEntity, Integ
     int deleteBySourceNameAndBusIdAndType(String sourceName, Integer busId, String type);
 
     List<GarbageImageEntity> findBySourceNameAndType(String sourceName, String type);
+
+    List<GarbageImageEntity> findBySourceNameAndTypeAndBusIdIn(String sourceName, String type, List<Integer> busIds);
+
+
+    List<GarbageImageEntity> findBySourceNameAndTypeAndBusId(String sourceName, String type,Integer busId);
 }

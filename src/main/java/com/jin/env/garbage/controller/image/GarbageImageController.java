@@ -43,4 +43,15 @@ public class GarbageImageController {
         return responseData;
     }
 
+
+    @RequestMapping(value = "uploadFoldImg",method = RequestMethod.POST)
+    public ResponseData uploadFoldImg(@RequestParam("file") MultipartFile multipartFile, HttpServletRequest request) {
+        Assert.state(!(multipartFile.isEmpty() ||
+                StringUtils.isBlank(multipartFile.getOriginalFilename())),"图片不能为空");
+        long fileSize = multipartFile.getSize();
+        Assert.state(fileSize <= maxImageSize, "上传图片过大");
+        ResponseData responseData = garbageImageService.uploadFoldImg(multipartFile);
+        return responseData;
+    }
+
 }

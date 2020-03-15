@@ -1,6 +1,7 @@
 package com.jin.env.garbage.controller.user;
 
 import com.aliyuncs.exceptions.ClientException;
+import com.jin.env.garbage.dto.param.ENoParam;
 import com.jin.env.garbage.entity.user.GarbageUserEntity;
 import com.jin.env.garbage.jwt.JwtUtil;
 import com.jin.env.garbage.service.user.GarbageUserService;
@@ -11,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,6 +49,18 @@ public class LoginApiController {
         return responseData;
     }
 
+    /**
+     * 注销用户
+     * @param request
+     * @param phone
+     * @return
+     */
+    @RequestMapping(value = "logOff",method = RequestMethod.POST)
+    public ResponseData logOff(HttpServletRequest request, String phone){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.logOff(jwt, phone);
+        return responseData;
+    }
 
 
     @RequestMapping(value = "refreshAccessToken",method = RequestMethod.GET)
@@ -345,4 +355,41 @@ public class LoginApiController {
         ResponseData responseData = garbageUserService.UpdateUserBatch(file, jwt);
         return responseData;
     }
+
+    @RequestMapping(value = "getVillageUserInfo", method = RequestMethod.GET)
+    public ResponseData getVillageUserInfo(HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.getVillageUserInfo(jwt);
+        return responseData;
+    }
+
+    /**
+     *
+     * @param eNoParams
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "updateEno", method = RequestMethod.POST)
+    public ResponseData updateEno(@RequestBody List<ENoParam> eNoParams, HttpServletRequest request){
+        Assert.state(eNoParams.size() != 0 , "请输入参数");
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.updateEno(eNoParams, jwt);
+        return responseData;
+    }
+
+    @RequestMapping(value = "addEno", method = RequestMethod.POST)
+    public ResponseData addEno(String newEno, Integer userId, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData = garbageUserService.addEno(userId, newEno, jwt);
+        return responseData;
+    }
+
+    @RequestMapping(value = "getUserInfoByPhone", method = RequestMethod.POST)
+    public ResponseData getUserInfoByPhone(String phone){
+        Assert.hasText(phone, "手机号必传");
+        ResponseData responseData = garbageUserService.getUserInfoByPhone(phone);
+        return responseData;
+    }
+
+
 }

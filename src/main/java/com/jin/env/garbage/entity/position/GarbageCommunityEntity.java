@@ -19,6 +19,8 @@ public class GarbageCommunityEntity extends BaseEntity{
     private Integer status;
     private String desc;
     private String fullAddress;
+
+    private Integer sendMsg;
     @Basic
     @Column(name = "province_id")
     public Integer getProvinceId() {
@@ -127,6 +129,16 @@ public class GarbageCommunityEntity extends BaseEntity{
 
     public void setFullAddress(String fullAddress) {
         this.fullAddress = fullAddress;
+    }
+
+    @Basic
+    @Column(name = "send_msg")
+    public Integer getSendMsg() {
+        return sendMsg;
+    }
+
+    public void setSendMsg(Integer sendMsg) {
+        this.sendMsg = sendMsg;
     }
 
     @Override

@@ -137,7 +137,14 @@ public class Constants {
         /**
          * 垃圾图片
          */
-        GARBAGE_IMAGE;
+        GARBAGE_IMAGE,
+        /**
+         * 美丽庭院
+         */
+        FOLD
+        ;
+
+
 
         private String type;
     }
@@ -161,7 +168,33 @@ public class Constants {
         /**
          * 有害垃圾
          */
-        DANGER_GARBAGE(4);
+        DANGER_GARBAGE(4),
+        /**
+         *  可回收- 铝金属
+         */
+        AL(5),
+        /**
+         * 可回收 - 铁
+         */
+        FE(6),
+        /**
+         * 可回收 - 铜
+         */
+        TU(7),
+        /**
+         * 可回收 - 纸张
+         */
+        PAPER(8),
+        /**
+         * 可回收 - 瓶子
+         */
+        BOTTEL(9),
+        /**
+         * 可回收 - 其他
+         */
+        RECYCLEOHTER(10);
+
+
         private Integer type;
 
         garbageType(Integer type) {
@@ -255,6 +288,83 @@ public class Constants {
     public enum taskType{
         START,  //开始定时任务
         END     // 结束定时任务
+    }
+
+    public enum sMsModelResult{
+        QUALITY("合格"),
+        NOTQUALITY("不合格"),
+        EMPTY("显示为空桶");
+
+        private String content;
+
+        sMsModelResult(String content) {
+            this.content = content;
+        }
+        public String getContent() {
+            return content;
+        }
+    }
+
+    public enum sMsModelRemark{
+        QUALITY("请继续保持"),
+        NOTQUALITY("请您重视垃圾分类"),
+        EMPTY("请您积极参与垃圾分类");
+
+        private String content;
+
+        sMsModelRemark(String content) {
+            this.content = content;
+        }
+        public String getContent() {
+            return content;
+        }
+    }
+
+    public enum messageStatus{
+        SEND(1),
+        NOTSEND(0);
+
+        messageStatus(Integer code) {
+            this.code = code;
+        }
+
+        private Integer code;
+
+        public Integer getCode() {
+            return code;
+        }
+    }
+
+    /**
+     * 垃圾分类卡的类型
+     */
+    public enum eNoType{
+        /**
+         * 厨余垃圾
+         */
+        KITCHEN_CARD(1),
+        /**
+         * 其他垃圾
+         */
+        OTHER_CARD(2),
+        /**
+         * 可回收垃圾
+         */
+        RECYCLEABLE_CARD(3),
+        /**
+         * 有害垃圾
+         */
+        DANGER_CARD(4),;
+
+        private int type;
+
+        eNoType(int type) {
+            this.type = type;
+        }
+
+        public int getType() {
+            return type;
+        }
     }
 
 }

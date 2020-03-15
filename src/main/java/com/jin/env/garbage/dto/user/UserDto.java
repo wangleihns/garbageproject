@@ -1,14 +1,14 @@
 package com.jin.env.garbage.dto.user;
 
 public class UserDto {
-    private Integer userId;
-    private String username;
+    protected Integer userId;
+    protected String username;
 
-    private String phone;
-    private String address;
-    private String eNo;
+    protected String phone;
+    protected String address;
+    protected String eNo;
 
-    private boolean isCollect;
+    protected boolean isCollect;
 
     public UserDto() {
     }

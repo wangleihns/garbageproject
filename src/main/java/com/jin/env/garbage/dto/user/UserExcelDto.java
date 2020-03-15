@@ -10,6 +10,9 @@ public class UserExcelDto {
     private String cleaner;
     private String company;
     private String eNo;
+    private String otherNo;
+    private String recycleNo;
+    private String dangerNo;
     private String address;
 
     private String dangYuan;
@@ -155,5 +158,29 @@ public class UserExcelDto {
 
     public void setWomenExeLeader(String womenExeLeader) {
         this.womenExeLeader = womenExeLeader;
+    }
+
+    public String getOtherNo() {
+        return otherNo;
+    }
+
+    public void setOtherNo(String otherNo) {
+        this.otherNo = otherNo;
+    }
+
+    public String getRecycleNo() {
+        return recycleNo;
+    }
+
+    public void setRecycleNo(String recycleNo) {
+        this.recycleNo = recycleNo;
+    }
+
+    public String getDangerNo() {
+        return dangerNo;
+    }
+
+    public void setDangerNo(String dangerNo) {
+        this.dangerNo = dangerNo;
     }
 }

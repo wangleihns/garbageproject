@@ -13,6 +13,7 @@ import com.jin.env.garbage.dao.village.GarbageVillageInfoDao;
 import com.jin.env.garbage.dto.garbage.UserCollectCountDto;
 import com.jin.env.garbage.dto.garbage.UserCollectRightAndWeightDto;
 import com.jin.env.garbage.dto.garbage.UserCollectRightAndWeightDto2;
+import com.jin.env.garbage.dto.param.ENoParam;
 import com.jin.env.garbage.dto.resource.ResourceListChildrenDto;
 import com.jin.env.garbage.dto.resource.ResourceListDto;
 import com.jin.env.garbage.dto.resource.UserResourceDto;
@@ -52,6 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.persistence.criteria.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +63,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -144,6 +147,9 @@ public class GarbageUserService {
         }
         if (!userEntity.getEnabled()){
             throw new RuntimeException("账号不可用");
+        }
+        if (userEntity.getStatus() == 0){
+            throw new RuntimeException("账号已注销");
         }
         if(!CommonUtil.md5(password).equals(userEntity.getPassword())){
             throw new RuntimeException("账号或密码不正确");
@@ -1033,6 +1039,7 @@ public class GarbageUserService {
             @Override
             public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicateList = new ArrayList<>();
+                predicateList.add(criteriaBuilder.equal(root.get("status"), Constants.dataType.ENABLE.getType()));
                 if(fromType == 0){
                     if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
                         Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
@@ -1079,54 +1086,98 @@ public class GarbageUserService {
         String todayString = DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd");
         Long start = DateFormatUtil.getFirstTimeOfDay(todayString).getTime();
         Long end = DateFormatUtil.getLastTimeOfDay(todayString).getTime();
-        Long collectCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
-            @Override
-            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicateList = new ArrayList<>();
-                Predicate startPredcate = criteriaBuilder.between(root.get("collectDate"), start, end);
-                predicateList.add(startPredcate);
-                if (fromType == 0){
-                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
-                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
-                        predicateList.add(predicate);
-                    }
-                    if (roleCodes.contains("VILLAGE_ADMIN")){
-                        //查看本村的注册量
-                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
-                        predicateList.add(predicate);
-                    }
-                    if (roleCodes.contains("TOWN_ADMIN")){
-                        Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
-                        predicateList.add(predicate);
-                    }
-                    if (roleCodes.contains("COUNTRY_ADMIN")){
-                        Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
-                        predicateList.add(predicate);
-                    }
-                    if (roleCodes.contains("CITY_ADMIN")){
-                        Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
-                        predicateList.add(predicate);
-                    }
-                    if (roleCodes.contains("PROVINCE_ADMIN")){
-                        Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
-                        predicateList.add(predicate);
-                    }
-                } else {
-                    if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 ){
-                        //小区管理员
-                        if (communityIds.size() > 0){
-                            predicateList.add(root.get("communityId").in(communityIds));
-                        }
-                    } else{
-                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
-                        predicateList.add(predicate);
-                    }
-                }
-                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+//        Long collectCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
+//            @Override
+//            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicateList = new ArrayList<>();
+//                Predicate startPredcate = criteriaBuilder.between(root.get("collectDate"), start, end);
+//                predicateList.add(startPredcate);
+//                if (fromType == 0){
+//                    if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+//                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+//                        predicateList.add(predicate);
+//                    }
+//                    if (roleCodes.contains("VILLAGE_ADMIN")){
+//                        //查看本村的注册量
+//                        Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+//                        predicateList.add(predicate);
+//                    }
+//                    if (roleCodes.contains("TOWN_ADMIN")){
+//                        Predicate predicate = criteriaBuilder.equal(root.get("townId"), userEntity.getTownId());
+//                        predicateList.add(predicate);
+//                    }
+//                    if (roleCodes.contains("COUNTRY_ADMIN")){
+//                        Predicate predicate = criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId());
+//                        predicateList.add(predicate);
+//                    }
+//                    if (roleCodes.contains("CITY_ADMIN")){
+//                        Predicate predicate = criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId());
+//                        predicateList.add(predicate);
+//                    }
+//                    if (roleCodes.contains("PROVINCE_ADMIN")){
+//                        Predicate predicate = criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId());
+//                        predicateList.add(predicate);
+//                    }
+//                } else {
+//                    if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 ){
+//                        //小区管理员
+//                        if (communityIds.size() > 0){
+//                            predicateList.add(root.get("communityId").in(communityIds));
+//                        }
+//                    } else{
+//                        Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+//                        predicateList.add(predicate);
+//                    }
+//                }
+//                return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+//            }
+//        });
+        StringBuilder builder = new StringBuilder("");
+        builder.append("select count(DISTINCT user_id) from garbage_collector where 1 = 1  and collect_date BETWEEN " + start + " AND " + end);
+
+        if (fromType == 0){
+            if (roleCodes.size() == 1 && "RESIDENT".equals(roleCodes.get(0)) || roleCodes.contains("COLLECTOR")){
+                builder.append(" AND village_id = " + userEntity.getVillageId());
             }
-        });
+            if (roleCodes.contains("VILLAGE_ADMIN")){
+                //查看本村的注册量
+                builder.append(" AND village_id = " + userEntity.getVillageId());
+            }
+            if (roleCodes.contains("TOWN_ADMIN")){
+                builder.append("  AND town_id = " + userEntity.getTownId());
+            }
+            if (roleCodes.contains("COUNTRY_ADMIN")){
+                builder.append("  AND country_id = " + userEntity.getCountryId());
+            }
+            if (roleCodes.contains("CITY_ADMIN")){
+                builder.append("  AND city_id = " + userEntity.getCityId());
+            }
+            if (roleCodes.contains("PROVINCE_ADMIN")){
+                builder.append("  AND province_id = " + userEntity.getProvinceId());
+            }
+        } else {
+            if (roleCodes.stream().filter(roleCode-> roleCode.endsWith("COMMUNITY_ADMIN")).count() > 0 ){
+                //小区管理员
+                if (communityIds.size() > 0){
+                    builder.append( "  AND community_id in ( ");
+                    for (int i = 0; i < communityIds.size(); i++) {
+                        if (i == communityIds.size() - 1){
+                            builder.append(communityIds.get(i));
+                        } else {
+                            builder.append(communityIds.get(i) + ",");
+                        }
+                    }
+                    builder.append(")");
+                }
+            } else{
+                builder.append(" AND community_id = " + userEntity.getCommunityId());
+            }
+        }
+
+        BigInteger collectCount = (BigInteger) entityManager.createNativeQuery(builder.toString()).getSingleResult();
+
         SummaryCountInfo countInfo = new SummaryCountInfo();
-        countInfo.setCollectCount(collectCount);
+        countInfo.setCollectCount(collectCount.longValue());
         countInfo.setUserCount(count);
         countInfo.setPointRechargeCount(0L);
         countInfo.setReceivedCount(0L);
@@ -1201,14 +1252,17 @@ public class GarbageUserService {
         }
 
         builder.append(" group by u.`month` ");
-
-        List<Object[]> data = entityManager.createNativeQuery(builder.toString())
-                .setParameter(1, year)
-                .setParameter(2,month).getResultList();
+        Query nativeQuery = entityManager.createNativeQuery(builder.toString());
+        nativeQuery.setParameter(1, year);
+        if (month > 5){
+            nativeQuery.setParameter(2,month);
+        }
+        List<Object[]> data =nativeQuery.getResultList();
         for (int i = 0; i < data.size(); i++) {
             UserCountInMonth countInMonth = new UserCountInMonth();
             Integer m = (Integer) data.get(i)[0];
             BigInteger count  = (BigInteger) data.get(i)[1];
+            countInMonth.setMonth(m+1);
             countInMonth.setTime(year + "-" + (m+1) );
             countInMonth.setCount(count.longValue());
             userCountInMonths.add(countInMonth);
@@ -1364,6 +1418,7 @@ public class GarbageUserService {
             @Override
             public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
+                predicates.add(criteriaBuilder.equal(root.get("status"), Constants.dataType.ENABLE.getType()));
                 if (fromType == 1){
                     if (roleCodes.stream().filter(n-> n.endsWith("COMMUNITY_ADMIN")).count() > 0){
                         if (finalCommunityIds.size()> 0){
@@ -1386,8 +1441,10 @@ public class GarbageUserService {
                         predicates.add(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
                     }else if (roleCodes.contains("CITY_ADMIN")){
                         predicates.add(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
-                    } else {
+                    } else if (roleCodes.contains("PROVINCE_ADMIN")){
                         predicates.add(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
+                    } else {
+
                     }
                 }
                 if (!StringUtils.isEmpty(name)){
@@ -1469,12 +1526,104 @@ public class GarbageUserService {
             }
             List<GarbageUserEntity> garbageUserEntityList = new ArrayList<>();
             List<UserExcelDto> list = ReadExcelUtil.readExcel(is, suffix);
+//            Map<String, List<UserExcelDto>> collect = list.stream().collect(Collectors.groupingBy(UserExcelDto::getPhone));
             List<String> phones = list.stream().map(u->u.getPhone()).collect(Collectors.toList());
+            Map<String, List<String>> collectPhoneMap = phones.stream().collect(Collectors.groupingBy(Function.identity()));
+            List<String> pp = new ArrayList<>();
+            for (String key:collectPhoneMap.keySet()){
+                List<String> p = collectPhoneMap.get(key);
+                if (p.size() > 1 ){
+                  pp.add(p.get(0));
+                }
+            }
+            if (pp.size() > 0){
+                String ph = pp.stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中手机号出现重复，请核查 " + ph);
+            }
+            List<String> eNos = list.stream().map(u->u.geteNo()).collect(Collectors.toList());
+            Map<String, List<String>> eNosMap = eNos.stream().collect(Collectors.groupingBy(Function.identity()));
+            List<String> ppEnos = new ArrayList<>();
+            for (String key:eNosMap.keySet()){
+                List<String> p = eNosMap.get(key);
+                if (p.size() > 1 ){
+                    ppEnos.add(p.get(0));
+                }
+            }
+            if (ppEnos.size() > 0){
+                String enop = ppEnos.stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中易腐垃圾卡号出现重复，请核查 " + enop);
+            }
+
+            List<String> otherENos = list.stream().map(u->u.getOtherNo()).collect(Collectors.toList());
+            Map<String, List<String>> otherMap = otherENos.stream().collect(Collectors.groupingBy(Function.identity()));
+            List<String> otherEnosRepeat = new ArrayList<>();
+            for (String key:otherMap.keySet()){
+                List<String> p = otherMap.get(key);
+                if (p.size() > 1 ){
+                    otherEnosRepeat.add(p.get(0));
+                }
+            }
+            if (otherEnosRepeat.size() > 0){
+                String enop = otherEnosRepeat.stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中其他垃圾卡号出现重复，请核查 " + enop);
+            }
+
+            List<String> recycleENos = list.stream().map(u->u.getRecycleNo()).collect(Collectors.toList());
+            Map<String, List<String>> recycleMap = recycleENos.stream().collect(Collectors.groupingBy(Function.identity()));
+            List<String> recycleEnosRepeat = new ArrayList<>();
+            for (String key:otherMap.keySet()){
+                List<String> p = otherMap.get(key);
+                if (p.size() > 1 ){
+                    recycleEnosRepeat.add(p.get(0));
+                }
+            }
+            if (recycleEnosRepeat.size() > 0){
+                String enop = recycleEnosRepeat.stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中可回收卡号出现重复，请核查 " + enop);
+            }
+            List<String> dangerENos = list.stream().map(u->u.getRecycleNo()).collect(Collectors.toList());
+            Map<String, List<String>> dangerMap = dangerENos.stream().collect(Collectors.groupingBy(Function.identity()));
+            List<String> dangerENosRepeat = new ArrayList<>();
+            for (String key:dangerMap.keySet()){
+                List<String> p = dangerMap.get(key);
+                if (p.size() > 1 ){
+                    dangerENosRepeat.add(p.get(0));
+                }
+            }
+            if (dangerENosRepeat.size() > 0){
+                String enop = dangerENosRepeat.stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中有害垃圾卡号出现重复，请核查 " + enop);
+            }
+
             List<GarbageUserEntity> userEntityList = garbageUserDao.findByPhoneIn(phones);
             if (userEntityList.size() > 0){
-                String p = phones.stream().collect(Collectors.joining(","));
-                throw new RuntimeException("导入的手机号出现重复，请核查 " + p);
+                String ph =  userEntityList.stream().map(n->n.getPhone()).collect(Collectors.toList()).stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中手机号与数据库中原有的手机号出现重复，请核查 " + ph);
             }
+
+            List<GarbageENoEntity> kitchenEnos = garbageENoDao.findByENoIn(eNos);
+            if(eNos.size() > 0){
+                String enosRepeat  =  kitchenEnos.stream().map(n->n.geteNo()).collect(Collectors.toList()).stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中易腐垃圾卡号与数据库中原有的易腐垃圾卡号出现重复，请核查 " + enosRepeat);
+            }
+            List<GarbageENoEntity> otherEntities = garbageENoDao.findByENoIn(eNos);
+            if(eNos.size() > 0){
+                String enosRepeat  =  otherEntities.stream().map(n->n.geteNo()).collect(Collectors.toList()).stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中其他垃圾卡号与数据库中原有的其他垃圾卡号出现重复，请核查 " + enosRepeat);
+            }
+
+            List<GarbageENoEntity> recyleEntities = garbageENoDao.findByENoIn(eNos);
+            if(eNos.size() > 0){
+                String enosRepeat  =  recyleEntities.stream().map(n->n.geteNo()).collect(Collectors.toList()).stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中可回收垃圾卡号与数据库中原有的可回收垃圾卡号出现重复，请核查 " + enosRepeat);
+            }
+
+            List<GarbageENoEntity> dangerEntities = garbageENoDao.findByENoIn(eNos);
+            if(eNos.size() > 0){
+                String enosRepeat  =  dangerEntities.stream().map(n->n.geteNo()).collect(Collectors.toList()).stream().collect(Collectors.joining(","));
+                throw new RuntimeException("导入的excel表格中有害垃圾卡号与数据库中原有的有害垃圾卡号出现重复，请核查 " + enosRepeat);
+            }
+
 
             Calendar calendar  = Calendar.getInstance();
             list.forEach(u ->{
@@ -1527,8 +1676,33 @@ public class GarbageUserService {
                     GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
                     garbageENoEntity.seteNo(e);
                     garbageENoEntity.setStatus(1);
+                    garbageENoEntity.seteNoType(Constants.eNoType.KITCHEN_CARD.getType());
                     eNoEntityList.add(garbageENoEntity);
                 });
+                String otherNo = u.getOtherNo();
+                String recyleNo = u.getRecycleNo();
+                String dangerNo = u.getDangerNo();
+                if (!StringUtils.isEmpty(otherNo)){
+                    GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
+                    garbageENoEntity.seteNo(otherNo);
+                    garbageENoEntity.setStatus(1);
+                    garbageENoEntity.seteNoType(Constants.eNoType.OTHER_CARD.getType());
+                    eNoEntityList.add(garbageENoEntity);
+                }
+                if (!StringUtils.isEmpty(recyleNo)){
+                    GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
+                    garbageENoEntity.seteNo(recyleNo);
+                    garbageENoEntity.setStatus(1);
+                    garbageENoEntity.seteNoType(Constants.eNoType.RECYCLEABLE_CARD.getType());
+                    eNoEntityList.add(garbageENoEntity);
+                }
+                if (!StringUtils.isEmpty(dangerNo)){
+                    GarbageENoEntity garbageENoEntity = new GarbageENoEntity();
+                    garbageENoEntity.seteNo(dangerNo);
+                    garbageENoEntity.setStatus(1);
+                    garbageENoEntity.seteNoType(Constants.eNoType.DANGER_CARD.getType());
+                    eNoEntityList.add(garbageENoEntity);
+                }
                 garbageUserEntity.seteNos(eNoEntityList);
 
                 garbageUserEntityList.add(garbageUserEntity);
@@ -1554,6 +1728,7 @@ public class GarbageUserService {
             public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                     List<Predicate> predicates = new ArrayList<>();
                 predicates.add(criteriaBuilder.equal(root.get("fromType"), fromType));
+                predicates.add(criteriaBuilder.equal(root.get("status"), Constants.dataType.ENABLE.getType()));
                 if (roleCodes.size() ==1 && "RESIDENT".equals(roleCodes.get(0))){
                     predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
                 }
@@ -1589,6 +1764,7 @@ public class GarbageUserService {
                         }
                     }
                 }
+                criteriaQuery.distinct(true);
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         });
@@ -1596,57 +1772,110 @@ public class GarbageUserService {
 
         Long startTime = DateFormatUtil.getFirstTimeOfDay(DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd")).getTime();
         Long endTime = DateFormatUtil.getLastTimeOfDay(DateFormatUtil.formatDate(new Date(), "yyyy-MM-dd")).getTime();
-        Long todayCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
-            @Override
-            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicates = new ArrayList<>();
-                predicates.add(criteriaBuilder.equal(root.get("garbageFromType"), fromType));
-                if (startTime !=null){
-                    Predicate predicate = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), startTime);
-                    predicates.add(predicate);
-                }
-                if (endTime != null){
-                    Predicate predicate = criteriaBuilder.lessThanOrEqualTo(root.get("collectDate"), endTime);
-                    predicates.add(predicate);
-                }
-                if (roleCodes.size() ==1 && "RESIDENT".equals(roleCodes.get(0))){
-                    predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
-                }
-                if (roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
-                    predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
-                } else if (roleCodes.contains("TOWN_ADMIN")) {
-                    if (id !=null){
-                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
-                    }
-                    predicates.add(criteriaBuilder.equal(root.get("townId"), userEntity.getTownId()));
-                } else if (roleCodes.contains("COUNTRY_ADMIN")){
-                    if (id !=null){
-                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
-                    }
-                    predicates.add(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
-                } else if (roleCodes.contains("CITY_ADMIN")){
-                    if (id !=null){
-                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
-                    }
-                    predicates.add(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
-                } else if (roleCodes.contains("PROVINCE_ADMIN")){
-                    if (id !=null){
-                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
-                    }
-                    predicates.add(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
-                } else {
-                    if (id != null){
-                        predicates.add(criteriaBuilder.equal(root.get("communityId"), id));
-                    } else {
-                        if (ids.size()> 0){
-                            predicates.add(root.get("communityId").in(ids));
-                        }
-                    }
-                }
-//                criteriaQuery.groupBy(root.get("userId"));
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+//        Long todayCount = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
+//            @Override
+//            public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicates = new ArrayList<>();
+//                predicates.add(criteriaBuilder.equal(root.get("garbageFromType"), fromType));
+//                if (startTime !=null){
+//                    Predicate predicate = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), startTime);
+//                    predicates.add(predicate);
+//                }
+//                if (endTime != null){
+//                    Predicate predicate = criteriaBuilder.lessThanOrEqualTo(root.get("collectDate"), endTime);
+//                    predicates.add(predicate);
+//                }
+//                if (roleCodes.size() ==1 && "RESIDENT".equals(roleCodes.get(0))){
+//                    predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+//                }
+//                if (roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
+//                    predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+//                } else if (roleCodes.contains("TOWN_ADMIN")) {
+//                    if (id !=null){
+//                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+//                    }
+//                    predicates.add(criteriaBuilder.equal(root.get("townId"), userEntity.getTownId()));
+//                } else if (roleCodes.contains("COUNTRY_ADMIN")){
+//                    if (id !=null){
+//                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+//                    }
+//                    predicates.add(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
+//                } else if (roleCodes.contains("CITY_ADMIN")){
+//                    if (id !=null){
+//                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+//                    }
+//                    predicates.add(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
+//                } else if (roleCodes.contains("PROVINCE_ADMIN")){
+//                    if (id !=null){
+//                        predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+//                    }
+//                    predicates.add(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
+//                } else {
+//                    if (id != null){
+//                        predicates.add(criteriaBuilder.equal(root.get("communityId"), id));
+//                    } else {
+//                        if (ids.size()> 0){
+//                            predicates.add(root.get("communityId").in(ids));
+//                        }
+//                    }
+//                }
+//                criteriaBuilder.count(root.get("userId"));
+//                criteriaQuery.distinct(true);
+//                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+//            }
+//        });
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery criteriaQuery = criteriaBuilder.createQuery(GarbageCollectorEntity.class);
+        Root<GarbageCollectorEntity> root = criteriaQuery.from(GarbageCollectorEntity.class);
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(criteriaBuilder.equal(root.get("garbageFromType"), fromType));
+        if (startTime !=null){
+            Predicate predicate = criteriaBuilder.greaterThanOrEqualTo(root.get("collectDate"), startTime);
+            predicates.add(predicate);
+        }
+        if (endTime != null){
+            Predicate predicate = criteriaBuilder.lessThanOrEqualTo(root.get("collectDate"), endTime);
+            predicates.add(predicate);
+        }
+        if (roleCodes.size() ==1 && "RESIDENT".equals(roleCodes.get(0))){
+            predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+        }
+        if (roleCodes.contains("COLLECTOR") || roleCodes.contains("VILLAGE_ADMIN")  ) {
+            predicates.add(criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId()));
+        } else if (roleCodes.contains("TOWN_ADMIN")) {
+            if (id !=null){
+                predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
             }
-        });
+            predicates.add(criteriaBuilder.equal(root.get("townId"), userEntity.getTownId()));
+        } else if (roleCodes.contains("COUNTRY_ADMIN")){
+            if (id !=null){
+                predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+            }
+            predicates.add(criteriaBuilder.equal(root.get("countryId"), userEntity.getCountryId()));
+        } else if (roleCodes.contains("CITY_ADMIN")){
+            if (id !=null){
+                predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+            }
+            predicates.add(criteriaBuilder.equal(root.get("cityId"), userEntity.getCityId()));
+        } else if (roleCodes.contains("PROVINCE_ADMIN")){
+            if (id !=null){
+                predicates.add(criteriaBuilder.equal(root.get("villageId"), id));
+            }
+            predicates.add(criteriaBuilder.equal(root.get("provinceId"), userEntity.getProvinceId()));
+        } else {
+            if (id != null){
+                predicates.add(criteriaBuilder.equal(root.get("communityId"), id));
+            } else {
+                if (ids.size()> 0){
+                    predicates.add(root.get("communityId").in(ids));
+                }
+            }
+        }
+        criteriaQuery.select( criteriaBuilder.countDistinct(root.get("userId")));
+        criteriaQuery.distinct(true);
+        criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+        Long todayCount = (Long) entityManager.createQuery(criteriaQuery).getSingleResult();
+
         Long totalUserPartIn = garbageCollectorDao.count(new Specification<GarbageCollectorEntity>() {
             @Override
             public Predicate toPredicate(Root<GarbageCollectorEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
@@ -1686,7 +1915,7 @@ public class GarbageUserService {
                         }
                     }
                 }
-//                criteriaQuery.groupBy(root.get("userId"));
+                criteriaQuery.distinct(true);
                 return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
             }
         });
@@ -1861,7 +2090,7 @@ public class GarbageUserService {
             List<String> phones = list.stream().map(u->u.getPhone()).collect(Collectors.toList());
             List<GarbageUserEntity> userEntityList = garbageUserDao.findByPhoneIn(phones);
             list.forEach(u ->{
-                GarbageUserEntity garbageUserEntity = garbageUserDao.findByPhone(u.getPhone());
+                GarbageUserEntity garbageUserEntity = garbageUserDao.findByPhone(u.getPhone().trim());
                 garbageUserEntity.setName(u.getName());
                 garbageUserEntity.setStatus(Constants.dataType.ENABLE.getType());
                 garbageUserEntity.setCredentialsNonExpired(true);
@@ -1914,4 +2143,139 @@ public class GarbageUserService {
         }
         return responseData;
     }
+
+    public ResponseData getVillageUserInfo(String jwt) {
+        ResponseData responseData = new ResponseData();
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        Integer fromType = userEntity.getFromType();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("COLLECTOR")){
+            throw new RuntimeException("只有收集员才能获取该信息列表");
+        }
+        Long villageId = userEntity.getVillageId();
+        List<GarbageUserEntity> userEntities = garbageUserDao.findAll(new Specification<GarbageUserEntity>() {
+            @Override
+            public Predicate toPredicate(Root<GarbageUserEntity> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>();
+                if (fromType == 1){
+                    Predicate predicate = criteriaBuilder.equal(root.get("communityId"), userEntity.getCommunityId());
+                    predicates.add(predicate);
+                }
+                if ( fromType == 0){
+                    Predicate predicate = criteriaBuilder.equal(root.get("villageId"), userEntity.getVillageId());
+                    predicates.add(predicate);
+                }
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
+        });
+        List<VillageUserInfo> userInfos = new ArrayList<>();
+        userEntities.forEach(n->{
+            VillageUserInfo userInfo = new VillageUserInfo();
+            userInfo.setUsername(n.getName());
+            userInfo.setPhone(n.getPhone());
+            List<GarbageENoEntity> eNoEntities = n.geteNos();
+            List<String> eNos = eNoEntities.stream().map(e-> e.geteNo()).collect(Collectors.toList());
+            userInfo.seteNos(eNos);
+            userInfos.add(userInfo);
+        });
+
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("居民信息获取成功");
+        responseData.setData(userInfos);
+        return responseData;
+    }
+
+    @Transactional
+    public ResponseData logOff(String jwt, String phone) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("VILLAGE_ADMIN")){
+            throw new RuntimeException("只有村管理员才能注销");
+        }
+        GarbageUserEntity user = garbageUserDao.findByPhone(phone);
+        if (user != null){
+            user.setStatus(0);
+            garbageUserDao.save(user);
+            ResponseData responseData = new ResponseData();
+            responseData.setStatus(Constants.responseStatus.Success.getStatus());
+            responseData.setMsg("居民信息获取成功");
+            return responseData;
+        } else {
+            throw new RuntimeException("查无此账号");
+        }
+    }
+
+    @Transactional
+    public ResponseData addEno(Integer userId, String newEno, String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("VILLAGE_ADMIN")){
+            throw new RuntimeException("只有村管理员才能修改电子卡ID");
+        }
+        GarbageENoEntity eNoEntity = garbageENoDao.findByENo(newEno);
+        if (eNoEntity != null){
+            throw new RuntimeException("该电子卡信息已存在, 无法添加");
+        }
+        GarbageENoEntity eNoEntityNew = new GarbageENoEntity();
+        eNoEntityNew.seteNo(newEno);
+        eNoEntityNew.setUserId(userId);
+        eNoEntityNew.setStatus(1);
+        garbageENoDao.save(eNoEntityNew);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("电子卡ID新增成功");
+        return responseData;
+    }
+
+    public ResponseData updateEno(List<ENoParam> eNoParams, String jwt) {
+        Integer sub = jwtUtil.getSubject(jwt);
+        GarbageUserEntity userEntity = garbageUserDao.findById(sub).get();
+        List<GarbageRoleEntity> roleEntities = userEntity.getRoles().stream().collect(Collectors.toList());
+        List<String> roleCodes = roleEntities.stream().map(garbageRoleEntity -> garbageRoleEntity.getRoleCode()).collect(Collectors.toList());
+        if (!roleCodes.contains("VILLAGE_ADMIN")){
+            throw new RuntimeException("只有村管理员才能修改电子卡ID");
+        }
+        List<String> oldEnos = eNoParams.stream().map(n -> n.getOldEno()).collect(Collectors.toList());
+        List<GarbageENoEntity> eNoEntities = garbageENoDao.findByENoIn(oldEnos);
+        if (eNoEntities.size() <= 0 && oldEnos.size() < oldEnos.size()){
+            throw new RuntimeException("查不到该电子卡信息");
+        }
+        Map<String, String> paramMap = eNoParams.stream().collect(Collectors.toMap(ENoParam::getOldEno, ENoParam::getNewEno));
+        eNoEntities.stream().forEach(n->{
+            n.seteNo(paramMap.get(n.geteNo()));
+        });
+        garbageENoDao.saveAll(eNoEntities);
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setMsg("电子卡ID替换成功");
+        return responseData;
+    }
+
+    public ResponseData getUserInfoByPhone(String phone) {
+        GarbageUserEntity userEntity = garbageUserDao.findByPhone(phone);
+        UserDto userDto = new UserDto();
+        userDto.setUserId(userEntity.getId());
+        userDto.setUsername(userEntity.getName());
+        userDto.setPhone(userEntity.getPhone());
+        String address = userEntity.getProvinceName() +userEntity.getCityName() +
+                userEntity.getCountryName() + userEntity.getTownName() +
+                userEntity.getVillageName() + userEntity.getAddress();
+        userDto.setAddress(address);
+        List<String> eNos = userEntity.geteNos().stream().map(n->n.geteNo()).collect(Collectors.toList());
+        String e = eNos.stream().collect(Collectors.joining(","));
+        userDto.seteNo(e);
+
+        ResponseData responseData = new ResponseData();
+        responseData.setStatus(Constants.responseStatus.Success.getStatus());
+        responseData.setData(userDto);
+        responseData.setMsg("居民信息获取成功");
+        return responseData;
+    }
+
 }

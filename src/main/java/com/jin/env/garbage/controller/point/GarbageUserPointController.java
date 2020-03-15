@@ -99,4 +99,24 @@ public class GarbageUserPointController {
         ResponseData responseData =garbageQualityPointService.setGarbageQualityPoint(id, quality, noQuality, empty, jwt);
         return responseData;
     }
+
+    /**
+     *  查询用户积分信息
+     * @param name
+     * @param eNo
+     * @return
+     */
+    @RequestMapping(value = "getPointUserInfo", method = RequestMethod.GET)
+    public ResponseData getPointUserInfo(String name, String eNo, HttpServletRequest request){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData =garbageUserPointService.getPointUserInfo(name, eNo,jwt);
+        return responseData;
+    }
+
+    @RequestMapping(value = "buyGoodsByPoint", method = RequestMethod.GET)
+    public ResponseData buyGoodsByPoint(Integer pointFrom, Integer point, String desc,  HttpServletRequest request, String eNo){
+        String jwt = request.getHeader("Authorization").split(" ")[1];
+        ResponseData responseData =garbageUserPointService.buyGoodsByPoint(pointFrom, point, desc, eNo, jwt);
+        return responseData;
+    }
 }

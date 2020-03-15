@@ -23,6 +23,8 @@ public class GarbageVillageInfoEntity  extends BaseEntity{
     private String showTitle;
     private String detailAddress;
 
+    private Integer sendMsg;
+
     @Basic
     @Column(name = "province_id")
     public Integer getProvinceId() {
@@ -161,6 +163,16 @@ public class GarbageVillageInfoEntity  extends BaseEntity{
 
     public void setDetailAddress(String detailAddress) {
         this.detailAddress = detailAddress;
+    }
+
+    @Basic
+    @Column(name = "send_msg")
+    public Integer getSendMsg() {
+        return sendMsg;
+    }
+
+    public void setSendMsg(Integer sendMsg) {
+        this.sendMsg = sendMsg;
     }
 
     @Override
